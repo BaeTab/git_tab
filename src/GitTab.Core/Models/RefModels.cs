@@ -54,3 +54,14 @@ public sealed class RemoteInfo
     public required string Name { get; init; }
     public required string Url { get; init; }
 }
+
+/// <summary>One entry in HEAD's reflog — a past position of HEAD you can restore to (undo).</summary>
+public sealed class ReflogEntry
+{
+    public required int Index { get; init; }          // HEAD@{Index}
+    public required string Sha { get; init; }         // the commit HEAD pointed to after this step
+    public required string ShortSha { get; init; }
+    public required string Message { get; init; }     // e.g. "commit: ...", "pull", "reset: ..."
+    public required DateTimeOffset When { get; init; }
+    public string? Committer { get; init; }
+}

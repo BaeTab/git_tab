@@ -108,6 +108,9 @@
                     </Menu>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding RefreshCommand}"
                             Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"/>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding OpenReflogCommand}"
+                            Content="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Reflog.Tip}"
+                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ManageRemotesCommand}"
                             Content="{loc:Tr Remote.Button}" ToolTip="{loc:Tr Remote.Tip}"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>

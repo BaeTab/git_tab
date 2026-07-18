@@ -98,6 +98,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Remote.UrlPrompt"] = "원격 저장소 주소(URL)를 입력하세요",
         ["Remote.RemoveConfirm"] = "‘{0}’ 원격을 삭제할까요? (로컬 커밋은 사라지지 않아요.)",
 
+        // 작업 기록 / 되돌리기 (reflog)
+        ["Reflog.Title"] = "작업 기록 · 되돌리기",
+        ["Reflog.Tip"] = "최근에 HEAD가 지나온 지점들이에요. 커밋·머지·리셋을 잘못했어도 여기서 되돌릴 수 있어요.",
+        ["Reflog.Reset"] = "이 지점으로",
+        ["Reflog.ResetConfirm"] = "‘{0}’ 지점으로 되돌릴까요? (reset --hard — 저장하지 않은 변경은 사라져요.)",
+        ["Reflog.UndoLast"] = "↩ 마지막 작업 취소",
+        ["Reflog.UndoLast.Tip"] = "바로 직전 상태로 되돌려요(HEAD@{1}). 방금 한 작업을 취소할 때 편해요.",
+
         // Language / theme / search
         ["Language"] = "언어",
         ["Language.Korean"] = "한국어",
@@ -364,6 +372,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Remote.NamePrompt"] = "Enter the remote name (usually origin)",
         ["Remote.UrlPrompt"] = "Enter the remote repository URL",
         ["Remote.RemoveConfirm"] = "Remove the remote '{0}'? (Your local commits are kept.)",
+
+        // History / undo (reflog)
+        ["Reflog.Title"] = "History & undo",
+        ["Reflog.Tip"] = "Recent positions HEAD has been at. If a commit, merge, or reset went wrong, you can restore from here.",
+        ["Reflog.Reset"] = "Restore",
+        ["Reflog.ResetConfirm"] = "Restore to '{0}'? (reset --hard — unsaved changes will be lost.)",
+        ["Reflog.UndoLast"] = "↩ Undo last action",
+        ["Reflog.UndoLast.Tip"] = "Restore the previous state (HEAD@{1}) — handy for undoing what you just did.",
 
         ["Language"] = "Language",
         ["Language.Korean"] = "한국어",

@@ -178,6 +178,15 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenReflog()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new ReflogViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowReflog(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
     private async Task OpenPath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return;

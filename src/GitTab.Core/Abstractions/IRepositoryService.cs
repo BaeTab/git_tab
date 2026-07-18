@@ -54,6 +54,9 @@ public interface IRepositoryService : IDisposable
     /// <summary>All configured remotes (name + URL).</summary>
     IReadOnlyList<RemoteInfo> GetRemotes();
 
+    /// <summary>Recent HEAD reflog entries (newest first) — the history you can undo/restore to.</summary>
+    IReadOnlyList<ReflogEntry> GetReflog(int max = 100);
+
     /// <summary>Commits reachable from <paramref name="includeSha"/> but not <paramref name="excludeSha"/>,
     /// newest-first (used to build an interactive-rebase plan).</summary>
     IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha);

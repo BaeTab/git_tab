@@ -499,6 +499,31 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public IReadOnlyList<GitTab.Core.Models.ReflogEntry> GetReflog(int max = 100)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var list = new List<GitTab.Core.Models.ReflogEntry>();
+            int i = 0;
+            foreach (var e in repo.Refs.Log("HEAD"))
+            {
+                var sha = e.To?.Sha ?? string.Empty;
+                list.Add(new GitTab.Core.Models.ReflogEntry
+                {
+                    Index = i,
+                    Sha = sha,
+                    ShortSha = sha.Length >= 7 ? sha[..7] : sha,
+                    Message = e.Message ?? string.Empty,
+                    When = e.Committer?.When ?? default,
+                    Committer = e.Committer?.Name
+                });
+                if (++i >= max) break;
+            }
+            return list;
+        }
+    }
+
     public IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha)
     {
         lock (_sync)
