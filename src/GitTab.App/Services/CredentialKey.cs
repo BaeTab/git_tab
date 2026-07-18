@@ -1,7 +1,7 @@
 namespace GitTab.App.Services;
 
 /// <summary>Maps a git remote URL to a per-host credential key and a display label.</summary>
-internal static class CredentialKey
+public static class CredentialKey
 {
     public const string Prefix = "GitTab:";
 

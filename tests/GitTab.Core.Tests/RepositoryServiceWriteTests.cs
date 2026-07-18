@@ -8,7 +8,7 @@ namespace GitTab.Core.Tests;
 
 /// <summary>
 /// Integration tests that drive real git.exe through RepositoryService, validating the trickier
-/// plumbing (interactive rebase sequence editor, conflict abort, stash, blame).
+/// plumbing (interactive rebase sequence editor, conflict abort, stash, blame, init, remotes, reflog).
 /// </summary>
 public sealed class RepositoryServiceWriteTests
 {
@@ -120,5 +120,96 @@ public sealed class RepositoryServiceWriteTests
         blame[0].Sha.Should().Be(c1);   // line 1 unchanged since first commit
         blame[1].Sha.Should().Be(c2);   // line 2 changed in second commit
         blame[1].Content.Should().Contain("BETA2");
+    }
+
+    // ---------------------------------------------------------------- init / remotes / reflog
+
+    [Fact]
+    public async Task Init_creates_a_new_repository()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "gittab-init-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var svc = NewService();
+            svc.Discover(dir).Should().BeNull("the folder is not a repository yet");
+
+            var result = await svc.InitAsync(dir, "main");
+            result.Success.Should().BeTrue(result.CombinedOutput);
+
+            Directory.Exists(Path.Combine(dir, ".git")).Should().BeTrue();
+            svc.Discover(dir).Should().NotBeNull("it is a repository after init");
+        }
+        finally
+        {
+            TryDelete(dir);
+        }
+    }
+
+    [Fact]
+    public async Task Remotes_roundtrip_add_get_set_remove()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        svc.GetRemotes().Should().BeEmpty();
+        svc.GetRemoteUrl().Should().BeNull();
+
+        (await svc.AddRemoteAsync("origin", "https://example.com/foo.git")).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetRemotes().Should().ContainSingle(r => r.Name == "origin" && r.Url == "https://example.com/foo.git");
+        svc.GetRemoteUrl().Should().Be("https://example.com/foo.git");
+
+        (await svc.SetRemoteUrlAsync("origin", "https://example.com/bar.git")).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetRemoteUrl("origin").Should().Be("https://example.com/bar.git");
+
+        (await svc.RemoveRemoteAsync("origin")).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetRemotes().Should().BeEmpty();
+        svc.GetRemoteUrl().Should().BeNull();
+    }
+
+    [Fact]
+    public void Reflog_lists_recent_head_positions_newest_first()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        var latest = repo.Commit("second", "a.txt", "12");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var log = svc.GetReflog(50);
+        log.Should().NotBeEmpty();
+        log[0].Index.Should().Be(0);
+        log[0].Sha.Should().Be(latest, "the most recent reflog entry is the latest commit");
+        log.Should().OnlyContain(e => e.Sha.Length > 0);
+    }
+
+    [Fact]
+    public void GetState_reports_clean_repository()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        svc.GetState().Operation.Should().Be(RepositoryOperation.None);
+        svc.GetState().IsInProgress.Should().BeFalse();
+        svc.GetSubmodulePaths().Should().BeEmpty();
+    }
+
+    private static void TryDelete(string dir)
+    {
+        try
+        {
+            if (!Directory.Exists(dir)) return;
+            foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+                File.SetAttributes(f, FileAttributes.Normal);
+            Directory.Delete(dir, recursive: true);
+        }
+        catch { /* leftover temp dirs are harmless */ }
     }
 }
