@@ -293,6 +293,12 @@
 
                             <!-- commit box -->
                             <StackPanel Grid.Row="2" Margin="6,6">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="{loc:Tr WC.Type}" VerticalAlignment="Center" Margin="0,0,6,0"
+                                               Foreground="{DynamicResource Brush.TextMuted}"/>
+                                    <ComboBox ItemsSource="{Binding CommitTypes}" SelectedItem="{Binding SelectedCommitType}"
+                                              MinWidth="130" ToolTip="{loc:Tr WC.Type.Tip}"/>
+                                </StackPanel>
                                 <TextBox Text="{Binding CommitMessage, UpdateSourceTrigger=PropertyChanged}"
                                          AcceptsReturn="True" TextWrapping="Wrap" MinHeight="54" MaxHeight="120"
                                          VerticalScrollBarVisibility="Auto"
