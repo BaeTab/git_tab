@@ -264,6 +264,20 @@ public sealed class LocalizationService : ILocalizationService
         ["Auth.Hint"] = "GitHub·GitLab은 비밀번호 대신 개인 액세스 토큰(PAT)을 쓰세요. 입력한 정보는 Windows 자격 증명 관리자에 안전하게 저장되고 다음부터 자동으로 사용돼요.",
         ["Git.NotFound"] = "git 실행 파일을 찾지 못했어요. 히스토리 보기는 되지만 커밋·푸시 등에는 Git이 필요해요. https://git-scm.com/download/win 에서 설치하거나, Git Tab 설치본에 포함된 Git을 사용하세요.",
 
+        // 설정 창
+        ["Settings.Title"] = "설정",
+        ["Settings.Appearance"] = "모양",
+        ["Settings.Theme"] = "테마",
+        ["Settings.ShellSection"] = "탐색기 통합",
+        ["Settings.ShellEnable"] = "Windows 탐색기 우클릭 메뉴 사용",
+        ["Settings.GitSection"] = "Git 실행 파일",
+        ["Settings.AuthSection"] = "인증",
+        ["Settings.ClearCred"] = "저장된 자격 증명 지우기",
+        ["Settings.ClearCredTip"] = "현재 원격 저장소 호스트에 저장한 사용자 이름·토큰을 삭제해요. 다음 Push/Pull 때 다시 입력하게 돼요.",
+        ["Settings.CredCleared"] = "저장된 자격 증명을 삭제했어요.",
+        ["Settings.NoRemote"] = "삭제할 원격 자격 증명이 없어요.",
+        ["Settings.About"] = "정보",
+
         // Common / dialogs
         ["Common.OK"] = "확인",
         ["Common.Cancel"] = "취소",
@@ -478,6 +492,20 @@ public sealed class LocalizationService : ILocalizationService
         ["Auth.Secret"] = "Password · Access token (PAT)",
         ["Auth.Hint"] = "For GitHub/GitLab use a Personal Access Token (PAT) instead of your password. Your details are saved securely in Windows Credential Manager and reused automatically.",
         ["Git.NotFound"] = "No git executable was found. Viewing history works, but commit/push need Git. Install it from https://git-scm.com/download/win, or use the Git bundled with the Git Tab installer.",
+
+        // Settings window
+        ["Settings.Title"] = "Settings",
+        ["Settings.Appearance"] = "Appearance",
+        ["Settings.Theme"] = "Theme",
+        ["Settings.ShellSection"] = "Explorer integration",
+        ["Settings.ShellEnable"] = "Windows Explorer right-click menu",
+        ["Settings.GitSection"] = "Git executable",
+        ["Settings.AuthSection"] = "Authentication",
+        ["Settings.ClearCred"] = "Clear saved credentials",
+        ["Settings.ClearCredTip"] = "Remove the username/token saved for the current remote's host. You'll be asked again on the next push/pull.",
+        ["Settings.CredCleared"] = "Saved credentials were cleared.",
+        ["Settings.NoRemote"] = "No remote credentials to clear.",
+        ["Settings.About"] = "About",
 
         ["Common.OK"] = "OK",
         ["Common.Cancel"] = "Cancel",

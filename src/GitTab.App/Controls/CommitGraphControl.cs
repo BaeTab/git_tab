@@ -54,6 +54,8 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         }).ToArray();
 
         LocalizationService.Current.LanguageChanged += (_, _) => InvalidateVisual();
+        // Re-resolve themed brushes and repaint when the theme is swapped at runtime.
+        ThemeService.ThemeChanged += (_, _) => InvalidateVisual();
     }
 
     // ------------------------------------------------------------ dependency properties

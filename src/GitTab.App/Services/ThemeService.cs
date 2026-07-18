@@ -21,6 +21,10 @@ public sealed class ThemeService : IThemeService
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>Raised after the theme dictionary is swapped, so custom-drawn controls (which
+    /// resolve brushes in OnRender rather than via DynamicResource) can invalidate and repaint.</summary>
+    public static event EventHandler? ThemeChanged;
+
     public AppTheme Theme
     {
         get => _theme;
@@ -44,5 +48,6 @@ public sealed class ThemeService : IThemeService
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Theme)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDark)));
+        ThemeChanged?.Invoke(this, EventArgs.Empty);
     }
 }

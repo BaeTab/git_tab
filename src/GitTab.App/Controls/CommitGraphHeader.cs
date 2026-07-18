@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using GitTab.App.Localization;
+using GitTab.App.Services;
 
 namespace GitTab.App.Controls;
 
@@ -14,6 +15,7 @@ public sealed class CommitGraphHeader : FrameworkElement
     public CommitGraphHeader()
     {
         LocalizationService.Current.LanguageChanged += (_, _) => InvalidateVisual();
+        ThemeService.ThemeChanged += (_, _) => InvalidateVisual();
     }
 
     public static readonly DependencyProperty LaneCountProperty = DependencyProperty.Register(

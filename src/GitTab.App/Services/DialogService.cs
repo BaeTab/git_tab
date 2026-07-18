@@ -23,6 +23,9 @@ public interface IDialogService
     /// <summary>Prompt for a username + password/token for <paramref name="host"/>; null if cancelled.</summary>
     CredentialInput? PromptCredentials(string host);
 
+    /// <summary>Show the Settings dialog bound to the given view model.</summary>
+    void ShowSettings(object viewModel);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -133,6 +136,12 @@ public sealed class DialogService : IDialogService
 
         box.Focus();
         return dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(result) ? result.Trim() : null;
+    }
+
+    public void ShowSettings(object viewModel)
+    {
+        var win = new SettingsWindow { DataContext = viewModel, Owner = Owner() };
+        win.ShowDialog();
     }
 
     public CredentialInput? PromptCredentials(string host)

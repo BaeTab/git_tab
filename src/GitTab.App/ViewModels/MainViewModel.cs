@@ -543,6 +543,8 @@ public sealed partial class MainViewModel : ObservableObject
     {
         _theme.Toggle();
         _settings.Update(_theme.Theme, Loc.Language);
+        OnPropertyChanged(nameof(IsDarkTheme));
+        OnPropertyChanged(nameof(IsLightTheme));
     }
 
     [RelayCommand]
@@ -550,11 +552,59 @@ public sealed partial class MainViewModel : ObservableObject
     {
         Loc.Toggle();
         _settings.Update(_theme.Theme, Loc.Language);
+        OnPropertyChanged(nameof(IsKoreanLanguage));
+        OnPropertyChanged(nameof(IsEnglishLanguage));
         // Menu labels are baked into the registry — refresh them if the integration is installed.
         if (_shell.IsInstalled)
         {
             try { _shell.Install(); } catch (Exception ex) { _logger.LogDebug(ex, "Shell relabel skipped"); }
         }
+    }
+
+    // ---------------------------------------------------------------- settings dialog bindings
+
+    public bool IsDarkTheme
+    {
+        get => _theme.Theme == AppTheme.Dark;
+        set { if (value && _theme.Theme != AppTheme.Dark) ToggleTheme(); }
+    }
+
+    public bool IsLightTheme
+    {
+        get => _theme.Theme == AppTheme.Light;
+        set { if (value && _theme.Theme != AppTheme.Light) ToggleTheme(); }
+    }
+
+    public bool IsKoreanLanguage
+    {
+        get => Loc.Language == AppLanguage.Korean;
+        set { if (value && Loc.Language != AppLanguage.Korean) ToggleLanguage(); }
+    }
+
+    public bool IsEnglishLanguage
+    {
+        get => Loc.Language == AppLanguage.English;
+        set { if (value && Loc.Language != AppLanguage.English) ToggleLanguage(); }
+    }
+
+    public string GitPath => GitTab.Core.Git.GitExecutableLocator.Resolve();
+    public string AppVersion => AppInfo.Version;
+
+    [RelayCommand]
+    private void OpenSettings() => _dialogs.ShowSettings(this);
+
+    [RelayCommand]
+    private void ClearCredentials()
+    {
+        if (!IsRepositoryOpen) { _dialogs.Info(Loc.T("Settings.NoRemote"), Loc.T("Settings.Title")); return; }
+        var key = CredentialKey.FromUrl(_repo.GetRemoteUrl());
+        if (key is null) { _dialogs.Info(Loc.T("Settings.NoRemote"), Loc.T("Settings.Title")); return; }
+        try
+        {
+            _credentials.Delete(key);
+            _dialogs.Info(Loc.T("Settings.CredCleared"), Loc.T("Settings.Title"));
+        }
+        catch (Exception ex) { _dialogs.Error(ex.Message, Loc.T("Common.Error")); }
     }
 
     // ---------------------------------------------------------------- Explorer shell integration

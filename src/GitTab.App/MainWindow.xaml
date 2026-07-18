@@ -154,18 +154,8 @@
                             Content="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Theme.Toggle}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding CheckUpdatesCommand}"
                             Content="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Update.Checking}"/>
-                    <Menu Background="Transparent" VerticalAlignment="Center">
-                        <MenuItem ToolTip="{loc:Tr Settings}">
-                            <MenuItem.Header>
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="13"/>
-                            </MenuItem.Header>
-                            <MenuItem Header="{loc:Tr Shell.Menu.Root}"
-                                      IsCheckable="True"
-                                      IsChecked="{Binding IsShellIntegrationInstalled, Mode=OneWay}"
-                                      Command="{Binding ToggleShellIntegrationCommand}"
-                                      ToolTip="{loc:Tr Shell.Tip}"/>
-                        </MenuItem>
-                    </Menu>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding OpenSettingsCommand}"
+                            Content="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Settings}"/>
                 </StackPanel>
             </Grid>
         </Border>
