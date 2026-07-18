@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:GitTab.App.Controls"
         xmlns:loc="clr-namespace:GitTab.App.Localization"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="{loc:Tr App.Title}"
         Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
         Height="760" Width="1220" MinHeight="480" MinWidth="900"
@@ -18,7 +19,38 @@
         <KeyBinding Modifiers="Control" Key="Return" Command="{Binding WorkingCopy.CommitCommand}"/>
     </Window.InputBindings>
 
-    <Grid>
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" CornerRadius="0"
+                            GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <DockPanel LastChildFill="True">
+        <!-- ================= Custom title bar ================= -->
+        <Border DockPanel.Dock="Top" Height="40" Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
+                    <Image Source="pack://application:,,,/GitTab;component/Assets/gittab.ico" Width="18" Height="18"
+                           Margin="0,0,8,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="{loc:Tr App.Title}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding RepositoryName}" Style="{StaticResource MutedText}" VerticalAlignment="Center"
+                               Margin="12,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="360"
+                               Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Style="{StaticResource TitleBarButton}" Content="&#xE921;" Click="OnMinimize"/>
+                    <Button x:Name="MaxRestoreButton" Style="{StaticResource TitleBarButton}" Content="&#xE922;" Click="OnMaxRestore"/>
+                    <Button Style="{StaticResource TitleBarCloseButton}" Content="&#xE8BB;" Click="OnCloseWindow"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -162,7 +194,18 @@
                                 <ListBox ItemsSource="{Binding Unstaged}" SelectedItem="{Binding SelectedFile}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid ToolTip="{Binding DisplayPath}">
+                                            <Grid ToolTip="{Binding DisplayPath}"
+                                                  Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                <Grid.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="{loc:Tr Conflict.Resolve}"
+                                                                  Command="{Binding PlacementTarget.Tag.ResolveConflictCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr Blame}"
+                                                                  Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    </ContextMenu>
+                                                </Grid.ContextMenu>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="*"/>
@@ -448,8 +491,9 @@
                     <!-- commit details header -->
                     <StackPanel Grid.Row="0" Margin="10,8" DataContext="{Binding Details}"
                                 Visibility="{Binding HasCommit, Converter={StaticResource Bool2Vis}}">
-                        <TextBlock Text="{Binding MessageFull}" TextWrapping="Wrap" FontSize="14" MaxHeight="120"
-                                   FontWeight="SemiBold"/>
+                        <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <TextBlock Text="{Binding MessageFull}" TextWrapping="Wrap" FontSize="14" FontWeight="SemiBold"/>
+                        </ScrollViewer>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <TextBlock Text="{Binding ShortSha}" FontFamily="Consolas" Style="{StaticResource MutedText}"/>
                             <TextBlock Text="  ·  " Style="{StaticResource MutedText}"/>
@@ -509,5 +553,6 @@
                 </StackPanel>
             </Grid>
         </Border>
-    </Grid>
+        </Grid>
+    </DockPanel>
 </Window>

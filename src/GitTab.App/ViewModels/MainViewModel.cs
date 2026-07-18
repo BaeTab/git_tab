@@ -405,6 +405,15 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand] private Task SubmoduleUpdate() => RunNetworkAsync(() => _repo.SubmoduleUpdateAsync());
 
     [RelayCommand]
+    private async Task ResolveConflict(FileChangeViewModel? file)
+    {
+        if (file is null || RepositoryPath is null) return;
+        if (!_dialogs.ShowConflictResolver(RepositoryPath, file.Path)) return;
+        if (await GitUi.RunAsync(() => _repo.MarkResolvedAsync(file.Path), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
     private void Blame(FileChangeViewModel? file)
     {
         var path = file?.Path ?? Details.SelectedFile?.Path;

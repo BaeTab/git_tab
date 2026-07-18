@@ -15,9 +15,10 @@ Abort/Continue, stage-to-resolve), **interactive rebase** (pick/squash/fixup/dro
 GitHub release-based auto-update.
 
 ## Deferred / partial (honest)
-- **Visual 3-way merge editor** — conflicts are handled via the banner (Abort/Continue) and by
-  staging resolved files, but there is no in-app side-by-side merge-conflict editor. You resolve
-  conflicts in the working tree (or your editor of choice), stage, then Continue.
+- **Conflict resolver** — there is an in-app resolver (per-block *Use ours / Use theirs / Both*,
+  right-click a conflicted file → Resolve conflict) plus the Abort/Continue banner. It is **not** a
+  full 3-way editor with the common ancestor pane or free-form hunk editing; complex conflicts may
+  still be easier to resolve in a dedicated merge tool.
 - **Interactive rebase "reword"** — excluded from the UI because the backend runs non-interactively
   (`GIT_EDITOR=:`), so commit messages can't be edited mid-rebase. Pick/Squash/Fixup/Drop + reorder
   are supported.

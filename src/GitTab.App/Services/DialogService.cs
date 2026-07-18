@@ -24,6 +24,9 @@ public interface IDialogService
 
     /// <summary>Shows the interactive-rebase planner; returns the plan, or null if cancelled.</summary>
     IReadOnlyList<RebaseTodoItem>? ShowInteractiveRebase(IReadOnlyList<RebaseTodoItem> items);
+
+    /// <summary>Shows the conflict resolver for a file; returns true if the file was written.</summary>
+    bool ShowConflictResolver(string workingDir, string relativePath);
 }
 
 public sealed class DialogService : IDialogService
@@ -56,6 +59,15 @@ public sealed class DialogService : IDialogService
         var vm = new InteractiveRebaseViewModel(items);
         var dialog = new InteractiveRebaseDialog { DataContext = vm, Owner = Owner() };
         return dialog.ShowDialog() == true ? vm.Plan : null;
+    }
+
+    public bool ShowConflictResolver(string workingDir, string relativePath)
+    {
+        var full = System.IO.Path.Combine(workingDir, relativePath);
+        var vm = new ConflictResolverViewModel(relativePath, full);
+        var dialog = new ConflictResolverDialog { DataContext = vm, Owner = Owner() };
+        dialog.ShowDialog();
+        return vm.Written;
     }
 
     public string? PickFolder(string? title = null)

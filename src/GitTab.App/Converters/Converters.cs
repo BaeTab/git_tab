@@ -50,6 +50,18 @@ public sealed class HasValueToVisibilityConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
+/// <summary>Two-way enum ⇄ bool for radio buttons: checked when the value equals the parameter.</summary>
+public sealed class EnumBooleanConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
+        => value is not null && parameter is string name && value.ToString() == name;
+
+    public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture)
+        => value is true && parameter is string name && Enum.TryParse(targetType, name, out var e)
+            ? e!
+            : Binding.DoNothing;
+}
+
 /// <summary>Localizes a resource key at bind time (does not live-update on language toggle).</summary>
 public sealed class LocKeyConverter : IValueConverter
 {

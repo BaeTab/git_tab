@@ -134,6 +134,10 @@ Git Tab depends on several excellent open-source projects. See [THIRD-PARTY-NOTI
 | Serilog.Extensions.Logging | 8.0.0 | Apache-2.0 |
 | Serilog.Sinks.File | 6.0.0 | Apache-2.0 |
 
+### Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, architecture overview, and coding conventions. Keep the build and tests green (`dotnet build` and `dotnet test` must pass, zero warnings), and ensure CI passes before opening a pull request. Have an idea? Open an issue on the [Issues](https://github.com/BaeTab/git_tab/issues) page.
+
 ### License
 
 Git Tab is released under the **MIT License**. See [LICENSE](LICENSE) for details.
@@ -269,6 +273,10 @@ Git Tab는 여러 우수한 오픈소스 프로젝트에 의존합니다. 자세
 | Serilog | 4.2.0 | Apache-2.0 |
 | Serilog.Extensions.Logging | 8.0.0 | Apache-2.0 |
 | Serilog.Sinks.File | 6.0.0 | Apache-2.0 |
+
+### 기여하기
+
+기여를 환영합니다! [CONTRIBUTING.md](CONTRIBUTING.md)에서 설정, 아키텍처, 코딩 규약을 확인하세요. 빌드와 테스트를 유지하고(`dotnet build`와 `dotnet test` 통과, 경고 0개), PR 전 CI를 통과하세요. 아이디어가 있으신가요? [Issues](https://github.com/BaeTab/git_tab/issues) 페이지에서 이슈를 열어주세요.
 
 ### 라이센스
 
