@@ -42,19 +42,26 @@ public partial class App : Application
         RegisterGlobalExceptionHandlers();
 
         // Theme + language must be applied before any window is shown.
-        Services.GetRequiredService<IThemeService>().Apply(AppTheme.Dark);
+        Services.GetRequiredService<IThemeService>().Apply(e.Args.Contains("--light") ? AppTheme.Light : AppTheme.Dark);
         _ = Services.GetRequiredService<ILocalizationService>(); // sets LocalizationService.Current
 
         var window = Services.GetRequiredService<MainWindow>();
         MainWindow = window;
         window.Show();
 
-        // Auto-open: a repository passed on the command line (e.g. an "Open in Git Tab" shell action),
-        // otherwise reopen the most recently used repository so the app starts where you left off.
+        // --topmost keeps the window above others (handy for screenshots / kiosk use).
+        if (e.Args.Contains("--topmost"))
+        {
+            window.Topmost = true;
+            window.Activate();
+        }
+
+        // Auto-open: a repository path passed on the command line (e.g. an "Open in Git Tab" shell
+        // action), otherwise reopen the most recently used repository so the app resumes where you
+        // left off.
         var mainVm = Services.GetRequiredService<ViewModels.MainViewModel>();
-        string? toOpen = e.Args.Length > 0 && Directory.Exists(e.Args[0])
-            ? e.Args[0]
-            : mainVm.RecentRepositories.FirstOrDefault(r => Directory.Exists(r.Path))?.Path;
+        var repoArg = e.Args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal) && Directory.Exists(a));
+        var toOpen = repoArg ?? mainVm.RecentRepositories.FirstOrDefault(r => Directory.Exists(r.Path))?.Path;
         if (toOpen is not null)
             _ = window.Dispatcher.InvokeAsync(() => mainVm.OpenPathCommand.Execute(toOpen));
     }
@@ -76,6 +83,7 @@ public partial class App : Application
         services.AddSingleton<IRepositoryService, RepositoryService>();
         services.AddSingleton<IRecentRepositoriesStore>(sp =>
             new RecentRepositoriesStore(sp.GetRequiredService<ILogger<RecentRepositoriesStore>>()));
+        services.AddSingleton<GitTab.Core.Gitignore.IGitignoreService, GitTab.Core.Gitignore.GitignoreService>();
 
         // App services
         services.AddSingleton<ILocalizationService, LocalizationService>();

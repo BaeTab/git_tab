@@ -117,7 +117,7 @@ public sealed class LocalizationService : ILocalizationService
         ["WC.Commit"] = "커밋하기",
         ["WC.Commit.Tip"] = "스테이지된 변경을 하나의 커밋(스냅샷)으로 저장해요. 커밋은 나중에 다시 돌아올 수 있는 안전한 기록점이에요.",
         ["WC.NothingToCommit"] = "커밋할 변경이 없어요",
-        ["WC.Clean"] = "변경사항이 없어요. 깨끗한 상태예요! 🎉",
+        ["WC.Clean"] = "변경사항이 없어요. 깨끗한 상태예요!",
 
         // Branches
         ["Branch.Local"] = "로컬 브랜치",
@@ -150,6 +150,15 @@ public sealed class LocalizationService : ILocalizationService
         ["Ctx.CopyMessage"] = "커밋 메시지 복사",
         ["Ctx.OpenFile"] = "파일 열기",
         ["Ctx.CopyPath"] = "경로 복사",
+
+        // .gitignore generator
+        ["Gitignore.Button"] = ".gitignore",
+        ["Gitignore.Title"] = ".gitignore 만들기",
+        ["Gitignore.Tip"] = "프로젝트 스택을 감지해 알맞은 .gitignore를 만들어요. 빌드 산출물·캐시 등 버전관리에 넣지 않을 파일을 자동으로 제외해요.",
+        ["Gitignore.Detected"] = "포함할 스택 (감지된 항목이 미리 선택됨)",
+        ["Gitignore.Write"] = "생성 / 덮어쓰기",
+        ["Gitignore.Append"] = "기존 파일에 추가",
+        ["Gitignore.Exists"] = "이미 .gitignore가 있어요.",
 
         // Commit details
         ["Details.Author"] = "작성자",
@@ -262,7 +271,7 @@ public sealed class LocalizationService : ILocalizationService
         ["WC.Commit"] = "Commit",
         ["WC.Commit.Tip"] = "Save your staged changes as one commit (a snapshot). A commit is a safe point you can always return to.",
         ["WC.NothingToCommit"] = "Nothing to commit",
-        ["WC.Clean"] = "No changes — your working tree is clean! 🎉",
+        ["WC.Clean"] = "No changes — your working tree is clean!",
 
         ["Branch.Local"] = "Local branches",
         ["Branch.Remote"] = "Remote branches",
@@ -293,6 +302,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Ctx.CopyMessage"] = "Copy commit message",
         ["Ctx.OpenFile"] = "Open file",
         ["Ctx.CopyPath"] = "Copy path",
+
+        ["Gitignore.Button"] = ".gitignore",
+        ["Gitignore.Title"] = "Create .gitignore",
+        ["Gitignore.Tip"] = "Detects your project's stack and generates a matching .gitignore, so build output, caches, and other noise stay out of version control.",
+        ["Gitignore.Detected"] = "Stacks to include (detected ones are pre-selected)",
+        ["Gitignore.Write"] = "Create / overwrite",
+        ["Gitignore.Append"] = "Append to existing",
+        ["Gitignore.Exists"] = "A .gitignore already exists.",
 
         ["Details.Author"] = "Author",
         ["Details.Date"] = "Date",

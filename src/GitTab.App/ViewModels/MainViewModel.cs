@@ -343,6 +343,14 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand] private void ToggleLanguage() => Loc.Toggle();
 
     [RelayCommand]
+    private async Task GenerateGitignore()
+    {
+        if (RepositoryPath is null) return;
+        if (_dialogs.ShowGitignoreGenerator(RepositoryPath))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
     private Task CheckUpdates() => CheckForUpdatesAsync(silent: false);
 
     private async Task CheckForUpdatesAsync(bool silent)

@@ -9,6 +9,7 @@
     <RootNamespace>GitTab.App</RootNamespace>
     <AssemblyName>GitTab</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\gittab.ico</ApplicationIcon>
 
     <Product>Git Tab</Product>
     <AssemblyTitle>Git Tab — Git Client</AssemblyTitle>
@@ -26,6 +27,10 @@
   <ItemGroup>
     <ProjectReference Include="..\GitTab.Core\GitTab.Core.csproj" />
     <ProjectReference Include="..\GitTab.Graph\GitTab.Graph.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\gittab.ico" />
   </ItemGroup>
 
   <ItemGroup>

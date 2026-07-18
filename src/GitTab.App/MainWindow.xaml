@@ -4,6 +4,7 @@
         xmlns:controls="clr-namespace:GitTab.App.Controls"
         xmlns:loc="clr-namespace:GitTab.App.Localization"
         Title="{loc:Tr App.Title}"
+        Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
         Height="760" Width="1220" MinHeight="480" MinWidth="900"
         AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop"
         Background="{DynamicResource Brush.Window}"
@@ -46,7 +47,10 @@
                         </MenuItem>
                     </Menu>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding RefreshCommand}"
-                            Content="⟳" FontSize="15" ToolTip="{loc:Tr Action.Refresh.Tip}"/>
+                            Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"/>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding GenerateGitignoreCommand}"
+                            Content="{loc:Tr Gitignore.Button}" ToolTip="{loc:Tr Gitignore.Tip}"
+                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
                 </StackPanel>
 
                 <!-- remote actions -->
@@ -82,9 +86,9 @@
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleLanguageCommand}"
                             Content="한 / EN" ToolTip="{loc:Tr Language}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleThemeCommand}"
-                            Content="◐" FontSize="15" ToolTip="{loc:Tr Theme.Toggle}"/>
+                            Content="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Theme.Toggle}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding CheckUpdatesCommand}"
-                            Content="⭳" FontSize="15" ToolTip="{loc:Tr Update.Checking}"/>
+                            Content="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Update.Checking}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -120,7 +124,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="{loc:Tr WC.Unstaged}" Style="{StaticResource SectionHeader}"
                                                TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="＋" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
+                                    <Button Grid.Column="1" Content="+" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
                                             Command="{Binding StageAllCommand}" ToolTip="{loc:Tr WC.StageAll.Tip}"/>
                                 </Grid>
                                 <ListBox ItemsSource="{Binding Unstaged}" SelectedItem="{Binding SelectedFile}">
@@ -136,10 +140,10 @@
                                                            Foreground="{Binding StatusColorKey, Converter={StaticResource Key2Brush}}"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding DisplayPath}" TextTrimming="CharacterEllipsis"/>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                                    <Button Content="＋" Style="{StaticResource ToolButton}" Padding="6,0"
+                                                    <Button Content="+" Style="{StaticResource ToolButton}" Padding="6,0"
                                                             Command="{Binding DataContext.StageCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                             CommandParameter="{Binding}" ToolTip="{loc:Tr WC.Stage.Tip}"/>
-                                                    <Button Content="⨯" Style="{StaticResource ToolButton}" Padding="6,0"
+                                                    <Button Content="" FontFamily="Segoe MDL2 Assets" FontSize="12" Style="{StaticResource ToolButton}" Padding="6,0"
                                                             Command="{Binding DataContext.DiscardCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                             CommandParameter="{Binding}" ToolTip="{loc:Tr WC.Discard.Tip}"/>
                                                 </StackPanel>
@@ -158,7 +162,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="{loc:Tr WC.Staged}" Style="{StaticResource SectionHeader}"
                                                TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="－" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
+                                    <Button Grid.Column="1" Content="−" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
                                             Command="{Binding UnstageAllCommand}" ToolTip="{loc:Tr WC.UnstageAll}"/>
                                 </Grid>
                                 <ListBox ItemsSource="{Binding Staged}" SelectedItem="{Binding SelectedFile}">
@@ -173,7 +177,7 @@
                                                 <TextBlock Grid.Column="0" Text="{Binding StatusLetter}" Width="16" FontWeight="Bold"
                                                            Foreground="{Binding StatusColorKey, Converter={StaticResource Key2Brush}}"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding DisplayPath}" TextTrimming="CharacterEllipsis"/>
-                                                <Button Grid.Column="2" Content="－" Style="{StaticResource ToolButton}" Padding="6,0"
+                                                <Button Grid.Column="2" Content="−" Style="{StaticResource ToolButton}" Padding="6,0"
                                                         Command="{Binding DataContext.UnstageCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                         CommandParameter="{Binding}" ToolTip="{loc:Tr WC.Unstage.Tip}"/>
                                             </Grid>
@@ -188,13 +192,11 @@
                                          AcceptsReturn="True" TextWrapping="Wrap" MinHeight="54" MaxHeight="120"
                                          VerticalScrollBarVisibility="Auto"
                                          ToolTip="{loc:Tr WC.Commit.Tip}"/>
-                                <Grid Margin="0,6,0,0">
-                                    <CheckBox Content="{loc:Tr WC.Amend}" IsChecked="{Binding Amend}" VerticalAlignment="Center"
-                                              Foreground="{DynamicResource Brush.Text}" ToolTip="{loc:Tr WC.Amend.Tip}"/>
-                                    <Button HorizontalAlignment="Right" Style="{StaticResource AccentButton}"
-                                            Content="{loc:Tr WC.Commit}" Command="{Binding CommitCommand}"
-                                            ToolTip="{loc:Tr WC.Commit.Tip}"/>
-                                </Grid>
+                                <CheckBox Content="{loc:Tr WC.Amend}" IsChecked="{Binding Amend}" Margin="0,8,0,0"
+                                          Foreground="{DynamicResource Brush.Text}" ToolTip="{loc:Tr WC.Amend.Tip}"/>
+                                <Button HorizontalAlignment="Stretch" Style="{StaticResource AccentButton}" Margin="0,8,0,0"
+                                        Content="{loc:Tr WC.Commit}" Command="{Binding CommitCommand}"
+                                        ToolTip="{loc:Tr WC.Commit.Tip}"/>
                                 <TextBlock Text="{loc:Tr WC.Clean}" Style="{StaticResource MutedText}" Margin="2,6,0,0"
                                            TextWrapping="Wrap"
                                            Visibility="{Binding IsClean, Converter={StaticResource Bool2Vis}}"/>
@@ -213,7 +215,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="{loc:Tr Branch.Local}" Style="{StaticResource SectionHeader}"
                                                TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="＋" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
+                                    <Button Grid.Column="1" Content="+" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
                                             Command="{Binding NewBranchCommand}" ToolTip="{loc:Tr Branch.New.Tip}"/>
                                 </Grid>
                                 <ListBox ItemsSource="{Binding Local}" SelectedItem="{Binding SelectedBranch}">

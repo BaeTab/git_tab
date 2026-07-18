@@ -1,6 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using GitTab.App.Localization;
+using GitTab.App.ViewModels;
+using GitTab.App.Views;
+using GitTab.Core.Gitignore;
 using Microsoft.Win32;
 
 namespace GitTab.App.Services;
@@ -12,13 +15,29 @@ public interface IDialogService
     void Error(string message, string? title = null);
     bool Confirm(string message, string? title = null);
     string? Prompt(string message, string? title = null, string? initial = null);
+
+    /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
+    bool ShowGitignoreGenerator(string workingDir);
 }
 
 public sealed class DialogService : IDialogService
 {
     private readonly ILocalizationService _loc;
+    private readonly IGitignoreService _gitignore;
 
-    public DialogService(ILocalizationService loc) => _loc = loc;
+    public DialogService(ILocalizationService loc, IGitignoreService gitignore)
+    {
+        _loc = loc;
+        _gitignore = gitignore;
+    }
+
+    public bool ShowGitignoreGenerator(string workingDir)
+    {
+        var vm = new GitignoreDialogViewModel(_gitignore, workingDir);
+        var dialog = new GitignoreDialog { DataContext = vm, Owner = Owner() };
+        dialog.ShowDialog();
+        return vm.Written;
+    }
 
     public string? PickFolder(string? title = null)
     {

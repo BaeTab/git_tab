@@ -18,11 +18,12 @@ namespace GitTab.App.Controls;
 /// </summary>
 public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
 {
-    private const double RowHeight = 26;
-    private const double LaneWidth = 16;
-    private const double NodeRadius = 5;
-    private const double GraphLeftPad = 12;
-    private const double ChipHeight = 16;
+    private const double RowHeight = 30;
+    private const double LaneWidth = 18;
+    private const double NodeRadius = 5.5;
+    private const double LaneThickness = 2.6;
+    private const double GraphLeftPad = 14;
+    private const double ChipHeight = 17;
 
     private readonly Pen[] _lanePens;
     private readonly Brush[] _laneBrushes;
@@ -39,7 +40,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         FocusVisualStyle = null;
         _lanePens = GraphPalette.Colors.Select(c =>
         {
-            var p = new Pen(new SolidColorBrush(c), 2.0) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
+            var p = new Pen(new SolidColorBrush(c), LaneThickness) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
             p.Freeze();
             return p;
         }).ToArray();
@@ -148,7 +149,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         var selBrush = Res("Brush.Selection", Brushes.LightBlue);
         var accentBrush = Res("Brush.Accent", Brushes.DodgerBlue);
         var surfaceBrush = Res("Brush.Surface", Brushes.White);
-        var nodeStroke = new Pen(surfaceBrush, 1.5);
+        var nodeStroke = new Pen(surfaceBrush, 2.0);
 
         double vh = _viewport.Height > 0 ? _viewport.Height : RenderSize.Height;
         double vw = _viewport.Width > 0 ? _viewport.Width : RenderSize.Width;
@@ -190,7 +191,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             double nodeX = LaneX(row.GraphRow.NodeLane);
             var nodeBrush = _laneBrushes[Mod(row.GraphRow.ColorIndex)];
             if (row.IsHead)
-                dc.DrawEllipse(null, new Pen(accentBrush, 2.0), new Point(nodeX, centerY), NodeRadius + 2.5, NodeRadius + 2.5);
+                dc.DrawEllipse(null, new Pen(accentBrush, 2.2), new Point(nodeX, centerY), NodeRadius + 3.0, NodeRadius + 3.0);
             dc.DrawEllipse(nodeBrush, nodeStroke, new Point(nodeX, centerY), NodeRadius, NodeRadius);
 
             // text area

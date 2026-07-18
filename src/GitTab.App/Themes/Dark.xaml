@@ -1,34 +1,34 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Dark theme palette -->
-    <SolidColorBrush x:Key="Brush.Window"     Color="#1E1F22"/>
-    <SolidColorBrush x:Key="Brush.Surface"    Color="#26282E"/>
-    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#2B2D33"/>
-    <SolidColorBrush x:Key="Brush.Border"     Color="#3A3D44"/>
-    <SolidColorBrush x:Key="Brush.Text"       Color="#E6E6E6"/>
-    <SolidColorBrush x:Key="Brush.TextMuted"  Color="#9AA0A8"/>
-    <SolidColorBrush x:Key="Brush.Accent"     Color="#4C8DFF"/>
-    <SolidColorBrush x:Key="Brush.OnAccent"   Color="#0B1220"/>
-    <SolidColorBrush x:Key="Brush.Selection"  Color="#2D3A52"/>
-    <SolidColorBrush x:Key="Brush.Hover"      Color="#2E3138"/>
-    <SolidColorBrush x:Key="Brush.Danger"     Color="#F0857D"/>
-    <SolidColorBrush x:Key="Brush.Success"    Color="#57C973"/>
+    <!-- Dark theme — refined slate + indigo (ties to the app mark) -->
+    <SolidColorBrush x:Key="Brush.Window"     Color="#15171C"/>
+    <SolidColorBrush x:Key="Brush.Surface"    Color="#1B1E24"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#222630"/>
+    <SolidColorBrush x:Key="Brush.Border"     Color="#2B303A"/>
+    <SolidColorBrush x:Key="Brush.Text"       Color="#D6DAE1"/>
+    <SolidColorBrush x:Key="Brush.TextMuted"  Color="#79818E"/>
+    <SolidColorBrush x:Key="Brush.Accent"     Color="#6B78E8"/>
+    <SolidColorBrush x:Key="Brush.OnAccent"   Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Selection"  Color="#262C40"/>
+    <SolidColorBrush x:Key="Brush.Hover"      Color="#232732"/>
+    <SolidColorBrush x:Key="Brush.Danger"     Color="#E56B7B"/>
+    <SolidColorBrush x:Key="Brush.Success"    Color="#4FBF8B"/>
 
-    <SolidColorBrush x:Key="Diff.AddBg"   Color="#12261C"/>
-    <SolidColorBrush x:Key="Diff.DelBg"   Color="#2A1517"/>
-    <SolidColorBrush x:Key="Diff.HunkBg"  Color="#1E2230"/>
-    <SolidColorBrush x:Key="Diff.AddText" Color="#7EE787"/>
-    <SolidColorBrush x:Key="Diff.DelText" Color="#FF9492"/>
-    <SolidColorBrush x:Key="Diff.Gutter"  Color="#8A909A"/>
+    <SolidColorBrush x:Key="Diff.AddBg"   Color="#14271D"/>
+    <SolidColorBrush x:Key="Diff.DelBg"   Color="#2A181B"/>
+    <SolidColorBrush x:Key="Diff.HunkBg"  Color="#1D2233"/>
+    <SolidColorBrush x:Key="Diff.AddText" Color="#6BD08B"/>
+    <SolidColorBrush x:Key="Diff.DelText" Color="#F08A93"/>
+    <SolidColorBrush x:Key="Diff.Gutter"  Color="#79818E"/>
 
-    <SolidColorBrush x:Key="Chip.Head.Bg"   Color="#4C8DFF"/>
-    <SolidColorBrush x:Key="Chip.Head.Text" Color="#08122A"/>
-    <SolidColorBrush x:Key="Chip.Local.Bg"   Color="#26364F"/>
-    <SolidColorBrush x:Key="Chip.Local.Text" Color="#A9C7FF"/>
-    <SolidColorBrush x:Key="Chip.Remote.Bg"   Color="#332B4D"/>
-    <SolidColorBrush x:Key="Chip.Remote.Text" Color="#C9B6F5"/>
-    <SolidColorBrush x:Key="Chip.Tag.Bg"   Color="#3B3320"/>
-    <SolidColorBrush x:Key="Chip.Tag.Text" Color="#EBCB72"/>
+    <SolidColorBrush x:Key="Chip.Head.Bg"   Color="#6B78E8"/>
+    <SolidColorBrush x:Key="Chip.Head.Text" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Chip.Local.Bg"   Color="#232A3D"/>
+    <SolidColorBrush x:Key="Chip.Local.Text" Color="#A9B4F1"/>
+    <SolidColorBrush x:Key="Chip.Remote.Bg"   Color="#2C2740"/>
+    <SolidColorBrush x:Key="Chip.Remote.Text" Color="#C3B2EE"/>
+    <SolidColorBrush x:Key="Chip.Tag.Bg"   Color="#33301F"/>
+    <SolidColorBrush x:Key="Chip.Tag.Text" Color="#DCC873"/>
 
 </ResourceDictionary>
