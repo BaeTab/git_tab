@@ -47,3 +47,10 @@ public sealed class HeadInfo
     public string? BranchFriendlyName { get; init; }
     public string? TipSha { get; init; }
 }
+
+/// <summary>A configured remote (e.g. origin) and its URL.</summary>
+public sealed class RemoteInfo
+{
+    public required string Name { get; init; }
+    public required string Url { get; init; }
+}

@@ -488,6 +488,17 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public IReadOnlyList<RemoteInfo> GetRemotes()
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            return repo.Network.Remotes
+                .Select(r => new RemoteInfo { Name = r.Name, Url = r.Url })
+                .ToArray();
+        }
+    }
+
     public IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha)
     {
         lock (_sync)
@@ -597,6 +608,15 @@ public sealed class RepositoryService : IRepositoryService
     public Task<GitResult> RunRawAsync(IReadOnlyList<string> args, CancellationToken ct = default)
         => Run(args, ct);
 
+    public async Task<GitResult> InitAsync(string path, string? initialBranch = "main", CancellationToken ct = default)
+    {
+        // Runs in the target folder directly — no repository is open yet, so we cannot use Run().
+        Directory.CreateDirectory(path);
+        var args = new List<string> { "init" };
+        if (!string.IsNullOrWhiteSpace(initialBranch)) { args.Add("-b"); args.Add(initialBranch); }
+        return await _git.RunAsync(path, args, cancellationToken: ct).ConfigureAwait(false);
+    }
+
     // ---- stash ----
 
     public Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default)
@@ -645,6 +665,15 @@ public sealed class RepositoryService : IRepositoryService
         => Run(new[] { "add", "--", path }, ct);
 
     // ---- branches / tags / remotes / submodules ----
+
+    public Task<GitResult> AddRemoteAsync(string name, string url, CancellationToken ct = default)
+        => Run(new[] { "remote", "add", name, url }, ct);
+
+    public Task<GitResult> SetRemoteUrlAsync(string name, string url, CancellationToken ct = default)
+        => Run(new[] { "remote", "set-url", name, url }, ct);
+
+    public Task<GitResult> RemoveRemoteAsync(string name, CancellationToken ct = default)
+        => Run(new[] { "remote", "remove", name }, ct);
 
     public Task<GitResult> DeleteRemoteBranchAsync(string remote, string branch, CancellationToken ct = default)
         => Run(new[] { "push", remote, "--delete", branch }, ct);

@@ -148,6 +148,36 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task CreateRepository()
+    {
+        var vm = new NewRepositoryViewModel(Loc);
+        if (!_dialogs.ShowNewRepository(vm)) return;
+
+        var path = vm.FolderPath.Trim();
+        if (string.IsNullOrWhiteSpace(path)) return;
+        var branch = string.IsNullOrWhiteSpace(vm.InitialBranch) ? "main" : vm.InitialBranch.Trim();
+
+        if (!await GitUi.RunAsync(() => _repo.InitAsync(path, branch), _dialogs, Loc, _logger)) return;
+        await OpenPath(path);
+
+        // Optionally wire up the origin remote in the same step.
+        if (IsRepositoryOpen && !string.IsNullOrWhiteSpace(vm.RemoteUrl))
+        {
+            if (await GitUi.RunAsync(() => _repo.AddRemoteAsync("origin", vm.RemoteUrl.Trim()), _dialogs, Loc, _logger))
+                await ReloadAllAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ManageRemotes()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new RemotesViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowRemotes(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
     private async Task OpenPath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return;

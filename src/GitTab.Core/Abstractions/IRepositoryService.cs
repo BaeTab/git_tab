@@ -51,6 +51,9 @@ public interface IRepositoryService : IDisposable
     /// stored credentials by host when prompting for authentication.</summary>
     string? GetRemoteUrl(string remote = "origin");
 
+    /// <summary>All configured remotes (name + URL).</summary>
+    IReadOnlyList<RemoteInfo> GetRemotes();
+
     /// <summary>Commits reachable from <paramref name="includeSha"/> but not <paramref name="excludeSha"/>,
     /// newest-first (used to build an interactive-rebase plan).</summary>
     IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha);
@@ -72,6 +75,13 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> FetchAsync(string? remote = null, bool prune = true, CancellationToken ct = default);
     Task<GitResult> PullAsync(CancellationToken ct = default);
     Task<GitResult> PushAsync(bool setUpstream = false, string? remote = null, string? branch = null, CancellationToken ct = default);
+
+    /// <summary>Create a new repository at <paramref name="path"/> (git init, creating the folder if needed).</summary>
+    Task<GitResult> InitAsync(string path, string? initialBranch = "main", CancellationToken ct = default);
+
+    Task<GitResult> AddRemoteAsync(string name, string url, CancellationToken ct = default);
+    Task<GitResult> SetRemoteUrlAsync(string name, string url, CancellationToken ct = default);
+    Task<GitResult> RemoveRemoteAsync(string name, CancellationToken ct = default);
 
     // ---- stash ----
     Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default);

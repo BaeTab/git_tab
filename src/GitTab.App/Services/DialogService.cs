@@ -26,6 +26,12 @@ public interface IDialogService
     /// <summary>Show the Settings dialog bound to the given view model.</summary>
     void ShowSettings(object viewModel);
 
+    /// <summary>Show the "create repository" dialog; returns true if the user confirmed.</summary>
+    bool ShowNewRepository(NewRepositoryViewModel vm);
+
+    /// <summary>Show the remotes manager dialog.</summary>
+    void ShowRemotes(RemotesViewModel vm);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -141,6 +147,18 @@ public sealed class DialogService : IDialogService
     public void ShowSettings(object viewModel)
     {
         var win = new SettingsWindow { DataContext = viewModel, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public bool ShowNewRepository(NewRepositoryViewModel vm)
+    {
+        var win = new NewRepositoryDialog { DataContext = vm, Owner = Owner() };
+        return win.ShowDialog() == true;
+    }
+
+    public void ShowRemotes(RemotesViewModel vm)
+    {
+        var win = new RemotesDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 
