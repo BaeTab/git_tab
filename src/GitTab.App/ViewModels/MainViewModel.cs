@@ -186,6 +186,30 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void CreatePullRequest()
+    {
+        if (!IsRepositoryOpen) return;
+        var url = RemoteWeb.PullRequestUrl(_repo.GetRemoteUrl(), CurrentBranchName);
+        if (url is null) { _dialogs.Info(Loc.T("Hosting.Unsupported"), AppInfo.ProductName); return; }
+        OpenBrowser(url);
+    }
+
+    [RelayCommand]
+    private void OpenRemoteWeb()
+    {
+        if (!IsRepositoryOpen) return;
+        var url = RemoteWeb.RepoUrl(_repo.GetRemoteUrl());
+        if (url is null) { _dialogs.Info(Loc.T("Hosting.NoRemote"), AppInfo.ProductName); return; }
+        OpenBrowser(url);
+    }
+
+    private void OpenBrowser(string url)
+    {
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Opening browser failed for {Url}", url); }
+    }
+
+    [RelayCommand]
     private async Task OpenReflog()
     {
         if (!IsRepositoryOpen) return;

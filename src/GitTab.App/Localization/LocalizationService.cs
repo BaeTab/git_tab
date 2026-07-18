@@ -98,6 +98,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Remote.UrlPrompt"] = "원격 저장소 주소(URL)를 입력하세요",
         ["Remote.RemoveConfirm"] = "‘{0}’ 원격을 삭제할까요? (로컬 커밋은 사라지지 않아요.)",
 
+        // 호스팅 연동 (GitHub/GitLab)
+        ["Hosting.PR"] = "PR 만들기",
+        ["Hosting.PR.Tip"] = "현재 브랜치로 GitHub Pull Request / GitLab Merge Request 만들기 페이지를 브라우저로 열어요.",
+        ["Hosting.Web"] = "웹에서 열기",
+        ["Hosting.Web.Tip"] = "이 저장소의 원격 웹 페이지(GitHub/GitLab 등)를 브라우저로 열어요.",
+        ["Hosting.Unsupported"] = "이 원격은 PR 만들기를 지원하지 않아요(GitHub·GitLab만 가능). 원격이 설정돼 있고 브랜치를 먼저 Push했는지 확인하세요.",
+        ["Hosting.NoRemote"] = "열 수 있는 원격 웹 주소가 없어요.",
+
         // 작업 기록 / 되돌리기 (reflog)
         ["Reflog.Title"] = "작업 기록 · 되돌리기",
         ["Reflog.Tip"] = "최근에 HEAD가 지나온 지점들이에요. 커밋·머지·리셋을 잘못했어도 여기서 되돌릴 수 있어요.",
@@ -385,6 +393,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Remote.NamePrompt"] = "Enter the remote name (usually origin)",
         ["Remote.UrlPrompt"] = "Enter the remote repository URL",
         ["Remote.RemoveConfirm"] = "Remove the remote '{0}'? (Your local commits are kept.)",
+
+        // Hosting integration (GitHub/GitLab)
+        ["Hosting.PR"] = "New PR",
+        ["Hosting.PR.Tip"] = "Open the GitHub Pull Request / GitLab Merge Request page for the current branch in your browser.",
+        ["Hosting.Web"] = "Open on web",
+        ["Hosting.Web.Tip"] = "Open this repository's remote web page (GitHub/GitLab, etc.) in your browser.",
+        ["Hosting.Unsupported"] = "This remote doesn't support opening a PR page (GitHub/GitLab only). Make sure a remote is set and you've pushed the branch.",
+        ["Hosting.NoRemote"] = "No remote web URL to open.",
 
         // History / undo (reflog)
         ["Reflog.Title"] = "History & undo",

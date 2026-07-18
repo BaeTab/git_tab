@@ -149,6 +149,12 @@
                             Content="{loc:Tr Action.Pull}" ToolTip="{loc:Tr Action.Pull.Tip}"/>
                     <Button Style="{StaticResource IconTextButton}" Tag="&#xE898;" Command="{Binding PushCommand}"
                             Content="{loc:Tr Action.Push}" ToolTip="{loc:Tr Action.Push.Tip}"/>
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE8A7;" Command="{Binding CreatePullRequestCommand}"
+                            Content="{loc:Tr Hosting.PR}" ToolTip="{loc:Tr Hosting.PR.Tip}"/>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding OpenRemoteWebCommand}"
+                            Content="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Hosting.Web.Tip}"
+                            AutomationProperties.Name="{loc:Tr Hosting.Web}"/>
                 </StackPanel>
 
                 <!-- search -->
