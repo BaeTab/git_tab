@@ -3,6 +3,29 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-07-18
+
+### Added
+- **Clone** — clone a remote repository from a URL, with an auto-derived folder name and GUI
+  authentication. Also available from the Explorer right-click menu.
+- **File history** — the commits that touched a file, with the file's diff at each commit (from a
+  file's right-click menu).
+- **Compare** — diff two branches, tags, or commits: changed files and per-file diffs.
+- **Content search (pickaxe)** — find commits that added or removed a string (or regex) in the code,
+  and jump to them.
+- **Command palette** — `Ctrl+P` opens a searchable list of every action.
+- **Explorer menu expanded** to 8 items (adds **Clone** and **Stash changes**).
+
+### Security / hardening
+- **Argument-injection hardening** — ref/branch/tag/remote names are validated so a name starting
+  with `-` can't be misread by git as an option.
+- **Update integrity** — releases publish a SHA-256, and the auto-updater verifies the downloaded
+  installer before launching it.
+
+### Engineering
+- CI: a `dotnet format` gate, CodeQL security analysis, and Dependabot. MinGit pinned for
+  reproducible installers. Regression suite grown to 92 tests (NSubstitute added for ViewModel tests).
+
 ## [0.5.0] - 2026-07-18
 
 ### Added
@@ -73,6 +96,7 @@ All notable changes to **Git Tab** are documented here. This project follows
 - Initial release: color commit graph, commit details + diff, staging & commit, branches & tags,
   fetch/pull/push, `.gitignore` generator, light/dark themes, Korean/English UI, auto-update.
 
+[0.6.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.6.0
 [0.5.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.5.0
 [0.4.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.4.0
 [0.3.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.3.0

@@ -28,7 +28,11 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **History & Undo** — Browse HEAD's reflog and restore to any point; one-click "undo last action".
 - **Partial Staging** — Stage individual hunks of a file (the GUI equivalent of `git add -p`).
 - **Visual 3-Way Merge** — Resolve conflicts with base / ours / theirs panes and an editable result.
-- **Create Repository & Remotes** — `git init` a new repo (with an optional `origin`) and manage remotes.
+- **Create / Clone / Remotes** — `git init` a new repo, **clone** from a URL, and manage remotes.
+- **File History** — the commits that touched a file, with the diff at each.
+- **Compare** — diff two branches, tags, or commits.
+- **Content Search (pickaxe)** — find where a string was added or removed in the code.
+- **Command Palette** — `Ctrl+P` for quick access to every action.
 - **GitHub/GitLab** — One-click "New PR" (opens the pre-filled Pull/Merge Request page) and "Open on web".
 - **Commit Helper** — A Conventional-Commits type dropdown for consistent messages.
 - **Stash** — Stash your changes and apply/pop/drop them later.
@@ -179,7 +183,11 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **작업 기록 & 되돌리기** — HEAD reflog를 훑어보고 원하는 지점으로 복원, 원클릭 ‘마지막 작업 취소’.
 - **부분 스테이징** — 파일의 헝크(변경 블록) 단위로 스테이지 (GUI판 `git add -p`).
 - **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결.
-- **저장소 만들기 & 원격 관리** — `git init`으로 새 저장소 생성(원격 연결 선택) 및 원격 추가/변경/삭제.
+- **만들기 / 복제 / 원격** — `git init` 새 저장소, URL에서 **복제(clone)**, 원격 추가/변경/삭제.
+- **파일 히스토리** — 파일을 건드린 커밋들과 각 커밋의 diff.
+- **비교(Compare)** — 두 브랜치·태그·커밋 사이 diff.
+- **내용 검색(pickaxe)** — 코드에서 문자열이 언제 추가·삭제됐는지 찾기.
+- **명령 팔레트** — `Ctrl+P`로 모든 액션 빠른 실행.
 - **GitHub/GitLab** — 원클릭 ‘PR 만들기’(미리 채워진 PR/MR 페이지 열기), ‘웹에서 열기’.
 - **커밋 도우미** — Conventional Commits 종류 드롭다운으로 일관된 메시지.
 - **스태시** — 변경을 잠시 치워두고 나중에 apply/pop/drop.
