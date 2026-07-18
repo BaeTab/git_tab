@@ -563,6 +563,17 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task RewordCommit()
+    {
+        if (SelectedCommit is null) return;
+        var current = SelectedCommit.Commit.MessageFull?.TrimEnd() ?? string.Empty;
+        var message = _dialogs.PromptMultiline(Loc.T("Reword.Prompt"), Loc.T("Reword.Title"), current);
+        if (string.IsNullOrWhiteSpace(message) || message.TrimEnd() == current) return;
+        if (await GitUi.RunAsync(() => _repo.RewordAsync(SelectedCommit.Sha, message), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
     private async Task CreateBranchHere()
     {
         if (SelectedCommit is null) return;

@@ -940,6 +940,58 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public async Task<GitResult> RewordAsync(string sha, string newMessage, CancellationToken ct = default)
+    {
+        if (Guard(sha) is { } bad) return bad;
+        if (string.IsNullOrWhiteSpace(newMessage))
+            return GitResult.Fault("git", "커밋 메시지가 비어 있습니다. (Empty commit message.)");
+
+        string? headSha;
+        bool isRoot;
+        IReadOnlyList<CommitInfo> above;
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            headSha = repo.Head.Tip?.Sha;
+            var commit = repo.Lookup<Commit>(sha);
+            isRoot = commit is not null && !commit.Parents.Any();
+        }
+
+        // Fast path: rewording the tip is just an amend.
+        if (headSha == sha)
+            return await Run(new[] { "commit", "--amend", "-m", newMessage }, ct).ConfigureAwait(false);
+
+        above = GetCommitsBetween(sha, "HEAD"); // commits above the target, newest-first
+
+        var plan = new StringBuilder();
+        plan.Append("reword ").Append(Short(sha)).Append(" reword\n");
+        foreach (var c in above.Reverse()) // oldest-first for the todo
+            plan.Append("pick ").Append(Short(c.Sha)).Append(' ').Append(c.Summary).Append('\n');
+
+        var todoPath = Path.Combine(Path.GetTempPath(), $"gittab-reword-plan-{Guid.NewGuid():N}.txt");
+        var msgPath = Path.Combine(Path.GetTempPath(), $"gittab-reword-msg-{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(todoPath, plan.ToString(), ct).ConfigureAwait(false);
+        await File.WriteAllTextAsync(msgPath, newMessage, ct).ConfigureAwait(false);
+        try
+        {
+            // Exactly one commit is 'reword', so git opens the message editor once — GIT_EDITOR copies
+            // our new message in.
+            var env = new Dictionary<string, string>
+            {
+                ["GIT_SEQUENCE_EDITOR"] = $"cp \"{todoPath.Replace('\\', '/')}\"",
+                ["GIT_EDITOR"] = $"cp \"{msgPath.Replace('\\', '/')}\""
+            };
+            var args = isRoot ? new[] { "rebase", "-i", "--root" } : new[] { "rebase", "-i", sha + "^" };
+            return await Run(args, env, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            try { File.Delete(todoPath); File.Delete(msgPath); } catch { /* temp cleanup */ }
+        }
+    }
+
+    private static string Short(string sha) => sha.Length >= 7 ? sha[..7] : sha;
+
     private string? CurrentBranchName()
     {
         lock (_sync)

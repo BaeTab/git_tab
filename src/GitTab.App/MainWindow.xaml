@@ -545,6 +545,7 @@
                             <controls:CommitGraphControl.ContextMenu>
                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                     <MenuItem Header="{loc:Tr Ctx.CheckoutCommit}" Command="{Binding CheckoutCommitCommand}"/>
+                                    <MenuItem Header="{loc:Tr Ctx.Reword}" Command="{Binding RewordCommitCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CreateBranch}" Command="{Binding CreateBranchHereCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CreateTag}" Command="{Binding CreateTagHereCommand}"/>
                                     <Separator/>

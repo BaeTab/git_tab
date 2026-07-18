@@ -20,6 +20,9 @@ public interface IDialogService
     bool Confirm(string message, string? title = null);
     string? Prompt(string message, string? title = null, string? initial = null);
 
+    /// <summary>Multi-line text prompt (e.g. editing a commit message); null if cancelled.</summary>
+    string? PromptMultiline(string message, string? title = null, string? initial = null);
+
     /// <summary>Prompt for a username + password/token for <paramref name="host"/>; null if cancelled.</summary>
     CredentialInput? PromptCredentials(string host);
 
@@ -287,6 +290,52 @@ public sealed class DialogService : IDialogService
 
         userBox.Focus();
         return dialog.ShowDialog() == true ? result : null;
+    }
+
+    public string? PromptMultiline(string message, string? title = null, string? initial = null)
+    {
+        var dialog = new Window
+        {
+            Title = title ?? _loc.T("App.Title"),
+            Width = 520,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Owner(),
+            ResizeMode = ResizeMode.CanResize,
+            ShowInTaskbar = false,
+            Background = (System.Windows.Media.Brush)Application.Current.Resources["Brush.Window"]
+        };
+
+        var label = new TextBlock { Text = message, Margin = new Thickness(0, 0, 0, 8), TextWrapping = TextWrapping.Wrap };
+        var box = new TextBox
+        {
+            Text = initial ?? string.Empty,
+            MinWidth = 460,
+            MinHeight = 120,
+            MaxHeight = 320,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+        };
+        box.SelectAll();
+
+        var ok = new Button { Content = _loc.T("Common.OK"), IsDefault = false, MinWidth = 84, Margin = new Thickness(0, 0, 8, 0) };
+        var cancel = new Button { Content = _loc.T("Common.Cancel"), IsCancel = true, MinWidth = 84 };
+        string? result = null;
+        ok.Click += (_, _) => { result = box.Text; dialog.DialogResult = true; };
+
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
+        buttons.Children.Add(ok);
+        buttons.Children.Add(cancel);
+
+        var panel = new StackPanel { Margin = new Thickness(16) };
+        panel.Children.Add(label);
+        panel.Children.Add(box);
+        panel.Children.Add(buttons);
+        dialog.Content = panel;
+
+        box.Focus();
+        return dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(result) ? result.Trim() : null;
     }
 
     private static Window? Owner() =>

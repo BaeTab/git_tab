@@ -258,6 +258,41 @@ public sealed class RepositoryServiceWriteTests
         hits.Select(c => c.Sha).Should().Contain(c2);
     }
 
+    [Fact]
+    public async Task Reword_head_amends_the_message()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("a", "a.txt", "1");
+        var head = repo.Commit("original", "b.txt", "2");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var r = await svc.RewordAsync(head, "reworded message");
+        r.Success.Should().BeTrue(r.CombinedOutput);
+        svc.Refresh();
+        svc.GetCommits()[0].Summary.Should().Be("reworded message");
+    }
+
+    [Fact]
+    public async Task Reword_older_commit_rewrites_via_rebase()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var target = repo.Commit("original first", "a.txt", "1");
+        repo.Commit("second", "b.txt", "2");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var r = await svc.RewordAsync(target, "new first message");
+        r.Success.Should().BeTrue(r.CombinedOutput);
+        svc.Refresh();
+        var summaries = svc.GetCommits().Select(c => c.Summary).ToList();
+        summaries.Should().Contain("new first message");
+        summaries.Should().Contain("second");    // later commit preserved
+        summaries.Should().NotContain("original first");
+    }
+
     private static void TryDelete(string dir)
     {
         try

@@ -102,6 +102,9 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> CloneAsync(string url, string targetPath, CancellationToken ct = default);
 
     Task<GitResult> CreateTagAsync(string name, string? target = null, CancellationToken ct = default);
+
+    /// <summary>Change a commit's message (amend if it's HEAD, otherwise an interactive-rebase reword).</summary>
+    Task<GitResult> RewordAsync(string sha, string newMessage, CancellationToken ct = default);
     Task<GitResult> AddRemoteAsync(string name, string url, CancellationToken ct = default);
     Task<GitResult> SetRemoteUrlAsync(string name, string url, CancellationToken ct = default);
     Task<GitResult> RemoveRemoteAsync(string name, CancellationToken ct = default);

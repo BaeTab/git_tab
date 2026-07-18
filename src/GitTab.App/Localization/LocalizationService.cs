@@ -212,6 +212,9 @@ public sealed class LocalizationService : ILocalizationService
 
         // Context-menu (TortoiseGit-style right-click)
         ["Ctx.CheckoutCommit"] = "이 커밋으로 체크아웃 (detached)",
+        ["Ctx.Reword"] = "메시지 수정 (reword)",
+        ["Reword.Title"] = "커밋 메시지 수정",
+        ["Reword.Prompt"] = "새 커밋 메시지를 입력하세요. (마지막 커밋이 아니면 그 위 커밋들이 다시 쓰여요.)",
         ["Ctx.CreateBranch"] = "여기서 브랜치 생성",
         ["Ctx.CreateTag"] = "여기서 태그 생성",
         ["Ctx.ResetSoft"] = "여기로 Reset — soft (변경 보존)",
@@ -527,6 +530,9 @@ public sealed class LocalizationService : ILocalizationService
         ["Branch.RenamePrompt"] = "Enter the new name",
 
         ["Ctx.CheckoutCommit"] = "Checkout this commit (detached)",
+        ["Ctx.Reword"] = "Reword message",
+        ["Reword.Title"] = "Reword commit message",
+        ["Reword.Prompt"] = "Enter the new commit message. (If it isn't the latest commit, the commits above it are rewritten.)",
         ["Ctx.CreateBranch"] = "Create branch here",
         ["Ctx.CreateTag"] = "Create tag here",
         ["Ctx.ResetSoft"] = "Reset here — soft (keep changes)",
