@@ -82,14 +82,27 @@ jobs:
         run: |
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.version }} installer\GitTab_installer.iss
 
-      # softprops/action-gh-release publishes the GitHub Release and
-      # attaches the installer. The filename (GitTab-Setup-<version>.exe)
-      # ends in .exe, which is what the in-app auto-updater looks for.
+      # Publish a SHA-256 checksum next to the installer. The in-app updater downloads this and
+      # refuses to launch an installer whose hash doesn't match (tamper/corruption protection).
+      - name: Checksum installer
+        shell: pwsh
+        run: |
+          Get-ChildItem dist\GitTab-Setup-*.exe | ForEach-Object {
+            $h = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash
+            "$h  $($_.Name)" | Out-File -Encoding ascii "$($_.FullName).sha256"
+            Write-Host "SHA256 $($_.Name) = $h"
+          }
+
+      # softprops/action-gh-release publishes the GitHub Release and attaches the installer plus its
+      # .sha256. The installer filename (GitTab-Setup-<version>.exe) ends in .exe, which is what the
+      # in-app auto-updater looks for.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.version.outputs.version) || github.ref_name }}
-          files: dist/GitTab-Setup-*.exe
+          files: |
+            dist/GitTab-Setup-*.exe
+            dist/GitTab-Setup-*.exe.sha256
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

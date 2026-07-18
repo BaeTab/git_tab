@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GitTab.App.Services;
 
-public sealed record UpdateInfo(Version Version, string TagName, string ReleaseUrl, string? InstallerUrl, string? Notes);
+public sealed record UpdateInfo(Version Version, string TagName, string ReleaseUrl, string? InstallerUrl, string? Notes, string? ChecksumUrl = null);
 
 public interface IUpdateService
 {
@@ -57,25 +57,24 @@ public sealed class GitHubUpdateService : IUpdateService
                 return null;
             }
 
-            string? installerUrl = null;
+            string? installerUrl = null, checksumUrl = null;
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 foreach (var asset in assets.EnumerateArray())
                 {
                     var name = asset.TryGetProperty("name", out var n) ? n.GetString() : null;
-                    if (name is not null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    {
-                        installerUrl = asset.TryGetProperty("browser_download_url", out var u) ? u.GetString() : null;
-                        break;
-                    }
+                    var dl = asset.TryGetProperty("browser_download_url", out var u) ? u.GetString() : null;
+                    if (name is null || dl is null) continue;
+                    if (name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)) checksumUrl = dl;
+                    else if (installerUrl is null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) installerUrl = dl;
                 }
             }
 
             var releaseUrl = root.TryGetProperty("html_url", out var h) ? h.GetString() ?? "" : "";
             var notes = root.TryGetProperty("body", out var b) ? b.GetString() : null;
 
-            _logger.LogInformation("Update available: {Tag}", tag);
-            return new UpdateInfo(latest, tag!, releaseUrl, installerUrl, notes);
+            _logger.LogInformation("Update available: {Tag} (checksum {HasSum})", tag, checksumUrl is not null ? "yes" : "no");
+            return new UpdateInfo(latest, tag!, releaseUrl, installerUrl, notes, checksumUrl);
         }
         catch (Exception ex)
         {
@@ -109,6 +108,31 @@ public sealed class GitHubUpdateService : IUpdateService
                 if (total > 0) progress?.Report((double)read / total);
             }
 
+            // Integrity: verify the download against the release's published SHA-256 before we ever
+            // launch it. If a checksum is published and doesn't match, refuse (possible tampering).
+            if (!string.IsNullOrWhiteSpace(update.ChecksumUrl))
+            {
+                var expected = await FetchExpectedHashAsync(http, update.ChecksumUrl!, ct).ConfigureAwait(false);
+                var actual = await ComputeSha256Async(path, ct).ConfigureAwait(false);
+                if (expected is null)
+                {
+                    _logger.LogWarning("Could not read published checksum; refusing to launch unverified installer.");
+                    TryDelete(path);
+                    return null;
+                }
+                if (!HashesMatch(expected, actual))
+                {
+                    _logger.LogError("Installer checksum mismatch (expected {Expected}, got {Actual}); refusing to launch.", expected, actual);
+                    TryDelete(path);
+                    return null;
+                }
+                _logger.LogInformation("Installer checksum verified.");
+            }
+            else
+            {
+                _logger.LogWarning("Release has no .sha256 asset; launching without integrity verification.");
+            }
+
             _logger.LogInformation("Downloaded installer to {Path}", path);
             return path;
         }
@@ -117,6 +141,35 @@ public sealed class GitHubUpdateService : IUpdateService
             _logger.LogWarning(ex, "Installer download failed");
             return null;
         }
+    }
+
+    /// <summary>True if the expected hash (first hex token of a checksum file) equals the actual hash.</summary>
+    public static bool HashesMatch(string? expectedChecksumFileContent, string? actualHex)
+    {
+        if (string.IsNullOrWhiteSpace(expectedChecksumFileContent) || string.IsNullOrWhiteSpace(actualHex)) return false;
+        // Checksum files are typically "<hex>  <filename>"; take the first whitespace-delimited token.
+        var token = expectedChecksumFileContent.Trim().Split(new[] { ' ', '\t', '\r', '\n', '*' },
+            StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        return token is not null && token.Equals(actualHex.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<string?> FetchExpectedHashAsync(HttpClient http, string url, CancellationToken ct)
+    {
+        try { return await http.GetStringAsync(url, ct).ConfigureAwait(false); }
+        catch { return null; }
+    }
+
+    private static async Task<string> ComputeSha256Async(string path, CancellationToken ct)
+    {
+        await using var fs = File.OpenRead(path);
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        var hash = await sha.ComputeHashAsync(fs, ct).ConfigureAwait(false);
+        return Convert.ToHexString(hash);
+    }
+
+    private static void TryDelete(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); } catch { /* best effort */ }
     }
 
     public void LaunchInstallerAndExit(string installerPath)
