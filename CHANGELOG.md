@@ -3,6 +3,24 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-07-18
+
+First stable release. Focused on stability, cancellation, and test confidence on top of the
+full feature set from 0.x.
+
+### Added
+- **Cancellation** — Fetch/Pull/Push/Clone/Stash can be cancelled (a Cancel button in the status
+  bar and in the standalone operation dialog); the underlying git process is stopped.
+
+### Hardened
+- **Large diffs are skipped** rather than parsed/rendered (avoids freezing on huge or generated
+  files); binary and too-large changes show a clear placeholder.
+- Empty / unborn (no-commit) repositories are handled without errors.
+
+### Engineering
+- Regression suite grown to 101 tests, including a localization-completeness guard (Korean and
+  English key sets must match) and ViewModel orchestration tests (NSubstitute).
+
 ## [0.6.1] - 2026-07-18
 
 ### Fixed
@@ -103,6 +121,7 @@ All notable changes to **Git Tab** are documented here. This project follows
 - Initial release: color commit graph, commit details + diff, staging & commit, branches & tags,
   fetch/pull/push, `.gitignore` generator, light/dark themes, Korean/English UI, auto-update.
 
+[1.0.0]: https://github.com/BaeTab/git_tab/releases/tag/v1.0.0
 [0.6.1]: https://github.com/BaeTab/git_tab/releases/tag/v0.6.1
 [0.6.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.6.0
 [0.5.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.5.0
