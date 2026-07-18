@@ -16,9 +16,16 @@ public sealed class TestRepository : IDisposable
 
     public static TestRepository CreateEmpty()
     {
-        var root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "braid-test-" + Guid.NewGuid().ToString("N"));
+        var root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "gittab-test-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         Repository.Init(root);
+        // Set repo-local identity so git.exe write operations (merge/rebase) work even when the
+        // machine has no global user.name/user.email (e.g. CI runners).
+        using (var repo = new Repository(root))
+        {
+            repo.Config.Set("user.name", "GitTab Test", ConfigurationLevel.Local);
+            repo.Config.Set("user.email", "test@gittab.local", ConfigurationLevel.Local);
+        }
         return new TestRepository(root);
     }
 
