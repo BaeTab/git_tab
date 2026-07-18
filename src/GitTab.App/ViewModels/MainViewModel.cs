@@ -177,6 +177,64 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private Task Clone() => CloneInto(null);
+
+    /// <summary>Clone flow; <paramref name="parentFolder"/> pre-fills the destination (shell "clone here").</summary>
+    public async Task CloneInto(string? parentFolder)
+    {
+        var vm = new CloneViewModel(Loc, parentFolder);
+        if (!_dialogs.ShowClone(vm)) return;
+        var url = vm.Url.Trim();
+        var target = vm.TargetPath;
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(target)) return;
+
+        IsBusy = true;
+        StatusText = Loc.T("Status.Working");
+        var result = await RunCloneWithAuthAsync(url, target);
+        IsBusy = false;
+
+        if (result is { Success: true })
+        {
+            await OpenPath(target);
+        }
+        else
+        {
+            if (result is not null)
+            {
+                var body = string.IsNullOrWhiteSpace(result.CombinedOutput) ? result.CommandLine : result.CombinedOutput;
+                _dialogs.Error(body, Loc.T("Error.GitFailed"));
+            }
+            StatusText = Loc.T("Status.Ready");
+        }
+    }
+
+    // Clone can't use RunWithAuthRetryAsync (no repo is open yet), so it keys credentials off the URL.
+    private async Task<GitResult?> RunCloneWithAuthAsync(string url, string target)
+    {
+        try
+        {
+            var result = await _repo.CloneAsync(url, target);
+            if (result.Success || !GitAuth.IsAuthFailure(result)) return result;
+
+            var input = _dialogs.PromptCredentials(CredentialKey.HostLabel(url));
+            if (input is null) return result;
+            var key = CredentialKey.FromUrl(url);
+            if (key is not null)
+            {
+                try { _credentials.Save(key, input.User, input.Secret); }
+                catch (Exception ex) { _logger.LogWarning(ex, "Saving credentials failed"); }
+            }
+            return await _repo.CloneAsync(url, target);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "clone threw");
+            _dialogs.Error(ex.Message, Loc.T("Error.GitFailed"));
+            return null;
+        }
+    }
+
+    [RelayCommand]
     private async Task ManageRemotes()
     {
         if (!IsRepositoryOpen) return;
@@ -712,6 +770,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// </summary>
     public async Task ExecuteShellCommandAsync(string verb, string? path)
     {
+        // Clone doesn't open an existing repo — the path is the destination parent folder.
+        if (verb == "clone") { await CloneInto(path); return; }
+
         if (!string.IsNullOrWhiteSpace(path))
         {
             var target = _repo.Discover(path);

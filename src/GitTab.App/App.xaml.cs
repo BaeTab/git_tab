@@ -70,9 +70,10 @@ public partial class App : Application
 
         var cmd = ParseShellCommand(e.Args);
 
-        // Explorer right-click Pull/Push/Fetch/Commit open a dedicated dialog (TortoiseGit-style)
+        // Explorer right-click Pull/Push/Fetch/Commit/Stash open a dedicated dialog (TortoiseGit-style)
         // as their own short-lived process, instead of routing into the full application window.
-        if (cmd.Path is not null && cmd.Verb is "pull" or "push" or "fetch" or "commit")
+        // (Clone/Open/Log open the main window instead.)
+        if (cmd.Path is not null && cmd.Verb is "pull" or "push" or "fetch" or "commit" or "stash")
         {
             ShowStandaloneDialog(cmd.Verb!, cmd.Path, e.Args);
             return;
@@ -143,6 +144,8 @@ public partial class App : Application
                 case "--pull": verb = "pull"; break;
                 case "--push": verb = "push"; break;
                 case "--fetch": verb = "fetch"; break;
+                case "--stash": verb = "stash"; break;
+                case "--clone": verb = "clone"; break;
                 default:
                     if (!a.StartsWith("--", StringComparison.Ordinal) && path is null && Directory.Exists(a))
                         path = a;

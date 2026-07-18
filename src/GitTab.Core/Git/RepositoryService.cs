@@ -679,6 +679,16 @@ public sealed class RepositoryService : IRepositoryService
         return await _git.RunAsync(path, args, cancellationToken: ct).ConfigureAwait(false);
     }
 
+    public async Task<GitResult> CloneAsync(string url, string targetPath, CancellationToken ct = default)
+    {
+        if (Guard(url) is { } bad) return bad;
+        var parent = Path.GetDirectoryName(targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
+        // No repo is open yet; run in the parent dir and clone into the (absolute) target path.
+        return await _git.RunAsync(parent ?? Environment.CurrentDirectory,
+            new[] { "clone", "--progress", url, targetPath }, cancellationToken: ct).ConfigureAwait(false);
+    }
+
     // ---- stash ----
 
     public Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default)

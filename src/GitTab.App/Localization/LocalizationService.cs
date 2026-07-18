@@ -78,6 +78,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Action.Push.Tip"] = "내 커밋을 원격 저장소로 보내요. 인증은 시스템 Git 자격 증명 도우미가 처리해요.",
         ["Action.Commit"] = "커밋",
 
+        // 복제 (Clone)
+        ["Clone.Title"] = "저장소 복제",
+        ["Clone.Action"] = "복제",
+        ["Clone.Tip"] = "원격 저장소 주소(URL)를 받아 내 컴퓨터로 복제(clone)해요.",
+        ["Clone.Url"] = "원격 저장소 주소 (URL)",
+        ["Clone.Parent"] = "받을 위치 (상위 폴더)",
+        ["Clone.FolderName"] = "폴더 이름",
+
         // 저장소 만들기 / 원격
         ["Repo.Create"] = "저장소 만들기",
         ["Repo.Create.Tip"] = "폴더를 골라 새 Git 저장소를 만들어요(git init). 원격 주소도 함께 연결할 수 있어요.",
@@ -296,10 +304,12 @@ public sealed class LocalizationService : ILocalizationService
         // Windows 탐색기 우클릭 통합 (TortoiseGit 대체)
         ["Shell.Menu.Root"] = "Git Tab",
         ["Shell.Menu.Open"] = "Git Tab에서 열기",
+        ["Shell.Menu.Clone"] = "복제(Clone)…",
         ["Shell.Menu.Commit"] = "커밋…",
         ["Shell.Menu.Pull"] = "받아오기 (Pull)",
         ["Shell.Menu.Push"] = "올리기 (Push)",
         ["Shell.Menu.Fetch"] = "가져오기 (Fetch)",
+        ["Shell.Menu.Stash"] = "변경 스태시",
         ["Shell.Menu.Log"] = "히스토리 / 로그",
         ["Shell.Tip"] = "Windows 탐색기에서 폴더를 우클릭하면 Git Tab 메뉴로 열기·커밋·풀·푸시를 바로 쓸 수 있어요. 체크 해제하면 제거돼요.",
 
@@ -373,6 +383,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Action.Push"] = "Push",
         ["Action.Push.Tip"] = "Sends your commits to the remote. Authentication is handled by your system Git credential helper.",
         ["Action.Commit"] = "Commit",
+
+        // Clone
+        ["Clone.Title"] = "Clone repository",
+        ["Clone.Action"] = "Clone",
+        ["Clone.Tip"] = "Copy a remote repository to your computer from its URL.",
+        ["Clone.Url"] = "Remote URL",
+        ["Clone.Parent"] = "Clone into (parent folder)",
+        ["Clone.FolderName"] = "Folder name",
 
         // Create repository / remotes
         ["Repo.Create"] = "Create repository",
@@ -576,10 +594,12 @@ public sealed class LocalizationService : ILocalizationService
         // Windows Explorer right-click integration (TortoiseGit replacement)
         ["Shell.Menu.Root"] = "Git Tab",
         ["Shell.Menu.Open"] = "Open in Git Tab",
+        ["Shell.Menu.Clone"] = "Clone…",
         ["Shell.Menu.Commit"] = "Commit…",
         ["Shell.Menu.Pull"] = "Pull",
         ["Shell.Menu.Push"] = "Push",
         ["Shell.Menu.Fetch"] = "Fetch",
+        ["Shell.Menu.Stash"] = "Stash changes",
         ["Shell.Menu.Log"] = "History / Log",
         ["Shell.Tip"] = "Right-click any folder in Windows Explorer to open, commit, pull or push with Git Tab. Uncheck to remove.",
 

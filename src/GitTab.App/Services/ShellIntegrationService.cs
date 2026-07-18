@@ -62,11 +62,13 @@ public sealed class ShellIntegrationService : IShellIntegrationService
     private static readonly Item[] Items =
     {
         new("01", "open",   "Shell.Menu.Open"),
-        new("02", "commit", "Shell.Menu.Commit"),
-        new("03", "pull",   "Shell.Menu.Pull"),
-        new("04", "push",   "Shell.Menu.Push"),
-        new("05", "fetch",  "Shell.Menu.Fetch"),
-        new("06", "log",    "Shell.Menu.Log"),
+        new("02", "clone",  "Shell.Menu.Clone"),
+        new("03", "commit", "Shell.Menu.Commit"),
+        new("04", "pull",   "Shell.Menu.Pull"),
+        new("05", "push",   "Shell.Menu.Push"),
+        new("06", "fetch",  "Shell.Menu.Fetch"),
+        new("07", "stash",  "Shell.Menu.Stash"),
+        new("08", "log",    "Shell.Menu.Log"),
     };
 
     public bool IsInstalled
@@ -102,9 +104,13 @@ public sealed class ShellIntegrationService : IShellIntegrationService
             p.SetValue("ExtendedSubCommandsKey", storeKey);
         }
 
-        // The items themselves, one set per surface (different path token).
+        // The items themselves, one set per surface (different path token). Clear any previous set
+        // first so re-registering after the item list changes doesn't leave stale entries.
         foreach (var (storePath, token) in Stores)
         {
+            try { Registry.CurrentUser.DeleteSubKeyTree(storePath, throwOnMissingSubKey: false); }
+            catch (Exception ex) { _logger.LogDebug(ex, "Clearing old menu store failed"); }
+
             using var shell = Registry.CurrentUser.CreateSubKey(storePath + @"\shell");
             foreach (var it in Items)
             {

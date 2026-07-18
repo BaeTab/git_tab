@@ -29,6 +29,9 @@ public interface IDialogService
     /// <summary>Show the "create repository" dialog; returns true if the user confirmed.</summary>
     bool ShowNewRepository(NewRepositoryViewModel vm);
 
+    /// <summary>Show the "clone repository" dialog; returns true if the user confirmed.</summary>
+    bool ShowClone(CloneViewModel vm);
+
     /// <summary>Show the remotes manager dialog.</summary>
     void ShowRemotes(RemotesViewModel vm);
 
@@ -159,6 +162,12 @@ public sealed class DialogService : IDialogService
     public bool ShowNewRepository(NewRepositoryViewModel vm)
     {
         var win = new NewRepositoryDialog { DataContext = vm, Owner = Owner() };
+        return win.ShowDialog() == true;
+    }
+
+    public bool ShowClone(CloneViewModel vm)
+    {
+        var win = new CloneDialog { DataContext = vm, Owner = Owner() };
         return win.ShowDialog() == true;
     }
 

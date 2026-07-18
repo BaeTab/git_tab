@@ -33,7 +33,7 @@ public sealed partial class OperationWindowViewModel : ObservableObject
         _logger = logger;
 
         Loc = loc;
-        Title = loc.T(verb switch { "pull" => "Action.Pull", "push" => "Action.Push", _ => "Action.Fetch" });
+        Title = loc.T(verb switch { "pull" => "Action.Pull", "push" => "Action.Push", "stash" => "Stash.Push", _ => "Action.Fetch" });
         RepositoryName = new DirectoryInfo(repo.CurrentRepositoryPath ?? ".").Name;
         Status = loc.T("Status.Working");
     }
@@ -53,6 +53,7 @@ public sealed partial class OperationWindowViewModel : ObservableObject
         {
             "pull" => () => _repo.PullAsync(),
             "push" => PushAsync,
+            "stash" => () => _repo.StashPushAsync(null, includeUntracked: true),
             _ => () => _repo.FetchAsync()
         };
 
