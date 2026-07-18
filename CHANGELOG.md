@@ -3,6 +3,24 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-07-18
+
+Power-user history editing and sharper diffs.
+
+### Added
+- **Reword commit** — change any commit's message from its right-click menu. HEAD is amended;
+  older commits are rewritten via an automatic interactive rebase (nothing else in the history
+  changes).
+- **Bisect** — hunt a bad commit by binary search. Start from a commit's menu (mark it good, HEAD
+  bad), then mark each checked-out commit Good / Bad / Skip from the on-screen bisect banner until
+  git pinpoints the first bad commit; Reset ends the session.
+- **Word-level diff highlighting** — within a modified line, only the words that actually changed
+  are tinted (a stronger shade over the row), in both unified and split views, so edits are far
+  easier to spot.
+
+### Engineering
+- Regression suite grown to 109 tests (added intra-line word-diff, reword, and bisect coverage).
+
 ## [1.0.0] - 2026-07-18
 
 First stable release. Focused on stability, cancellation, and test confidence on top of the

@@ -21,10 +21,11 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 ### Features
 
 - **Color Commit Graph** — Branches get distinct colors; commits line up in a virtualized, interactive graph that handles tens of thousands of commits without lag.
-- **Commit Details & Diff** — Message, author, date, changed files, and a colored **unified or side-by-side** diff (AvalonEdit).
+- **Commit Details & Diff** — Message, author, date, changed files, and a colored **unified or side-by-side** diff (AvalonEdit) with **word-level highlighting** of the exact words that changed.
 - **Staging & Commit** — Stage/unstage/discard individual files and commit (or amend) from the UI.
 - **Branches & Tags** — Checkout, create, delete, rename, merge, rebase; create/delete/push tags; delete remote branches.
 - **Interactive Rebase** — Reorder, squash, fixup, or drop commits with a visual planner.
+- **Reword & Bisect** — Rewrite any commit's message, and binary-search for a bad commit (Good / Bad / Skip) right from the graph.
 - **History & Undo** — Browse HEAD's reflog and restore to any point; one-click "undo last action".
 - **Partial Staging** — Stage individual hunks of a file (the GUI equivalent of `git add -p`).
 - **Visual 3-Way Merge** — Resolve conflicts with base / ours / theirs panes and an editable result.
@@ -176,10 +177,11 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 ### 주요 기능
 
 - **색상 커밋 그래프** — 각 브랜치에 고유 색상; 가상화된 그래프로 수만 개의 커밋도 지연 없이 처리합니다.
-- **커밋 상세 & Diff** — 메시지·작성자·날짜·변경 파일과 색상 **통합/좌우 비교(side-by-side)** diff (AvalonEdit).
+- **커밋 상세 & Diff** — 메시지·작성자·날짜·변경 파일과 색상 **통합/좌우 비교(side-by-side)** diff (AvalonEdit), **바뀐 단어만 강조**하는 word-level 하이라이트.
 - **스테이징 & 커밋** — 파일 단위 스테이징/언스테이징/되돌리기, 커밋(및 amend).
 - **브랜치 & 태그** — 체크아웃·생성·삭제·이름변경·병합·리베이스, 태그 생성/삭제/푸시, 원격 브랜치 삭제.
 - **대화형 리베이스** — 커밋을 재정렬·squash·fixup·drop 하는 시각적 플래너.
+- **메시지 수정(reword) & 이분 탐색(bisect)** — 커밋 메시지를 다시 쓰고, Good/Bad/Skip 으로 버그 커밋을 이분 탐색 — 그래프에서 바로.
 - **작업 기록 & 되돌리기** — HEAD reflog를 훑어보고 원하는 지점으로 복원, 원클릭 ‘마지막 작업 취소’.
 - **부분 스테이징** — 파일의 헝크(변경 블록) 단위로 스테이지 (GUI판 `git add -p`).
 - **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결.
