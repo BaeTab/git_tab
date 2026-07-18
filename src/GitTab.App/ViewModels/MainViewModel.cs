@@ -523,7 +523,8 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task ResolveConflict(FileChangeViewModel? file)
     {
         if (file is null || RepositoryPath is null) return;
-        if (!_dialogs.ShowConflictResolver(RepositoryPath, file.Path)) return;
+        var (baseText, ours, theirs) = _repo.GetConflictVersions(file.Path);
+        if (!_dialogs.ShowConflictResolver(RepositoryPath, file.Path, baseText, ours, theirs)) return;
         if (await GitUi.RunAsync(() => _repo.MarkResolvedAsync(file.Path), _dialogs, Loc, _logger))
             await ReloadAllAsync();
     }

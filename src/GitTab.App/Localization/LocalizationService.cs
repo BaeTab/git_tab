@@ -220,6 +220,11 @@ public sealed class LocalizationService : ILocalizationService
         ["Conflict.Both"] = "둘 다",
         ["Conflict.Ours"] = "내 변경 (ours)",
         ["Conflict.Theirs"] = "상대 변경 (theirs)",
+        ["Conflict.Base"] = "공통 조상 (base)",
+        ["Conflict.Result"] = "최종 결과 (직접 편집)",
+        ["Conflict.UseOursAll"] = "내 것으로",
+        ["Conflict.UseTheirsAll"] = "상대 것으로",
+        ["Conflict.KeepBoth"] = "양쪽 유지(마커 제거)",
         ["Conflict.ApplyResolve"] = "해결 적용",
 
         // Stash
@@ -494,6 +499,11 @@ public sealed class LocalizationService : ILocalizationService
         ["Conflict.Both"] = "Both",
         ["Conflict.Ours"] = "Ours (yours)",
         ["Conflict.Theirs"] = "Theirs (incoming)",
+        ["Conflict.Base"] = "Common ancestor (base)",
+        ["Conflict.Result"] = "Final result (edit directly)",
+        ["Conflict.UseOursAll"] = "Use ours",
+        ["Conflict.UseTheirsAll"] = "Use theirs",
+        ["Conflict.KeepBoth"] = "Keep both (strip markers)",
         ["Conflict.ApplyResolve"] = "Apply resolution",
 
         ["Stash.Section"] = "Stashes",

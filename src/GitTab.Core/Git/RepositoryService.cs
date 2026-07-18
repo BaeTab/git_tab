@@ -469,6 +469,25 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public (string? Base, string? Ours, string? Theirs) GetConflictVersions(string path)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var conflict = repo.Index.Conflicts[path];
+            if (conflict is null) return (null, null, null);
+
+            string? Read(IndexEntry? entry)
+            {
+                if (entry is null) return null;
+                try { return repo.Lookup<Blob>(entry.Id)?.GetContentText(); }
+                catch (Exception ex) { _logger.LogDebug(ex, "Reading conflict blob failed for {Path}", path); return null; }
+            }
+
+            return (Read(conflict.Ancestor), Read(conflict.Ours), Read(conflict.Theirs));
+        }
+    }
+
     public IReadOnlyList<string> GetSubmodulePaths()
     {
         lock (_sync)

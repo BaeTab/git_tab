@@ -45,6 +45,10 @@ public interface IRepositoryService : IDisposable
     RepositoryStateInfo GetState();
     IReadOnlyList<StashInfo> GetStashes();
     IReadOnlyList<BlameLine> GetBlame(string path);
+
+    /// <summary>The three merge stages of a conflicted file: common ancestor (base), ours, and theirs.
+    /// Any may be null (e.g. add/add conflicts have no base).</summary>
+    (string? Base, string? Ours, string? Theirs) GetConflictVersions(string path);
     IReadOnlyList<string> GetSubmodulePaths();
 
     /// <summary>URL of the given remote (default "origin"), or null if it has none. Used to key
