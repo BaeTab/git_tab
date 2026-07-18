@@ -97,20 +97,26 @@
                 </StackPanel>
 
                 <!-- remote actions -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
-                    <Border Style="{StaticResource Chip}" Background="{DynamicResource Brush.SurfaceAlt}" Padding="8,2">
-                        <TextBlock Text="{Binding CurrentBranchName}" FontWeight="SemiBold"/>
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
+                    <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="7" Padding="9,3" Margin="4,0"
+                            VerticalAlignment="Center" ToolTip="{loc:Tr Remote.AheadBehind.Tip}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding CurrentBranchName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Style="{StaticResource MutedText}" FontSize="11">
+                                <Run Text="↑"/><Run Text="{Binding Ahead}"/><Run Text=" ↓"/><Run Text="{Binding Behind}"/>
+                            </TextBlock>
+                        </StackPanel>
                     </Border>
-                    <TextBlock VerticalAlignment="Center" Margin="4,0" Style="{StaticResource MutedText}"
-                               ToolTip="{loc:Tr Remote.AheadBehind.Tip}">
-                        <Run Text="↑"/><Run Text="{Binding Ahead}"/><Run Text="  ↓"/><Run Text="{Binding Behind}"/>
-                    </TextBlock>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding FetchCommand}"
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE895;" Command="{Binding FetchCommand}"
                             Content="{loc:Tr Action.Fetch}" ToolTip="{loc:Tr Action.Fetch.Tip}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding PullCommand}"
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE896;" Command="{Binding PullCommand}"
                             Content="{loc:Tr Action.Pull}" ToolTip="{loc:Tr Action.Pull.Tip}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding PushCommand}"
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE898;" Command="{Binding PushCommand}"
                             Content="{loc:Tr Action.Push}" ToolTip="{loc:Tr Action.Push.Tip}"/>
                 </StackPanel>
 
@@ -126,6 +132,7 @@
 
                 <!-- language / theme / update -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleLanguageCommand}"
                             Content="한 / EN" ToolTip="{loc:Tr Language}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleThemeCommand}"

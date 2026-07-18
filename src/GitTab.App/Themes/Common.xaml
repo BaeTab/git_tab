@@ -258,6 +258,119 @@
         </Setter>
     </Style>
 
+    <!-- ============ Toolbar bits ============ -->
+    <Style x:Key="ToolbarSeparator" TargetType="Border">
+        <Setter Property="Width" Value="1"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
+        <Setter Property="Margin" Value="8,6"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+    </Style>
+
+    <!-- Toolbar button with a leading Segoe MDL2 glyph + text. Set Tag = glyph, Content = label. -->
+    <Style x:Key="IconTextButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="9,5"/>
+        <Setter Property="Margin" Value="1,0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}"
+                                   FontFamily="Segoe MDL2 Assets" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ Menus & context menus (themed) ============ -->
+    <Style TargetType="Menu">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+    </Style>
+
+    <Style TargetType="ContextMenu">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="3">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.28" Color="#000000"/>
+                        </Border.Effect>
+                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Separator">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="1" Background="{DynamicResource Brush.Border}" Margin="8,4"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4" Margin="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter Grid.Column="0" ContentSource="Header" RecognizesAccessKey="True"
+                                              Margin="12,6" VerticalAlignment="Center"/>
+                            <Path x:Name="arrow" Grid.Column="1" Data="M0,0 L4,4 L0,8 Z"
+                                  Fill="{DynamicResource Brush.TextMuted}" Margin="8,0,10,0"
+                                  VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False"
+                                   IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Right" PopupAnimation="Fade" HorizontalOffset="-3">
+                                <Border Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}"
+                                        BorderThickness="1" CornerRadius="6" Padding="3" Margin="4">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.28" Color="#000000"/>
+                                    </Border.Effect>
+                                    <StackPanel IsItemsHost="True"/>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Selection}"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter TargetName="arrow" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ============ Custom title-bar buttons ============ -->
     <Style x:Key="TitleBarButton" TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
