@@ -19,9 +19,19 @@ public partial class App : Application
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GitTab");
 
     private ILogger<App>? _logger;
+    private SingleInstance? _singleInstance;
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // GIT_ASKPASS mode: git launched us to answer a credential prompt. Print the stored value
+        // to stdout and exit immediately — no logging, DI, or UI.
+        if (Environment.GetEnvironmentVariable("GITTAB_ASKPASS") == "1")
+        {
+            try { AskPassResponder.Respond(e.Args, Console.Out); } catch { /* never block git */ }
+            Shutdown(0);
+            return;
+        }
+
         base.OnStartup(e);
 
         Directory.CreateDirectory(Path.Combine(AppDataDir, "logs"));
@@ -37,19 +47,44 @@ public partial class App : Application
 
         Services = BuildServiceProvider();
         _logger = Services.GetRequiredService<ILogger<App>>();
-        _logger.LogInformation("GitTab starting up. Version {Version}", AppInfo.Version);
 
+        // Restore the saved language early — the Explorer menu labels are localized at register time.
+        var settings = Services.GetRequiredService<ISettingsService>();
+        var loc = Services.GetRequiredService<ILocalizationService>(); // sets LocalizationService.Current
+        if (Enum.TryParse<AppLanguage>(settings.Current.Language, out var savedLang))
+            loc.Language = savedLang;
+
+        // Headless: (un)register the Explorer right-click integration and exit. Used by the in-app
+        // toggle so the registry write happens in the real user's HKCU, and available to scripts.
+        if (e.Args.Contains("--register-shell") || e.Args.Contains("--unregister-shell"))
+        {
+            var shell = Services.GetRequiredService<IShellIntegrationService>();
+            if (e.Args.Contains("--register-shell")) shell.Install(); else shell.Uninstall();
+            Shutdown(0);
+            return;
+        }
+
+        _logger.LogInformation("GitTab starting up. Version {Version}", AppInfo.Version);
         RegisterGlobalExceptionHandlers();
 
-        // Theme + language: restore saved preferences before any window is shown (--light overrides).
-        var settings = Services.GetRequiredService<ISettingsService>();
+        // Single instance: if Git Tab is already running, forward this command line (e.g. an
+        // Explorer "Git Tab ▸ Pull" click) to it and exit, so the action lands in the open window.
+        var cmd = ParseShellCommand(e.Args);
+        _singleInstance = new SingleInstance();
+        if (!_singleInstance.TryAcquire())
+        {
+            SingleInstance.TrySend((cmd.Verb ?? string.Empty) + "\n" + (cmd.Path ?? string.Empty));
+            _singleInstance.Dispose();
+            Shutdown(0);
+            return;
+        }
+        _singleInstance.StartServer(OnShellMessage);
+
+        // Theme (--light overrides the saved preference).
         var theme = e.Args.Contains("--light")
             ? AppTheme.Light
             : Enum.TryParse<AppTheme>(settings.Current.Theme, out var savedTheme) ? savedTheme : AppTheme.Dark;
         Services.GetRequiredService<IThemeService>().Apply(theme);
-        var loc = Services.GetRequiredService<ILocalizationService>(); // sets LocalizationService.Current
-        if (Enum.TryParse<AppLanguage>(settings.Current.Language, out var savedLang))
-            loc.Language = savedLang;
 
         var window = Services.GetRequiredService<MainWindow>();
         MainWindow = window;
@@ -62,14 +97,70 @@ public partial class App : Application
             window.Activate();
         }
 
-        // Auto-open: a repository path passed on the command line (e.g. an "Open in Git Tab" shell
-        // action), otherwise reopen the most recently used repository so the app resumes where you
-        // left off.
+        // If no git.exe is anywhere (bundled / installed / PATH), reads still work via LibGit2Sharp
+        // but writes/network don't — tell the user once, with a link, instead of failing silently.
+        _ = Task.Run(async () =>
+        {
+            var runner = Services.GetRequiredService<IGitCommandRunner>();
+            if (await runner.IsGitAvailableAsync())
+                return;
+            window.Dispatcher.Invoke(() =>
+                Services.GetRequiredService<IDialogService>().Info(loc.T("Git.NotFound"), loc.T("App.Title")));
+        });
+
         var mainVm = Services.GetRequiredService<ViewModels.MainViewModel>();
-        var repoArg = e.Args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal) && Directory.Exists(a));
-        var toOpen = repoArg ?? mainVm.RecentRepositories.FirstOrDefault(r => Directory.Exists(r.Path))?.Path;
-        if (toOpen is not null)
-            _ = window.Dispatcher.InvokeAsync(() => mainVm.OpenPathCommand.Execute(toOpen));
+        if (cmd.Verb is not null && cmd.Path is not null)
+        {
+            // A repository path + verb was passed on the command line (shell action / drag-open).
+            _ = window.Dispatcher.InvokeAsync(() => _ = mainVm.ExecuteShellCommandAsync(cmd.Verb, cmd.Path));
+        }
+        else
+        {
+            // Otherwise reopen the most recently used repository so the app resumes where you left off.
+            var toOpen = mainVm.RecentRepositories.FirstOrDefault(r => Directory.Exists(r.Path))?.Path;
+            if (toOpen is not null)
+                _ = window.Dispatcher.InvokeAsync(() => mainVm.OpenPathCommand.Execute(toOpen));
+        }
+    }
+
+    /// <summary>Parse a shell/CLI command into a (verb, folder-path) pair. A bare path implies "open".</summary>
+    private static (string? Verb, string? Path) ParseShellCommand(string[] args)
+    {
+        string? verb = null, path = null;
+        foreach (var a in args)
+        {
+            switch (a)
+            {
+                case "--open": verb = "open"; break;
+                case "--log": verb = "log"; break;
+                case "--commit": verb = "commit"; break;
+                case "--pull": verb = "pull"; break;
+                case "--push": verb = "push"; break;
+                case "--fetch": verb = "fetch"; break;
+                default:
+                    if (!a.StartsWith("--", StringComparison.Ordinal) && path is null && Directory.Exists(a))
+                        path = a;
+                    break;
+            }
+        }
+        if (path is not null && verb is null) verb = "open";
+        return (verb, path);
+    }
+
+    // A forwarded command line arrived from a second instance (background thread) → run it here.
+    private void OnShellMessage(string msg)
+    {
+        int nl = msg.IndexOf('\n');
+        string verb = (nl >= 0 ? msg[..nl] : msg).Trim();
+        string path = (nl >= 0 ? msg[(nl + 1)..] : string.Empty).Trim();
+        if (verb.Length == 0) verb = "open";
+
+        _ = Dispatcher.InvokeAsync(async () =>
+        {
+            (MainWindow as MainWindow)?.ActivateForShell();
+            var vm = Services.GetRequiredService<ViewModels.MainViewModel>();
+            await vm.ExecuteShellCommandAsync(verb, string.IsNullOrEmpty(path) ? null : path);
+        });
     }
 
     private static IServiceProvider BuildServiceProvider()
@@ -83,9 +174,13 @@ public partial class App : Application
             b.SetMinimumLevel(LogLevel.Debug);
         });
 
-        // Core
+        // Core — git.exe resolved from a bundled copy / install / PATH, with this exe wired as the
+        // GIT_ASKPASS credential provider so HTTPS auth works with no credential helper installed.
         services.AddSingleton<IGitCommandRunner>(sp =>
-            new GitCommandRunner(sp.GetRequiredService<ILogger<GitCommandRunner>>()));
+            new GitCommandRunner(
+                sp.GetRequiredService<ILogger<GitCommandRunner>>(),
+                gitExecutable: GitExecutableLocator.Resolve(),
+                askPassExe: Environment.ProcessPath));
         services.AddSingleton<IRepositoryService, RepositoryService>();
         services.AddSingleton<IRecentRepositoriesStore>(sp =>
             new RecentRepositoriesStore(sp.GetRequiredService<ILogger<RecentRepositoriesStore>>()));
@@ -98,6 +193,8 @@ public partial class App : Application
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IUpdateService, GitHubUpdateService>();
+        services.AddSingleton<IShellIntegrationService, ShellIntegrationService>();
+        services.AddSingleton<ICredentialStore, WindowsCredentialStore>();
 
         // ViewModels
         services.AddSingleton<WorkingCopyViewModel>();
@@ -152,6 +249,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _logger?.LogInformation("GitTab exiting.");
+        _singleInstance?.Dispose();
         Log.CloseAndFlush();
         base.OnExit(e);
     }

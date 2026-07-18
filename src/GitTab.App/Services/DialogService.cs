@@ -9,6 +9,9 @@ using Microsoft.Win32;
 
 namespace GitTab.App.Services;
 
+/// <summary>Credentials collected from the GUI auth prompt.</summary>
+public sealed record CredentialInput(string User, string Secret);
+
 public interface IDialogService
 {
     string? PickFolder(string? title = null);
@@ -16,6 +19,9 @@ public interface IDialogService
     void Error(string message, string? title = null);
     bool Confirm(string message, string? title = null);
     string? Prompt(string message, string? title = null, string? initial = null);
+
+    /// <summary>Prompt for a username + password/token for <paramref name="host"/>; null if cancelled.</summary>
+    CredentialInput? PromptCredentials(string host);
 
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
@@ -127,6 +133,70 @@ public sealed class DialogService : IDialogService
 
         box.Focus();
         return dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(result) ? result.Trim() : null;
+    }
+
+    public CredentialInput? PromptCredentials(string host)
+    {
+        var dialog = new Window
+        {
+            Title = _loc.T("Auth.Title"),
+            Width = 440,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Owner(),
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false,
+            Background = (System.Windows.Media.Brush)Application.Current.Resources["Brush.Window"]
+        };
+
+        var title = new TextBlock
+        {
+            Text = string.Format(_loc.T("Auth.Message"), host),
+            FontWeight = FontWeights.SemiBold,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+
+        var userLabel = new TextBlock { Text = _loc.T("Auth.User"), Margin = new Thickness(0, 0, 0, 4) };
+        var userBox = new TextBox { MinWidth = 380 };
+
+        var secretLabel = new TextBlock { Text = _loc.T("Auth.Secret"), Margin = new Thickness(0, 10, 0, 4) };
+        var secretBox = new PasswordBox { MinWidth = 380 };
+
+        var hint = new TextBlock
+        {
+            Text = _loc.T("Auth.Hint"),
+            Style = (Style)Application.Current.Resources["MutedText"],
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 12, 0, 0)
+        };
+
+        var ok = new Button { Content = _loc.T("Common.OK"), IsDefault = true, MinWidth = 84, Margin = new Thickness(0, 0, 8, 0) };
+        var cancel = new Button { Content = _loc.T("Common.Cancel"), IsCancel = true, MinWidth = 84 };
+        CredentialInput? result = null;
+        ok.Click += (_, _) =>
+        {
+            if (string.IsNullOrWhiteSpace(secretBox.Password)) { secretBox.Focus(); return; }
+            result = new CredentialInput(userBox.Text.Trim(), secretBox.Password);
+            dialog.DialogResult = true;
+        };
+
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
+        buttons.Children.Add(ok);
+        buttons.Children.Add(cancel);
+
+        var panel = new StackPanel { Margin = new Thickness(18) };
+        panel.Children.Add(title);
+        panel.Children.Add(userLabel);
+        panel.Children.Add(userBox);
+        panel.Children.Add(secretLabel);
+        panel.Children.Add(secretBox);
+        panel.Children.Add(hint);
+        panel.Children.Add(buttons);
+        dialog.Content = panel;
+
+        userBox.Focus();
+        return dialog.ShowDialog() == true ? result : null;
     }
 
     private static Window? Owner() =>

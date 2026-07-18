@@ -20,8 +20,13 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly IThemeService _theme;
     private readonly IUpdateService _updates;
+    private readonly IShellIntegrationService _shell;
+    private readonly ICredentialStore _credentials;
     private readonly ILogger<MainViewModel> _logger;
     private readonly GraphLayoutEngine _engine = new();
+
+    /// <summary>Raised when a shell "commit" action asks the window to focus the staging panel.</summary>
+    public event Action? CommitFocusRequested;
 
     private IReadOnlyList<CommitInfo> _allCommits = Array.Empty<CommitInfo>();
     private IReadOnlyDictionary<string, IReadOnlyList<RefLabel>> _refsBySha =
@@ -39,6 +44,8 @@ public sealed partial class MainViewModel : ObservableObject
         ILocalizationService loc,
         IThemeService theme,
         IUpdateService updates,
+        IShellIntegrationService shell,
+        ICredentialStore credentials,
         ISettingsService settings,
         ICommitStatsSource stats,
         WorkingCopyViewModel workingCopy,
@@ -53,6 +60,8 @@ public sealed partial class MainViewModel : ObservableObject
         Loc = loc;
         _theme = theme;
         _updates = updates;
+        _shell = shell;
+        _credentials = credentials;
         _settings = settings;
         WorkingCopy = workingCopy;
         Branches = branches;
@@ -299,10 +308,74 @@ public sealed partial class MainViewModel : ObservableObject
         if (!IsRepositoryOpen) return;
         IsBusy = true;
         StatusText = Loc.T("Status.Working");
-        var ok = await GitUi.RunAsync(op, _dialogs, Loc, _logger);
+        var ok = await RunWithAuthRetryAsync(op);
         IsBusy = false;
         if (ok) await ReloadAllAsync();
         else StatusText = Loc.T("Status.Ready");
+    }
+
+    /// <summary>
+    /// Run a network op; on an authentication failure, prompt for credentials in the GUI, store
+    /// them (Windows Credential Manager), and retry once. This makes HTTPS auth fully GUI-driven.
+    /// </summary>
+    private async Task<bool> RunWithAuthRetryAsync(Func<Task<GitResult>> op)
+    {
+        GitResult result;
+        try { result = await op().ConfigureAwait(true); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "network op threw");
+            _dialogs.Error(ex.Message, Loc.T("Error.GitFailed"));
+            return false;
+        }
+
+        if (result.Success) return true;
+
+        if (IsAuthFailure(result))
+        {
+            var url = _repo.GetRemoteUrl();
+            var input = _dialogs.PromptCredentials(CredentialKey.HostLabel(url));
+            if (input is not null)
+            {
+                var key = CredentialKey.FromUrl(url);
+                if (key is not null)
+                {
+                    try { _credentials.Save(key, input.User, input.Secret); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Saving credentials failed"); }
+                }
+                try
+                {
+                    var retry = await op().ConfigureAwait(true);
+                    if (retry.Success) return true;
+                    result = retry;
+                }
+                catch (Exception ex)
+                {
+                    _dialogs.Error(ex.Message, Loc.T("Error.GitFailed"));
+                    return false;
+                }
+            }
+        }
+
+        _logger.LogWarning("git failed ({Code}): {Cmd}\n{Out}", result.ExitCode, result.CommandLine, result.CombinedOutput);
+        var body = string.IsNullOrWhiteSpace(result.CombinedOutput) ? result.CommandLine : result.CombinedOutput;
+        _dialogs.Error(body, Loc.T("Error.GitFailed"));
+        return false;
+    }
+
+    private static bool IsAuthFailure(GitResult r)
+    {
+        var s = r.CombinedOutput;
+        if (string.IsNullOrEmpty(s)) return false;
+        string[] needles =
+        {
+            "Authentication failed", "could not read Username", "could not read Password",
+            "terminal prompts disabled", "Invalid username or password",
+            "Support for password authentication", "remote: HTTP Basic",
+            "fatal: Authentication", "403 Forbidden", "401 Unauthorized",
+            "Permission denied", "Login failed", "Repository not found"
+        };
+        return needles.Any(n => s.Contains(n, StringComparison.OrdinalIgnoreCase));
     }
 
     // ---------------------------------------------------------------- commit context-menu actions
@@ -477,6 +550,61 @@ public sealed partial class MainViewModel : ObservableObject
     {
         Loc.Toggle();
         _settings.Update(_theme.Theme, Loc.Language);
+        // Menu labels are baked into the registry — refresh them if the integration is installed.
+        if (_shell.IsInstalled)
+        {
+            try { _shell.Install(); } catch (Exception ex) { _logger.LogDebug(ex, "Shell relabel skipped"); }
+        }
+    }
+
+    // ---------------------------------------------------------------- Explorer shell integration
+
+    public bool IsShellIntegrationInstalled => _shell.IsInstalled;
+
+    [RelayCommand]
+    private void ToggleShellIntegration()
+    {
+        try
+        {
+            if (_shell.IsInstalled) _shell.Uninstall();
+            else _shell.Install();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Toggling Explorer shell integration failed");
+            _dialogs.Error(ex.Message, Loc.T("Common.Error"));
+        }
+        OnPropertyChanged(nameof(IsShellIntegrationInstalled));
+    }
+
+    /// <summary>
+    /// Run a command that arrived from the command line or an Explorer right-click: open (or switch
+    /// to) the given repository, then perform the verb (pull / push / fetch / commit / log).
+    /// </summary>
+    public async Task ExecuteShellCommandAsync(string verb, string? path)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            var target = _repo.Discover(path);
+            if (target is null)
+            {
+                _dialogs.Error(Loc.T("Error.NotARepo"), Loc.T("Error.OpenFailed"));
+                return;
+            }
+            if (!IsRepositoryOpen || !string.Equals(RepositoryPath, target, StringComparison.OrdinalIgnoreCase))
+                await OpenPath(target);
+        }
+
+        if (!IsRepositoryOpen) return;
+
+        switch (verb)
+        {
+            case "pull": await Pull(); break;
+            case "push": await Push(); break;
+            case "fetch": await Fetch(); break;
+            case "commit": CommitFocusRequested?.Invoke(); break;
+            // "open" / "log": the repository is open and the graph (log) is already shown.
+        }
     }
 
     [RelayCommand]

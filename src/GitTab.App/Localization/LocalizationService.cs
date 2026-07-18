@@ -82,6 +82,7 @@ public sealed class LocalizationService : ILocalizationService
         ["Language"] = "언어",
         ["Language.Korean"] = "한국어",
         ["Language.English"] = "English",
+        ["Settings"] = "설정",
         ["Theme.Toggle"] = "테마 전환",
         ["Theme.Light"] = "라이트",
         ["Theme.Dark"] = "다크",
@@ -245,6 +246,24 @@ public sealed class LocalizationService : ILocalizationService
         ["Update.Checking"] = "업데이트 확인 중…",
         ["Update.CheckFailed"] = "업데이트를 확인하지 못했어요",
 
+        // Windows 탐색기 우클릭 통합 (TortoiseGit 대체)
+        ["Shell.Menu.Root"] = "Git Tab",
+        ["Shell.Menu.Open"] = "Git Tab에서 열기",
+        ["Shell.Menu.Commit"] = "커밋…",
+        ["Shell.Menu.Pull"] = "받아오기 (Pull)",
+        ["Shell.Menu.Push"] = "올리기 (Push)",
+        ["Shell.Menu.Fetch"] = "가져오기 (Fetch)",
+        ["Shell.Menu.Log"] = "히스토리 / 로그",
+        ["Shell.Tip"] = "Windows 탐색기에서 폴더를 우클릭하면 Git Tab 메뉴로 열기·커밋·풀·푸시를 바로 쓸 수 있어요. 체크 해제하면 제거돼요.",
+
+        // GUI 인증 (자격 증명)
+        ["Auth.Title"] = "Git 인증",
+        ["Auth.Message"] = "‘{0}’에 접근하려면 로그인이 필요해요.",
+        ["Auth.User"] = "사용자 이름",
+        ["Auth.Secret"] = "비밀번호 · 액세스 토큰(PAT)",
+        ["Auth.Hint"] = "GitHub·GitLab은 비밀번호 대신 개인 액세스 토큰(PAT)을 쓰세요. 입력한 정보는 Windows 자격 증명 관리자에 안전하게 저장되고 다음부터 자동으로 사용돼요.",
+        ["Git.NotFound"] = "git 실행 파일을 찾지 못했어요. 히스토리 보기는 되지만 커밋·푸시 등에는 Git이 필요해요. https://git-scm.com/download/win 에서 설치하거나, Git Tab 설치본에 포함된 Git을 사용하세요.",
+
         // Common / dialogs
         ["Common.OK"] = "확인",
         ["Common.Cancel"] = "취소",
@@ -293,6 +312,7 @@ public sealed class LocalizationService : ILocalizationService
         ["Language"] = "Language",
         ["Language.Korean"] = "한국어",
         ["Language.English"] = "English",
+        ["Settings"] = "Settings",
         ["Theme.Toggle"] = "Toggle theme",
         ["Theme.Light"] = "Light",
         ["Theme.Dark"] = "Dark",
@@ -440,6 +460,24 @@ public sealed class LocalizationService : ILocalizationService
         ["Update.UpToDate"] = "You're on the latest version",
         ["Update.Checking"] = "Checking for updates…",
         ["Update.CheckFailed"] = "Couldn't check for updates",
+
+        // Windows Explorer right-click integration (TortoiseGit replacement)
+        ["Shell.Menu.Root"] = "Git Tab",
+        ["Shell.Menu.Open"] = "Open in Git Tab",
+        ["Shell.Menu.Commit"] = "Commit…",
+        ["Shell.Menu.Pull"] = "Pull",
+        ["Shell.Menu.Push"] = "Push",
+        ["Shell.Menu.Fetch"] = "Fetch",
+        ["Shell.Menu.Log"] = "History / Log",
+        ["Shell.Tip"] = "Right-click any folder in Windows Explorer to open, commit, pull or push with Git Tab. Uncheck to remove.",
+
+        // GUI authentication (credentials)
+        ["Auth.Title"] = "Git authentication",
+        ["Auth.Message"] = "Sign in to access '{0}'.",
+        ["Auth.User"] = "Username",
+        ["Auth.Secret"] = "Password · Access token (PAT)",
+        ["Auth.Hint"] = "For GitHub/GitLab use a Personal Access Token (PAT) instead of your password. Your details are saved securely in Windows Credential Manager and reused automatically.",
+        ["Git.NotFound"] = "No git executable was found. Viewing history works, but commit/push need Git. Install it from https://git-scm.com/download/win, or use the Git bundled with the Git Tab installer.",
 
         ["Common.OK"] = "OK",
         ["Common.Cancel"] = "Cancel",

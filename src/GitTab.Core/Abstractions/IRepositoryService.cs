@@ -47,6 +47,10 @@ public interface IRepositoryService : IDisposable
     IReadOnlyList<BlameLine> GetBlame(string path);
     IReadOnlyList<string> GetSubmodulePaths();
 
+    /// <summary>URL of the given remote (default "origin"), or null if it has none. Used to key
+    /// stored credentials by host when prompting for authentication.</summary>
+    string? GetRemoteUrl(string remote = "origin");
+
     /// <summary>Commits reachable from <paramref name="includeSha"/> but not <paramref name="excludeSha"/>,
     /// newest-first (used to build an interactive-rebase plan).</summary>
     IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha);

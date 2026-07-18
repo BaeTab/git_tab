@@ -478,6 +478,16 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public string? GetRemoteUrl(string remote = "origin")
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var r = repo.Network.Remotes[remote] ?? repo.Network.Remotes.FirstOrDefault();
+            return r?.Url;
+        }
+    }
+
     public IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha)
     {
         lock (_sync)

@@ -65,6 +65,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 ; Copy the whole publish output — single-file publish still emits the LibGit2Sharp
 ; native library (git2-*.dll) *next to* the exe, so the exe alone is not enough.
+; recursesubdirs also picks up publish\git (bundled portable MinGit added by the release
+; workflow), so Git Tab ships with git and uses {app}\git\cmd\git.exe automatically — no
+; separate Git install required. Local builds without it still work (git from install/PATH).
 Source: "..\publish\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist

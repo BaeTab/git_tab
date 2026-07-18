@@ -15,12 +15,21 @@ public sealed class GitCommandRunner : IGitCommandRunner
 {
     private readonly ILogger<GitCommandRunner> _logger;
     private readonly string _gitExe;
+    private readonly string? _askPassExe;
     private readonly TimeSpan _timeout;
 
-    public GitCommandRunner(ILogger<GitCommandRunner> logger, string gitExecutable = "git", TimeSpan? timeout = null)
+    /// <param name="gitExecutable">Full path to git.exe (see <see cref="GitExecutableLocator"/>), or "git" for PATH.</param>
+    /// <param name="askPassExe">
+    /// Path to an executable that answers git credential prompts (our own exe in <c>--askpass</c>
+    /// mode). When set, HTTPS auth works with no credential helper installed — git calls it via
+    /// GIT_ASKPASS and it returns credentials from the GUI-managed store.
+    /// </param>
+    public GitCommandRunner(ILogger<GitCommandRunner> logger, string gitExecutable = "git",
+        string? askPassExe = null, TimeSpan? timeout = null)
     {
         _logger = logger;
         _gitExe = gitExecutable;
+        _askPassExe = askPassExe;
         _timeout = timeout ?? TimeSpan.FromMinutes(5);
     }
 
@@ -55,6 +64,14 @@ public sealed class GitCommandRunner : IGitCommandRunner
         // Never open an interactive editor (would hang a windowless process). ":" is the shell
         // no-op that git runs via its bundled sh, so --continue/merge keep their default messages.
         psi.Environment["GIT_EDITOR"] = ":";
+
+        // GUI credential provider: git calls this exe for username/password when no credential
+        // helper supplies them, so HTTPS auth works even on a bare git with nothing configured.
+        if (!string.IsNullOrEmpty(_askPassExe))
+        {
+            psi.Environment["GIT_ASKPASS"] = _askPassExe;
+            psi.Environment["GITTAB_ASKPASS"] = "1";
+        }
 
         if (environment is not null)
             foreach (var kv in environment)

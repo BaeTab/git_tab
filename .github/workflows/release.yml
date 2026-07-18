@@ -50,6 +50,26 @@ jobs:
           echo "Resolved version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      # Bundle portable git (MinGit) next to the app so Git Tab is a self-contained,
+      # "no CLI required" tool: the app prefers <app>\git\cmd\git.exe over any system git.
+      # Best-effort — if the download fails the installer still builds (git is then expected
+      # from a system install / PATH), so this must not fail the release.
+      - name: Bundle portable git (MinGit)
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; "User-Agent" = "git-tab-release" }
+          $rel = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/git-for-windows/git/releases/latest"
+          $asset = $rel.assets | Where-Object { $_.name -match '^MinGit-.*-64-bit\.zip$' } | Select-Object -First 1
+          if (-not $asset) { throw "MinGit 64-bit asset not found" }
+          Write-Host "Downloading $($asset.name)"
+          Invoke-WebRequest -Headers $headers -Uri $asset.browser_download_url -OutFile mingit.zip
+          Expand-Archive -Path mingit.zip -DestinationPath publish\git -Force
+          if (-not (Test-Path publish\git\cmd\git.exe)) { throw "MinGit layout unexpected" }
+          Write-Host "Bundled git at publish\git\cmd\git.exe"
+
       - name: Install Inno Setup
         run: choco install innosetup -y
 

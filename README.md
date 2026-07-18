@@ -26,10 +26,13 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Stash** — Stash your changes and apply/pop/drop them later.
 - **Blame** — See which commit last changed each line of a file.
 - **Conflict Handling** — An in-progress banner with Abort/Continue; resolve by staging files.
-- **Remotes** — Fetch, pull, push with ahead/behind tracking; auth via the system git credential helper.
+- **Remotes** — Fetch, pull, push with ahead/behind tracking.
+- **GUI Authentication** — Push/pull to private HTTPS remotes with no console setup: enter a username + Personal Access Token once in a dialog, stored securely in Windows Credential Manager and reused automatically.
+- **Windows Explorer Integration** — TortoiseGit-style right-click menu (**Open / Commit / Pull / Push / Fetch / History**) on any folder; a single running instance receives the action. Toggle it from the toolbar's settings menu (no admin needed).
+- **Bundled Git** — The installer ships portable Git, so Git Tab is a true all-in-one tool that works even without Git installed separately.
 - **Submodules** — One-click `submodule update --init --recursive`.
 - **`.gitignore` Generator** — Detects your stack (.NET, Node, Python, Java, Rust, Go, Flutter, Unity…) and generates a matching file.
-- **Right-click Context Menus** — TortoiseGit-style menus on commits, branches, and files.
+- **Right-click Context Menus** — In-app TortoiseGit-style menus on commits, branches, and files.
 - **Commit Search** — Filter by message, author, or hash in real time.
 - **Light & Dark Themes + English/Korean UI** — Toggle at runtime, remembered across restarts; beginner-friendly tooltips explain every Git action.
 - **Keyboard Shortcuts** — F5/Ctrl+R refresh, Ctrl+O open, Ctrl+Enter commit.
@@ -47,7 +50,7 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 
 - **Windows 10 or Windows 11**
 - **.NET 8 Desktop Runtime** ([download](https://dotnet.microsoft.com/en-us/download/dotnet/8.0))
-- **Git** installed and available on PATH (`git --version` should work in cmd)
+- **Git** — bundled with the installer, so no separate install is needed. Git Tab auto-detects a system Git (PATH or standard install) if you prefer to use your own.
 
 ### Build from Source
 
@@ -166,10 +169,13 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **스태시** — 변경을 잠시 치워두고 나중에 apply/pop/drop.
 - **Blame** — 파일의 각 줄을 마지막으로 바꾼 커밋 표시.
 - **충돌 처리** — 진행 중 배너(중단/계속), 파일을 스테이지하여 해결.
-- **원격** — Fetch/Pull/Push + ahead/behind, 시스템 Git 자격증명 도우미 위임.
+- **원격** — Fetch/Pull/Push + ahead/behind 추적.
+- **GUI 인증** — 콘솔 설정 없이 비공개 HTTPS 원격에 Push/Pull. 사용자 이름 + 개인 액세스 토큰(PAT)을 한 번만 대화상자에 입력하면 Windows 자격 증명 관리자에 안전하게 저장되어 이후 자동으로 사용됩니다.
+- **Windows 탐색기 통합** — 아무 폴더나 우클릭하면 TortoiseGit 스타일 메뉴(**열기 / 커밋 / 받아오기 / 올리기 / 가져오기 / 히스토리**)가 나오고, 실행 중인 창으로 바로 전달됩니다. 툴바 설정 메뉴에서 켜고 끌 수 있습니다(관리자 권한 불필요).
+- **Git 번들 포함** — 설치본에 이식형 Git이 포함되어, Git이 따로 설치돼 있지 않아도 동작하는 진정한 올인원 도구입니다.
 - **서브모듈** — 원클릭 `submodule update --init --recursive`.
 - **.gitignore 생성기** — 스택 자동 감지(.NET·Node·Python·Java·Rust·Go·Flutter·Unity 등) 후 생성.
-- **우클릭 컨텍스트 메뉴** — TortoiseGit 스타일(커밋·브랜치·파일).
+- **우클릭 컨텍스트 메뉴** — 앱 내 TortoiseGit 스타일(커밋·브랜치·파일).
 - **커밋 검색** — 메시지·작성자·해시로 실시간 필터링.
 - **라이트/다크 테마 + 한/영 UI** — 런타임 전환, 재시작 후에도 기억; 모든 동작에 초보자 친화 툴팁.
 - **단축키** — F5/Ctrl+R 새로고침, Ctrl+O 열기, Ctrl+Enter 커밋.
@@ -187,7 +193,7 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 
 - **Windows 10 또는 Windows 11**
 - **.NET 8 Desktop Runtime** ([다운로드](https://dotnet.microsoft.com/en-us/download/dotnet/8.0))
-- **Git** 설치 및 PATH에 등록 (`git --version`이 cmd에서 작동해야 함)
+- **Git** — 설치본에 포함되어 별도 설치가 필요 없습니다. 직접 설치한 Git이 있으면(PATH·표준 설치 경로) 자동으로 감지해 사용합니다.
 
 ### 소스에서 빌드
 

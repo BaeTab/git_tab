@@ -20,6 +20,21 @@ public partial class MainWindow : Window
         _vm = vm;
         DataContext = vm;
         StateChanged += (_, _) => UpdateMaxRestoreGlyph();
+        // A shell "commit" action focuses the staging tab.
+        vm.CommitFocusRequested += () => LeftTabs.SelectedIndex = 0;
+    }
+
+    /// <summary>Bring the window to the foreground when an Explorer right-click routes here.</summary>
+    public void ActivateForShell()
+    {
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Show();
+        Activate();
+        // Momentary topmost flip reliably raises the window above the caller (Explorer).
+        var wasTopmost = Topmost;
+        Topmost = true;
+        Topmost = wasTopmost;
+        Focus();
     }
 
     // ---- custom title-bar buttons ----
