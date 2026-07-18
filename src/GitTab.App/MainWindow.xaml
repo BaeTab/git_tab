@@ -662,7 +662,12 @@
         <Border Grid.Row="3" Background="{DynamicResource Brush.Surface}"
                 BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="10,4">
             <Grid>
-                <TextBlock Text="{Binding StatusText}" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                    <Button Content="{loc:Tr Common.Cancel}" Style="{StaticResource ToolButton}" Padding="8,1" Margin="10,0,0,0"
+                            Command="{Binding CancelNetworkCommand}"
+                            Visibility="{Binding CanCancelNetwork, Converter={StaticResource Bool2Vis}}"/>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <TextBlock Text="{Binding RepositoryPath}" Style="{StaticResource MutedText}" FontSize="11"
                                TextTrimming="CharacterEllipsis" MaxWidth="500" VerticalAlignment="Center"/>

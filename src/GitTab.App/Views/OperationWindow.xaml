@@ -42,8 +42,13 @@
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="{Binding Status}" VerticalAlignment="Center"
                        Foreground="{DynamicResource Brush.TextMuted}"/>
-            <Button Grid.Column="1" Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True"
-                    MinWidth="92" Click="OnClose"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="{loc:Tr Common.Cancel}" MinWidth="92" Margin="0,0,8,0"
+                        Command="{Binding CancelCommand}"
+                        Visibility="{Binding IsRunning, Converter={StaticResource Bool2Vis}}"/>
+                <Button Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True"
+                        MinWidth="92" Click="OnClose"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

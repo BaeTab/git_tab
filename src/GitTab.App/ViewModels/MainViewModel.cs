@@ -188,10 +188,15 @@ public sealed partial class MainViewModel : ObservableObject
         var target = vm.TargetPath;
         if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(target)) return;
 
+        using var cts = new CancellationTokenSource();
+        _networkCts = cts;
+        CanCancelNetwork = true;
         IsBusy = true;
         StatusText = Loc.T("Status.Working");
-        var result = await RunCloneWithAuthAsync(url, target);
+        var result = await RunCloneWithAuthAsync(url, target, cts.Token);
         IsBusy = false;
+        CanCancelNetwork = false;
+        _networkCts = null;
 
         if (result is { Success: true })
         {
@@ -209,11 +214,11 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     // Clone can't use RunWithAuthRetryAsync (no repo is open yet), so it keys credentials off the URL.
-    private async Task<GitResult?> RunCloneWithAuthAsync(string url, string target)
+    private async Task<GitResult?> RunCloneWithAuthAsync(string url, string target, CancellationToken ct)
     {
         try
         {
-            var result = await _repo.CloneAsync(url, target);
+            var result = await _repo.CloneAsync(url, target, ct);
             if (result.Success || !GitAuth.IsAuthFailure(result)) return result;
 
             var input = _dialogs.PromptCredentials(CredentialKey.HostLabel(url));
@@ -224,8 +229,9 @@ public sealed partial class MainViewModel : ObservableObject
                 try { _credentials.Save(key, input.User, input.Secret); }
                 catch (Exception ex) { _logger.LogWarning(ex, "Saving credentials failed"); }
             }
-            return await _repo.CloneAsync(url, target);
+            return await _repo.CloneAsync(url, target, ct);
         }
+        catch (OperationCanceledException) { return null; }
         catch (Exception ex)
         {
             _logger.LogError(ex, "clone threw");
@@ -483,26 +489,38 @@ public sealed partial class MainViewModel : ObservableObject
     // ---------------------------------------------------------------- remote
 
     [RelayCommand]
-    private Task Fetch() => RunNetworkAsync(() => _repo.FetchAsync());
+    private Task Fetch() => RunNetworkAsync(ct => _repo.FetchAsync(ct: ct));
 
     [RelayCommand]
-    private Task Pull() => RunNetworkAsync(() => _repo.PullAsync());
+    private Task Pull() => RunNetworkAsync(ct => _repo.PullAsync(ct));
 
     [RelayCommand]
-    private Task Push() => RunNetworkAsync(() =>
+    private Task Push() => RunNetworkAsync(ct =>
     {
         var current = Branches.Local.FirstOrDefault(b => b.IsCurrent);
         var needsUpstream = current?.Model.UpstreamFriendlyName is null;
-        return _repo.PushAsync(setUpstream: needsUpstream);
+        return _repo.PushAsync(setUpstream: needsUpstream, ct: ct);
     });
 
-    private async Task RunNetworkAsync(Func<Task<GitResult>> op)
+    private CancellationTokenSource? _networkCts;
+
+    [ObservableProperty] private bool _canCancelNetwork;
+
+    [RelayCommand]
+    private void CancelNetwork() => _networkCts?.Cancel();
+
+    private async Task RunNetworkAsync(Func<CancellationToken, Task<GitResult>> op)
     {
         if (!IsRepositoryOpen) return;
+        using var cts = new CancellationTokenSource();
+        _networkCts = cts;
+        CanCancelNetwork = true;
         IsBusy = true;
         StatusText = Loc.T("Status.Working");
-        var ok = await RunWithAuthRetryAsync(op);
+        var ok = await RunWithAuthRetryAsync(op, cts.Token);
         IsBusy = false;
+        CanCancelNetwork = false;
+        _networkCts = null;
         if (ok) await ReloadAllAsync();
         else StatusText = Loc.T("Status.Ready");
     }
@@ -511,10 +529,11 @@ public sealed partial class MainViewModel : ObservableObject
     /// Run a network op; on an authentication failure, prompt for credentials in the GUI, store
     /// them (Windows Credential Manager), and retry once. This makes HTTPS auth fully GUI-driven.
     /// </summary>
-    private async Task<bool> RunWithAuthRetryAsync(Func<Task<GitResult>> op)
+    private async Task<bool> RunWithAuthRetryAsync(Func<CancellationToken, Task<GitResult>> op, CancellationToken ct)
     {
         GitResult result;
-        try { result = await GitAuth.RunWithRetryAsync(op, _repo, _credentials, _dialogs, Loc, _logger); }
+        try { result = await GitAuth.RunWithRetryAsync(op, _repo, _credentials, _dialogs, Loc, _logger, ct); }
+        catch (OperationCanceledException) { return false; }
         catch (Exception ex)
         {
             _logger.LogError(ex, "network op threw");
@@ -597,8 +616,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ---------------------------------------------------------------- conflicts / stash / submodule / blame / rebase
 
-    [RelayCommand] private Task AbortOperation() => RunNetworkAsync(() => _repo.AbortOperationAsync());
-    [RelayCommand] private Task ContinueOperation() => RunNetworkAsync(() => _repo.ContinueOperationAsync());
+    [RelayCommand] private Task AbortOperation() => RunNetworkAsync(ct => _repo.AbortOperationAsync(ct));
+    [RelayCommand] private Task ContinueOperation() => RunNetworkAsync(ct => _repo.ContinueOperationAsync(ct));
 
     [RelayCommand]
     private async Task StashPush()
@@ -632,7 +651,7 @@ public sealed partial class MainViewModel : ObservableObject
             await ReloadAllAsync();
     }
 
-    [RelayCommand] private Task SubmoduleUpdate() => RunNetworkAsync(() => _repo.SubmoduleUpdateAsync());
+    [RelayCommand] private Task SubmoduleUpdate() => RunNetworkAsync(ct => _repo.SubmoduleUpdateAsync(ct));
 
     [RelayCommand]
     private async Task ResolveConflict(FileChangeViewModel? file)

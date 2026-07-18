@@ -47,19 +47,24 @@ public sealed partial class OperationWindowViewModel : ObservableObject
     [ObservableProperty] private bool _isSuccess;
     [ObservableProperty] private string _status;
 
+    private readonly CancellationTokenSource _cts = new();
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void Cancel() => _cts.Cancel();
+
     public async Task RunAsync()
     {
-        Func<Task<GitResult>> op = _verb switch
+        Func<CancellationToken, Task<GitResult>> op = _verb switch
         {
-            "pull" => () => _repo.PullAsync(),
+            "pull" => ct => _repo.PullAsync(ct),
             "push" => PushAsync,
-            "stash" => () => _repo.StashPushAsync(null, includeUntracked: true),
-            _ => () => _repo.FetchAsync()
+            "stash" => ct => _repo.StashPushAsync(null, includeUntracked: true, ct),
+            _ => ct => _repo.FetchAsync(ct: ct)
         };
 
         try
         {
-            var result = await GitAuth.RunWithRetryAsync(op, _repo, _credentials, _dialogs, _loc, _logger);
+            var result = await GitAuth.RunWithRetryAsync(op, _repo, _credentials, _dialogs, _loc, _logger, _cts.Token);
             IsSuccess = result.Success;
             var text = string.IsNullOrWhiteSpace(result.CombinedOutput) ? result.CommandLine : result.CombinedOutput;
             Output = text.Trim();
@@ -78,10 +83,10 @@ public sealed partial class OperationWindowViewModel : ObservableObject
         }
     }
 
-    private Task<GitResult> PushAsync()
+    private Task<GitResult> PushAsync(CancellationToken ct)
     {
         var current = _repo.GetBranches().FirstOrDefault(b => b.IsCurrent);
         var needsUpstream = current?.UpstreamFriendlyName is null;
-        return _repo.PushAsync(setUpstream: needsUpstream);
+        return _repo.PushAsync(setUpstream: needsUpstream, ct: ct);
     }
 }

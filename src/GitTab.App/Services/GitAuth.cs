@@ -15,11 +15,12 @@ public static class GitAuth
     /// <summary>Runs <paramref name="op"/>; on an auth failure prompts + stores creds + retries once.
     /// Returns the final <see cref="GitResult"/> (which may itself be a failure). May throw if the op throws.</summary>
     public static async Task<GitResult> RunWithRetryAsync(
-        Func<Task<GitResult>> op,
+        Func<CancellationToken, Task<GitResult>> op,
         IRepositoryService repo, ICredentialStore credentials,
-        IDialogService dialogs, ILocalizationService loc, ILogger logger)
+        IDialogService dialogs, ILocalizationService loc, ILogger logger,
+        CancellationToken ct = default)
     {
-        var result = await op().ConfigureAwait(true);
+        var result = await op(ct).ConfigureAwait(true);
         if (result.Success || !IsAuthFailure(result)) return result;
 
         var input = dialogs.PromptCredentials(CredentialKey.HostLabel(repo.GetRemoteUrl()));
@@ -31,7 +32,7 @@ public static class GitAuth
             try { credentials.Save(key, input.User, input.Secret); }
             catch (Exception ex) { logger.LogWarning(ex, "Saving credentials failed"); }
         }
-        return await op().ConfigureAwait(true);
+        return await op(ct).ConfigureAwait(true);
     }
 
     /// <summary>Heuristic: does this failure look like an authentication/authorization problem?</summary>
