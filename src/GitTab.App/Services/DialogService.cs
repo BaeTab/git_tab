@@ -50,6 +50,9 @@ public interface IDialogService
     /// <summary>Show the compare (two-ref diff) dialog.</summary>
     void ShowCompare(CompareViewModel vm);
 
+    /// <summary>Show the content-search (pickaxe) dialog; returns true if the user picked a commit.</summary>
+    bool ShowContentSearch(ContentSearchViewModel vm);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -214,6 +217,12 @@ public sealed class DialogService : IDialogService
     {
         var win = new CompareDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
+    }
+
+    public bool ShowContentSearch(ContentSearchViewModel vm)
+    {
+        var win = new ContentSearchDialog { DataContext = vm, Owner = Owner() };
+        return win.ShowDialog() == true;
     }
 
     public CredentialInput? PromptCredentials(string host)

@@ -244,6 +244,20 @@ public sealed class RepositoryServiceWriteTests
         (await svc.CreateTagAsync("v1.0")).Success.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task SearchContent_finds_commits_that_added_the_term()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("c1", "a.txt", "hello world\n");
+        var c2 = repo.Commit("c2", "a.txt", "hello world\nMAGIC_TOKEN_XYZ\n");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var hits = await svc.SearchContentAsync("MAGIC_TOKEN_XYZ", useRegex: false);
+        hits.Select(c => c.Sha).Should().Contain(c2);
+    }
+
     private static void TryDelete(string dir)
     {
         try

@@ -750,6 +750,37 @@ public sealed class RepositoryService : IRepositoryService
     public Task<GitResult> RunRawAsync(IReadOnlyList<string> args, CancellationToken ct = default)
         => Run(args, ct);
 
+    public async Task<IReadOnlyList<CommitInfo>> SearchContentAsync(string term, bool useRegex, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(term)) return Array.Empty<CommitInfo>();
+        // Pickaxe: -S finds commits that change the number of occurrences of the string; -G is regex.
+        var args = new[]
+        {
+            "log", (useRegex ? "-G" : "-S") + term,
+            "--format=%H%x1f%P%x1f%an%x1f%ae%x1f%aI%x1f%s", "-n", "500"
+        };
+        var result = await Run(args, ct).ConfigureAwait(false);
+        if (!result.Success) return Array.Empty<CommitInfo>();
+
+        var list = new List<CommitInfo>();
+        foreach (var line in result.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var p = line.Split('\x1f');
+            if (p.Length < 6) continue;
+            list.Add(new CommitInfo
+            {
+                Sha = p[0].Trim(),
+                ParentShas = p[1].Trim().Length == 0 ? Array.Empty<string>() : p[1].Trim().Split(' '),
+                AuthorName = p[2],
+                AuthorEmail = p[3],
+                WhenUtc = DateTimeOffset.TryParse(p[4], out var w) ? w : DateTimeOffset.MinValue,
+                Summary = p[5],
+                MessageFull = p[5]
+            });
+        }
+        return list;
+    }
+
     public async Task<GitResult> InitAsync(string path, string? initialBranch = "main", CancellationToken ct = default)
     {
         // Runs in the target folder directly — no repository is open yet, so we cannot use Run().

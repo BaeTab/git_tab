@@ -138,6 +138,13 @@ public sealed class LocalizationService : ILocalizationService
         ["Compare.From"] = "기준",
         ["Compare.To"] = "대상",
         ["Compare.Changed"] = "변경된 파일",
+        ["Search.Content"] = "내용 검색",
+        ["Search.Content.Tip"] = "코드에서 특정 문자열이 추가·삭제된 커밋을 찾아요(pickaxe). 정규식도 가능.",
+        ["Search.Regex"] = "정규식",
+        ["Search.Run"] = "검색",
+        ["Search.Empty"] = "일치하는 커밋이 없어요.",
+        ["Search.DblClick"] = "결과를 더블클릭하면 그 커밋으로 이동해요.",
+        ["Search.NotInView"] = "그 커밋은 현재 목록에서 찾지 못했어요.",
 
         // Panels
         ["Panel.History"] = "히스토리",
@@ -451,6 +458,13 @@ public sealed class LocalizationService : ILocalizationService
         ["Compare.From"] = "Base",
         ["Compare.To"] = "Target",
         ["Compare.Changed"] = "Changed files",
+        ["Search.Content"] = "Content search",
+        ["Search.Content.Tip"] = "Find commits that added or removed a string in the code (pickaxe). Regex supported.",
+        ["Search.Regex"] = "Regex",
+        ["Search.Run"] = "Search",
+        ["Search.Empty"] = "No matching commits.",
+        ["Search.DblClick"] = "Double-click a result to jump to that commit.",
+        ["Search.NotInView"] = "That commit isn't in the current list.",
 
         ["Panel.History"] = "History",
         ["Panel.Changes"] = "Changes",

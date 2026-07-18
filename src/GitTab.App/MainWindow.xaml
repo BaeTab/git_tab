@@ -129,6 +129,10 @@
                             Content="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Compare.Tip}"
                             AutomationProperties.Name="{loc:Tr Compare.Title}"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding ContentSearchCommand}"
+                            Content="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Search.Content.Tip}"
+                            AutomationProperties.Name="{loc:Tr Search.Content}"
+                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ManageRemotesCommand}"
                             Content="{loc:Tr Remote.Button}" ToolTip="{loc:Tr Remote.Tip}"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>

@@ -268,6 +268,26 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task ContentSearch()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new ContentSearchViewModel(_repo, Loc, _logger);
+        if (!_dialogs.ShowContentSearch(vm) || vm.ChosenSha is not { } sha) return;
+
+        int Find()
+        {
+            for (int i = 0; i < Rows.Count; i++)
+                if (Rows[i].Sha == sha) return i;
+            return -1;
+        }
+
+        var idx = Find();
+        while (idx < 0 && HasMoreCommits) { await LoadMore(); idx = Find(); }
+        if (idx >= 0) SelectedCommitIndex = idx;
+        else _dialogs.Info(Loc.T("Search.NotInView"), AppInfo.ProductName);
+    }
+
+    [RelayCommand]
     private void Compare()
     {
         if (!IsRepositoryOpen) return;
@@ -792,6 +812,7 @@ public sealed partial class MainViewModel : ObservableObject
                 P("Gitignore.Title", GenerateGitignoreCommand),
                 P("Stash.Push", StashPushCommand),
                 P("Compare.Title", CompareCommand),
+                P("Search.Content", ContentSearchCommand),
             });
         }
         return list;

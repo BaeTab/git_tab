@@ -74,6 +74,9 @@ public interface IRepositoryService : IDisposable
     /// <summary>Commits that touched <paramref name="path"/>, newest first (file history).</summary>
     IReadOnlyList<CommitInfo> GetFileHistory(string path, int max = 300);
 
+    /// <summary>Commits that added/removed <paramref name="term"/> in the code (pickaxe: -S, or -G for regex).</summary>
+    Task<IReadOnlyList<CommitInfo>> SearchContentAsync(string term, bool useRegex, CancellationToken ct = default);
+
     // ---- writes / network (git.exe) ----
     Task<GitResult> StageAsync(string path, CancellationToken ct = default);
     Task<GitResult> StageAllAsync(CancellationToken ct = default);
