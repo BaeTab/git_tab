@@ -18,15 +18,22 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 
 ### Features
 
-- **🎨 Color Commit Graph** — Branches are assigned distinct colors; commits line up in a virtualized, interactive graph that handles tens of thousands of commits without lag.
-- **📖 Commit Details & Unified Diff** — Click any commit to see its message, author, date, and a full syntax-highlighted diff view (powered by AvalonEdit).
-- **💾 Working Directory Staging** — Stage/unstage individual files, inspect changes, and commit (or amend) from the UI.
-- **🌿 Branch Operations** — Checkout, create, delete, rename, merge, and rebase branches directly from the graph.
-- **🔗 Remote Management** — Fetch, pull, and push to multiple remotes. Ahead/behind tracking and integrated credential handling via the system git credential helper.
-- **🔍 Commit Search** — Filter commits by message, author, or hash in real time.
-- **🌙 Light & Dark Themes** — Toggle between themes without restarting.
-- **🇬🇧 🇰🇷 Bilingual UI** — Switch between English and Korean at runtime; tooltips on every action explain Git concepts for beginners.
-- **⚡ Auto-Update** — The app checks GitHub Releases and downloads new versions with a single click.
+- **Color Commit Graph** — Branches get distinct colors; commits line up in a virtualized, interactive graph that handles tens of thousands of commits without lag.
+- **Commit Details & Diff** — Message, author, date, changed files, and a colored **unified or side-by-side** diff (AvalonEdit).
+- **Staging & Commit** — Stage/unstage/discard individual files and commit (or amend) from the UI.
+- **Branches & Tags** — Checkout, create, delete, rename, merge, rebase; create/delete/push tags; delete remote branches.
+- **Interactive Rebase** — Reorder, squash, fixup, or drop commits with a visual planner.
+- **Stash** — Stash your changes and apply/pop/drop them later.
+- **Blame** — See which commit last changed each line of a file.
+- **Conflict Handling** — An in-progress banner with Abort/Continue; resolve by staging files.
+- **Remotes** — Fetch, pull, push with ahead/behind tracking; auth via the system git credential helper.
+- **Submodules** — One-click `submodule update --init --recursive`.
+- **`.gitignore` Generator** — Detects your stack (.NET, Node, Python, Java, Rust, Go, Flutter, Unity…) and generates a matching file.
+- **Right-click Context Menus** — TortoiseGit-style menus on commits, branches, and files.
+- **Commit Search** — Filter by message, author, or hash in real time.
+- **Light & Dark Themes + English/Korean UI** — Toggle at runtime, remembered across restarts; beginner-friendly tooltips explain every Git action.
+- **Keyboard Shortcuts** — F5/Ctrl+R refresh, Ctrl+O open, Ctrl+Enter commit.
+- **Auto-Update** — Checks GitHub Releases and installs new versions in one click.
 
 ### Screenshots
 
@@ -147,15 +154,22 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 
 ### 주요 기능
 
-- **🎨 색상 커밋 그래프** — 각 브랜치에 고유 색상을 할당; 커밋들이 가상화된 그래프에 정렬되어 수만 개의 커밋도 지연 없이 처리합니다.
-- **📖 커밋 상세 & 통합 Diff** — 커밋을 클릭하면 메시지, 작성자, 날짜, 그리고 구문 강조된 전체 diff를 볼 수 있습니다(AvalonEdit 기반).
-- **💾 작업 디렉토리 스테이징** — 파일을 개별 스테이징/언스테이징하고, 변경 사항을 검사한 후 커밋(또는 수정)할 수 있습니다.
-- **🌿 브랜치 작업** — 브랜치를 체크아웃, 생성, 삭제, 이름 변경, 병합, 리베이스합니다.
-- **🔗 원격 저장소 관리** — 여러 원격에 대해 Fetch, Pull, Push를 수행합니다. Ahead/Behind 추적 및 시스템 Git 자격증명 도우미와의 통합.
-- **🔍 커밋 검색** — 메시지, 작성자, 커밋 해시로 실시간 필터링합니다.
-- **🌙 라이트 & 다크 테마** — 재시작 없이 테마를 전환합니다.
-- **🇬🇧 🇰🇷 이중 언어 UI** — 런타임에 영어와 한국어 간 전환; 모든 Git 작업에 초보자 친화적 설명이 담긴 툴팁을 제공합니다.
-- **⚡ 자동 업데이트** — GitHub Releases를 확인하고 새 버전을 한 클릭으로 다운로드합니다.
+- **색상 커밋 그래프** — 각 브랜치에 고유 색상; 가상화된 그래프로 수만 개의 커밋도 지연 없이 처리합니다.
+- **커밋 상세 & Diff** — 메시지·작성자·날짜·변경 파일과 색상 **통합/좌우 비교(side-by-side)** diff (AvalonEdit).
+- **스테이징 & 커밋** — 파일 단위 스테이징/언스테이징/되돌리기, 커밋(및 amend).
+- **브랜치 & 태그** — 체크아웃·생성·삭제·이름변경·병합·리베이스, 태그 생성/삭제/푸시, 원격 브랜치 삭제.
+- **대화형 리베이스** — 커밋을 재정렬·squash·fixup·drop 하는 시각적 플래너.
+- **스태시** — 변경을 잠시 치워두고 나중에 apply/pop/drop.
+- **Blame** — 파일의 각 줄을 마지막으로 바꾼 커밋 표시.
+- **충돌 처리** — 진행 중 배너(중단/계속), 파일을 스테이지하여 해결.
+- **원격** — Fetch/Pull/Push + ahead/behind, 시스템 Git 자격증명 도우미 위임.
+- **서브모듈** — 원클릭 `submodule update --init --recursive`.
+- **.gitignore 생성기** — 스택 자동 감지(.NET·Node·Python·Java·Rust·Go·Flutter·Unity 등) 후 생성.
+- **우클릭 컨텍스트 메뉴** — TortoiseGit 스타일(커밋·브랜치·파일).
+- **커밋 검색** — 메시지·작성자·해시로 실시간 필터링.
+- **라이트/다크 테마 + 한/영 UI** — 런타임 전환, 재시작 후에도 기억; 모든 동작에 초보자 친화 툴팁.
+- **단축키** — F5/Ctrl+R 새로고침, Ctrl+O 열기, Ctrl+Enter 커밋.
+- **자동 업데이트** — GitHub Releases 확인 후 한 클릭 설치.
 
 ### 스크린샷
 

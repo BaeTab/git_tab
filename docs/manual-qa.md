@@ -21,9 +21,24 @@ Verification performed against the real `git_tab` repository (and synthetic repo
 | 14 | App icon in title bar / taskbar | ✅ | `docs/screenshots/*` (GT mark in title bar) |
 | 15 | Global exception handler keeps app alive | ✅ | `DispatcherUnhandledException` handled + logged |
 
+## v0.2.0 additions
+| # | Scenario | Result | Evidence |
+|---|----------|--------|----------|
+| 16 | Interactive rebase (squash) via `GIT_SEQUENCE_EDITOR` | ✅ | integration test `Interactive_rebase_squash_reduces_commit_count` |
+| 17 | Merge conflict detected + aborted | ✅ | integration test `Merge_conflict_is_detected_then_aborted` + conflict banner |
+| 18 | Stash push → pop roundtrip | ✅ | integration test `Stash_push_then_pop_roundtrips_changes` |
+| 19 | Blame per-line authorship | ✅ | integration test `Blame_attributes_each_line_to_its_commit` + Blame view |
+| 20 | Tags render as chips; tag/remote-branch delete + stash sections | ✅ | screenshot (v0.9 chip), Branches tab wiring |
+| 21 | Side-by-side diff toggle + synced scroll | ✅ | screenshot (Split toggle), DiffView split build |
+| 22 | Settings (theme/language) persisted across restarts | ✅ | `%AppData%/GitTab/settings.json` |
+| 23 | Release-based update detects newer version | ✅ | v0.1.0 → v0.2.0 published; updater compares SemVer |
+
 ## Automated
 - `dotnet build GitTab.sln` → 0 warnings, 0 errors.
-- `dotnet test GitTab.sln` → 20 passing (10 graph layout, 10 core: repo reads + diff parse + gitignore).
+- `dotnet test GitTab.sln` → **25 passing** (10 graph layout, 15 core: reads + diff parse + gitignore +
+  rebase/conflict/stash/blame/range integration tests).
+- **GitHub Actions `build` workflow green on `windows-latest`** (clean checkout → restore → build → test),
+  and the `release` workflow publishes the InnoSetup installer to a GitHub Release.
 
 ## Exercised by build/logic but not driven end-to-end here (require credentials / conflicts)
 - Actual `push` to a remote (needs configured credentials) — command wired; auth delegated to git.
