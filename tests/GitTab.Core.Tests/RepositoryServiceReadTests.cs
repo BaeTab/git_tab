@@ -139,4 +139,20 @@ public sealed class RepositoryServiceReadTests
         shas.Should().Contain(new[] { a1, a2 });
         shas.Should().NotContain(b1);   // a commit that didn't touch the file is excluded
     }
+
+    [Fact]
+    public void GetChangesBetween_lists_files_differing_between_refs()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("base", "a.txt", "1");
+        var main = repo.CurrentBranch;
+        repo.CreateBranch("feature", checkout: true);
+        repo.Commit("add b", "b.txt", "x");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var changes = svc.GetChangesBetween(main, "feature");
+        changes.Should().Contain(c => c.Path == "b.txt" && c.Kind == FileChangeKind.Added);
+    }
 }

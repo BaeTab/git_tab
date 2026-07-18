@@ -1,0 +1,61 @@
+<Window x:Class="GitTab.App.Views.CompareDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GitTab.App.Localization"
+        xmlns:controls="clr-namespace:GitTab.App.Controls"
+        Title="{loc:Tr Compare.Title}"
+        Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
+        Width="1020" Height="660" MinWidth="720" MinHeight="440"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window}" FontFamily="Segoe UI" FontSize="13">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="{loc:Tr Compare.From}" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding Refs}" SelectedItem="{Binding FromRef}" MinWidth="200"/>
+            <TextBlock Text="→" VerticalAlignment="Center" Margin="12,0" FontSize="16" Foreground="{DynamicResource Brush.TextMuted}"/>
+            <TextBlock Text="{loc:Tr Compare.To}" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding Refs}" SelectedItem="{Binding ToRef}" MinWidth="200"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" MinWidth="220"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="300"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Card}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Compare.Changed}" Style="{StaticResource SectionHeader}" Margin="4,4,0,4"/>
+                    <ListBox ItemsSource="{Binding ChangedFiles}" SelectedItem="{Binding SelectedFile}"
+                             Background="Transparent" BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ToolTip="{Binding DisplayPath}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding StatusLetter}" Width="16" FontWeight="Bold"
+                                               Foreground="{Binding StatusColorKey, Converter={StaticResource Key2Brush}}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DisplayPath}" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent"/>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <controls:DiffView DataContext="{Binding Diff}"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

@@ -268,6 +268,19 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void Compare()
+    {
+        if (!IsRepositoryOpen) return;
+        var current = CurrentBranchName;
+        var names = _repo.GetBranches().Select(b => b.FriendlyName).ToList();
+        var baseRef = names.Contains("main") ? "main"
+            : names.Contains("master") ? "master"
+            : names.FirstOrDefault(n => n != current) ?? current;
+        var vm = new CompareViewModel(_repo, Loc, _logger, from: baseRef, to: current);
+        _dialogs.ShowCompare(vm);
+    }
+
+    [RelayCommand]
     private async Task OpenReflog()
     {
         if (!IsRepositoryOpen) return;
@@ -778,6 +791,7 @@ public sealed partial class MainViewModel : ObservableObject
                 P("Hosting.Web", OpenRemoteWebCommand),
                 P("Gitignore.Title", GenerateGitignoreCommand),
                 P("Stash.Push", StashPushCommand),
+                P("Compare.Title", CompareCommand),
             });
         }
         return list;

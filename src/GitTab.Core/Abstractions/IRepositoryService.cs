@@ -41,6 +41,12 @@ public interface IRepositoryService : IDisposable
     FileDiff GetCommitFileDiff(string sha, string path);
     FileDiff GetWorkingFileDiff(string path, bool staged);
 
+    /// <summary>Files that differ between two refs (branches/tags/commits).</summary>
+    IReadOnlyList<FileChange> GetChangesBetween(string fromRef, string toRef);
+
+    /// <summary>Diff of one file between two refs.</summary>
+    FileDiff GetFileDiffBetween(string fromRef, string toRef, string path);
+
     // ---- advanced reads ----
     RepositoryStateInfo GetState();
     IReadOnlyList<StashInfo> GetStashes();

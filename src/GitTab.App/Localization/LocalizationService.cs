@@ -133,6 +133,11 @@ public sealed class LocalizationService : ILocalizationService
         ["Search.Placeholder"] = "메시지 · 작성자 · 해시로 검색",
         ["Search.Tip"] = "커밋 메시지, 작성자 이름, 또는 커밋 해시로 걸러서 찾아요.",
         ["Palette.Placeholder"] = "명령 검색… (Ctrl+P)",
+        ["Compare.Title"] = "브랜치/커밋 비교",
+        ["Compare.Tip"] = "두 브랜치·태그·커밋 사이의 변경 파일과 diff를 비교해요.",
+        ["Compare.From"] = "기준",
+        ["Compare.To"] = "대상",
+        ["Compare.Changed"] = "변경된 파일",
 
         // Panels
         ["Panel.History"] = "히스토리",
@@ -441,6 +446,11 @@ public sealed class LocalizationService : ILocalizationService
         ["Search.Placeholder"] = "Search message · author · hash",
         ["Search.Tip"] = "Filter commits by message text, author name, or commit hash.",
         ["Palette.Placeholder"] = "Search commands… (Ctrl+P)",
+        ["Compare.Title"] = "Compare branches/commits",
+        ["Compare.Tip"] = "Compare changed files and diffs between two branches, tags, or commits.",
+        ["Compare.From"] = "Base",
+        ["Compare.To"] = "Target",
+        ["Compare.Changed"] = "Changed files",
 
         ["Panel.History"] = "History",
         ["Panel.Changes"] = "Changes",

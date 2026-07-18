@@ -47,6 +47,9 @@ public interface IDialogService
     /// <summary>Show the Ctrl+P command palette; returns true if the user confirmed a command.</summary>
     bool ShowCommandPalette(CommandPaletteViewModel vm);
 
+    /// <summary>Show the compare (two-ref diff) dialog.</summary>
+    void ShowCompare(CompareViewModel vm);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -205,6 +208,12 @@ public sealed class DialogService : IDialogService
     {
         var win = new CommandPaletteWindow { DataContext = vm, Owner = Owner() };
         return win.ShowDialog() == true;
+    }
+
+    public void ShowCompare(CompareViewModel vm)
+    {
+        var win = new CompareDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
     }
 
     public CredentialInput? PromptCredentials(string host)

@@ -360,6 +360,47 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    private static Commit? ResolveCommit(Repository repo, string reference)
+    {
+        if (string.IsNullOrWhiteSpace(reference)) return null;
+        if (repo.Branches[reference]?.Tip is { } branchTip) return branchTip;
+        if (repo.Tags[reference]?.Target is Commit tagCommit) return tagCommit;
+        try { return repo.Lookup<Commit>(reference); } catch { return null; }
+    }
+
+    public IReadOnlyList<FileChange> GetChangesBetween(string fromRef, string toRef)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var from = ResolveCommit(repo, fromRef)?.Tree;
+            var to = ResolveCommit(repo, toRef)?.Tree;
+            if (from is null || to is null) return Array.Empty<FileChange>();
+            return repo.Diff.Compare<TreeChanges>(from, to).Select(c => new FileChange
+            {
+                Path = c.Path,
+                OldPath = c.OldPath,
+                Kind = MapChangeKind(c.Status),
+                IsStaged = false
+            }).ToArray();
+        }
+    }
+
+    public FileDiff GetFileDiffBetween(string fromRef, string toRef, string path)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var from = ResolveCommit(repo, fromRef)?.Tree;
+            var to = ResolveCommit(repo, toRef)?.Tree;
+            if (from is null || to is null) return new FileDiff { Path = path, RawPatch = string.Empty };
+            var entry = repo.Diff.Compare<Patch>(from, to, new[] { path }).FirstOrDefault();
+            if (entry is null) return new FileDiff { Path = path, RawPatch = string.Empty };
+            return UnifiedDiffParser.Parse(entry.Path, entry.OldPath != entry.Path ? entry.OldPath : null,
+                entry.Patch ?? string.Empty, entry.IsBinaryComparison);
+        }
+    }
+
     public FileDiff GetWorkingFileDiff(string path, bool staged)
     {
         lock (_sync)
