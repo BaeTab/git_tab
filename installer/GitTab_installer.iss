@@ -87,9 +87,9 @@ Name: "{autodesktop}\Git Tab"; Filename: "{app}\{#AppExeName}"; Tasks: desktopic
 Filename: "{app}\{#AppExeName}"; Parameters: "--register-shell"; Flags: runasoriginaluser runhidden nowait; Tasks: shellmenu
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,Git Tab}"; Flags: nowait postinstall skipifsilent
 
-[UninstallRun]
-; Remove the Explorer menu on uninstall (before the exe is deleted), again as the original user.
-Filename: "{app}\{#AppExeName}"; Parameters: "--unregister-shell"; Flags: runasoriginaluser runhidden; RunOnceId: "UnregisterShellMenu"
+; Note: the Explorer menu is registered per-user (HKCU) via runasoriginaluser above. An elevated
+; uninstaller runs in the admin hive and cannot clean another user's HKCU, so removal is handled
+; from within the app (Settings → uncheck "Windows 탐색기 우클릭 메뉴") rather than [UninstallRun].
 
 [Code]
 // Runs `dotnet --list-runtimes` and checks the captured output for a line
