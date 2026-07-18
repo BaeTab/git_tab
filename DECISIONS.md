@@ -12,3 +12,5 @@ Running log of design/implementation decisions. One line each. Newest at top.
 - **Credentials delegated to git credential helper** — no in-app credential UI (security + license risk avoidance).
 - **Auto-update via GitHub Releases** — app checks the `latest` release, compares SemVer, downloads the InnoSetup installer asset, and launches it. No custom update server.
 - **H.Soft / Hyun-woo Bae branding retained** — this is the personal `github.com/BaeTab` repo, not the company GitLab, so personal branding is permitted.
+- **Runtime i18n (ko/en)** via a `LocalizationService` singleton exposing a bindable `this[key]` indexer; XAML binds `{Binding [Key]}` so toggling language updates all strings live without restart. Strings live in ko/en dictionaries.
+- **Beginner-friendly UX** — every Git action carries a plain-language tooltip (what it does + when to use it, aimed at first-time Git users), plus guided empty-states. Both languages.
