@@ -323,6 +323,24 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public CommitStats GetCommitStats(string sha)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var commit = repo.Lookup<Commit>(sha);
+            if (commit is null) return new CommitStats { FilesChanged = 0, Additions = 0, Deletions = 0 };
+            var parent = commit.Parents.FirstOrDefault();
+            var patch = repo.Diff.Compare<Patch>(parent?.Tree, commit.Tree);
+            return new CommitStats
+            {
+                FilesChanged = patch.Count(),
+                Additions = patch.LinesAdded,
+                Deletions = patch.LinesDeleted
+            };
+        }
+    }
+
     public FileDiff GetCommitFileDiff(string sha, string path)
     {
         lock (_sync)

@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using GitTab.App.Localization;
+using GitTab.App.Services;
 using GitTab.App.ViewModels;
 using GitTab.Core.Models;
 using GitTab.Graph.Models;
@@ -12,22 +13,23 @@ using GitTab.Graph.Models;
 namespace GitTab.App.Controls;
 
 /// <summary>
-/// Custom-rendered, virtualized commit history. Draws lane edges, nodes, ref chips and commit
-/// text directly via <see cref="OnRender"/>, and implements <see cref="IScrollInfo"/> so only the
-/// rows inside the viewport are ever drawn — the key to smooth scrolling over huge histories.
+/// Custom-rendered, virtualized commit history in a GitLens-style columnar layout
+/// (Branch/Tag · Graph · Message · Changes · Author · Date · SHA). Draws everything directly via
+/// <see cref="OnRender"/> and implements <see cref="IScrollInfo"/> so only visible rows are drawn.
 /// </summary>
 public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
 {
     private const double RowHeight = 30;
     private const double LaneWidth = 18;
-    private const double NodeRadius = 5.5;
-    private const double LaneThickness = 2.6;
-    private const double GraphLeftPad = 14;
+    private const double NodeRadius = 8;
+    private const double LaneThickness = 2.4;
+    private const double GraphLeftPad = 12;
     private const double ChipHeight = 17;
 
     private readonly Pen[] _lanePens;
     private readonly Brush[] _laneBrushes;
     private readonly Typeface _uiFont = new("Segoe UI");
+    private readonly Typeface _uiBold = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
     private readonly Typeface _monoFont = new("Consolas");
 
     private Vector _offset;
@@ -88,6 +90,16 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         set => SetValue(SelectedIndexProperty, value);
     }
 
+    public static readonly DependencyProperty StatsSourceProperty = DependencyProperty.Register(
+        nameof(StatsSource), typeof(ICommitStatsSource), typeof(CommitGraphControl),
+        new FrameworkPropertyMetadata(null, OnStatsSourceChanged));
+
+    public ICommitStatsSource? StatsSource
+    {
+        get => (ICommitStatsSource?)GetValue(StatsSourceProperty);
+        set => SetValue(StatsSourceProperty, value);
+    }
+
     private static void OnRowsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var c = (CommitGraphControl)d;
@@ -98,15 +110,20 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     }
 
     private static void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        => ((CommitGraphControl)d).BringIndexIntoView((int)e.NewValue);
+
+    private static void OnStatsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var c = (CommitGraphControl)d;
-        c.BringIndexIntoView((int)e.NewValue);
+        if (e.OldValue is ICommitStatsSource oldSrc) oldSrc.StatsUpdated -= c.OnStatsUpdated;
+        if (e.NewValue is ICommitStatsSource newSrc) newSrc.StatsUpdated += c.OnStatsUpdated;
     }
 
-    // ------------------------------------------------------------ layout
+    private void OnStatsUpdated(object? sender, EventArgs e) => InvalidateVisual();
 
-    private double LaneX(int lane) => GraphLeftPad + lane * LaneWidth + LaneWidth / 2;
-    private double GraphWidth => GraphLeftPad + Math.Max(LaneCount, 1) * LaneWidth + 8;
+    // ------------------------------------------------------------ layout / scrolling
+
+    private double GraphWidthEstimate => Math.Max(1, LaneCount) * LaneWidth + 200;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -128,8 +145,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     {
         int count = Rows?.Count ?? 0;
         double vw = double.IsInfinity(viewport.Width) ? _viewport.Width : viewport.Width;
-        _extent = new Size(Math.Max(vw, GraphWidth), count * RowHeight);
-        // Clamp offset if content shrank.
+        _extent = new Size(Math.Max(vw, GraphWidthEstimate), count * RowHeight);
         _offset.Y = Math.Max(0, Math.Min(_offset.Y, Math.Max(0, _extent.Height - _viewport.Height)));
     }
 
@@ -137,24 +153,30 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
 
     protected override void OnRender(DrawingContext dc)
     {
-        // Whole-viewport transparent fill so clicks anywhere hit the control.
         dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, RenderSize.Width, RenderSize.Height));
 
         var rows = Rows;
         if (rows is null || rows.Count == 0) return;
 
-        double pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+        double ppd = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         var textBrush = Res("Brush.Text", Brushes.Black);
         var mutedBrush = Res("Brush.TextMuted", Brushes.Gray);
         var selBrush = Res("Brush.Selection", Brushes.LightBlue);
         var accentBrush = Res("Brush.Accent", Brushes.DodgerBlue);
         var surfaceBrush = Res("Brush.Surface", Brushes.White);
-        var nodeStroke = new Pen(surfaceBrush, 2.0);
+        var trackBrush = Res("Brush.SurfaceAlt", Brushes.LightGray);
+        var greenBrush = Res("Brush.Success", Brushes.Green);
+        var redBrush = Res("Brush.Danger", Brushes.Red);
+        var nodeStroke = new Pen(surfaceBrush, 1.5);
 
         double vh = _viewport.Height > 0 ? _viewport.Height : RenderSize.Height;
         double vw = _viewport.Width > 0 ? _viewport.Width : RenderSize.Width;
+        var cols = GraphColumns.Compute(vw, LaneCount, LaneWidth);
+
         int first = Math.Max(0, (int)Math.Floor(_offset.Y / RowHeight));
         int last = Math.Min(rows.Count - 1, (int)Math.Ceiling((_offset.Y + vh) / RowHeight));
+
+        double LaneX(int lane) => cols.GraphX + GraphLeftPad + lane * LaneWidth + LaneWidth / 2;
 
         dc.PushTransform(new TranslateTransform(-_offset.X, -_offset.Y));
 
@@ -165,11 +187,10 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             double centerY = top + RowHeight / 2;
             double bottom = top + RowHeight;
 
-            // selection background across the viewport width
             if (i == SelectedIndex)
                 dc.DrawRectangle(selBrush, null, new Rect(_offset.X, top, vw, RowHeight));
 
-            // edges
+            // ----- edges -----
             foreach (var seg in row.GraphRow.PassingLanes)
             {
                 var pen = _lanePens[Mod(seg.ColorIndex)];
@@ -178,54 +199,106 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
                     case LaneKind.Straight:
                         dc.DrawLine(pen, new Point(LaneX(seg.FromLane), top), new Point(LaneX(seg.ToLane), bottom));
                         break;
-                    case LaneKind.Merge: // top edge -> node center
+                    case LaneKind.Merge:
                         DrawConnector(dc, pen, LaneX(seg.FromLane), top, LaneX(row.GraphRow.NodeLane), centerY);
                         break;
-                    case LaneKind.Branch: // node center -> bottom edge
+                    case LaneKind.Branch:
                         DrawConnector(dc, pen, LaneX(row.GraphRow.NodeLane), centerY, LaneX(seg.ToLane), bottom);
                         break;
                 }
             }
 
-            // node
+            // ----- avatar node -----
             double nodeX = LaneX(row.GraphRow.NodeLane);
-            var nodeBrush = _laneBrushes[Mod(row.GraphRow.ColorIndex)];
+            var lanePen = _lanePens[Mod(row.GraphRow.ColorIndex)];
+            var avColor = AuthorAvatar.ColorFor(string.IsNullOrEmpty(row.Commit.AuthorEmail) ? row.AuthorName : row.Commit.AuthorEmail);
+            var avBrush = new SolidColorBrush(avColor);
             if (row.IsHead)
-                dc.DrawEllipse(null, new Pen(accentBrush, 2.2), new Point(nodeX, centerY), NodeRadius + 3.0, NodeRadius + 3.0);
-            dc.DrawEllipse(nodeBrush, nodeStroke, new Point(nodeX, centerY), NodeRadius, NodeRadius);
+                dc.DrawEllipse(null, new Pen(accentBrush, 2.2), new Point(nodeX, centerY), NodeRadius + 3, NodeRadius + 3);
+            dc.DrawEllipse(avBrush, nodeStroke, new Point(nodeX, centerY), NodeRadius, NodeRadius);
+            dc.DrawEllipse(null, lanePen, new Point(nodeX, centerY), NodeRadius, NodeRadius); // lane-colored ring
+            var initial = Ft(AuthorAvatar.Initial(row.AuthorName), Brushes.White, 9.5, _uiBold, ppd);
+            dc.DrawText(initial, new Point(nodeX - initial.Width / 2, centerY - initial.Height / 2));
 
-            // text area
-            double x = GraphWidth + 6;
-            double rightEdge = _offset.X + vw - 10;
+            // ----- refs (right-aligned, ending just left of the graph) -----
+            DrawRefs(dc, row.Refs, cols.RefsX, cols.GraphX - 6, centerY, ppd);
 
-            // right-aligned: time, then author, then short sha (all muted)
-            var timeText = Ft(RelativeTime.Format(row.WhenUtc, LocalizationService.Current), mutedBrush, 11.5, _uiFont, pixelsPerDip);
-            var authorText = Ft(Truncate(row.AuthorName, 22), mutedBrush, 11.5, _uiFont, pixelsPerDip);
-            var shaText = Ft(row.ShortSha, mutedBrush, 11.5, _monoFont, pixelsPerDip);
+            // ----- message -----
+            var message = Ft(row.Summary, textBrush, 12.5, _uiFont, ppd, cols.MessageW);
+            dc.DrawText(message, new Point(cols.MessageX, centerY - message.Height / 2));
 
-            double ty = centerY - timeText.Height / 2;
-            double timeX = rightEdge - timeText.Width;
-            double authorX = timeX - 12 - authorText.Width;
-            double shaX = authorX - 12 - shaText.Width;
-            dc.DrawText(timeText, new Point(timeX, ty));
-            dc.DrawText(authorText, new Point(authorX, ty));
-            dc.DrawText(shaText, new Point(shaX, ty));
+            // ----- changes (optional) -----
+            if (cols.ChangesW > 0)
+                DrawChanges(dc, row.Sha, cols.ChangesX, cols.ChangesW, centerY, ppd, mutedBrush, trackBrush, greenBrush, redBrush);
 
-            // chips
-            foreach (var chip in row.Refs)
+            // ----- author / date (optional) / sha -----
+            if (cols.AuthorW > 0)
             {
-                double w = DrawChip(dc, chip, x, centerY, pixelsPerDip);
-                x += w + 4;
-                if (x > shaX - 40) break; // don't overflow into the right block
+                var author = Ft(row.AuthorName, mutedBrush, 12, _uiFont, ppd, cols.AuthorW);
+                dc.DrawText(author, new Point(cols.AuthorX, centerY - author.Height / 2));
             }
 
-            // summary (fills remaining space, ellipsized)
-            double summaryMax = Math.Max(40, shaX - 16 - x);
-            var summary = Ft(row.Summary, textBrush, 12.5, _uiFont, pixelsPerDip, summaryMax);
-            dc.DrawText(summary, new Point(x, centerY - summary.Height / 2));
+            if (cols.DateW > 0)
+            {
+                var date = Ft(RelativeTime.Format(row.WhenUtc, LocalizationService.Current), mutedBrush, 11.5, _uiFont, ppd, cols.DateW);
+                dc.DrawText(date, new Point(cols.DateX, centerY - date.Height / 2));
+            }
+
+            var sha = Ft(row.ShortSha, mutedBrush, 11.5, _monoFont, ppd, cols.ShaW);
+            dc.DrawText(sha, new Point(cols.ShaX, centerY - sha.Height / 2));
         }
 
         dc.Pop();
+    }
+
+    private void DrawRefs(DrawingContext dc, IReadOnlyList<RefLabel> refs, double leftLimit, double endX, double centerY, double ppd)
+    {
+        double x = endX;
+        foreach (var chip in refs)
+        {
+            var (bgKey, fgKey) = chip.Kind switch
+            {
+                RefKind.Tag => ("Chip.Tag.Bg", "Chip.Tag.Text"),
+                RefKind.RemoteBranch => ("Chip.Remote.Bg", "Chip.Remote.Text"),
+                RefKind.Head => ("Chip.Head.Bg", "Chip.Head.Text"),
+                _ => chip.IsCurrent ? ("Chip.Head.Bg", "Chip.Head.Text") : ("Chip.Local.Bg", "Chip.Local.Text")
+            };
+            var bg = Res(bgKey, Brushes.LightGray);
+            var fg = Res(fgKey, Brushes.Black);
+            var label = Ft(chip.Name, fg, 10.5, _uiFont, ppd, 120);
+            double w = label.Width + 12;
+            double chipX = x - w;
+            if (chipX < leftLimit) break;
+            var rect = new Rect(chipX, centerY - ChipHeight / 2, w, ChipHeight);
+            dc.DrawRoundedRectangle(bg, null, rect, 7, 7);
+            dc.DrawText(label, new Point(chipX + 6, centerY - label.Height / 2));
+            x = chipX - 4;
+        }
+    }
+
+    private void DrawChanges(DrawingContext dc, string sha, double x, double w, double centerY, double ppd,
+        Brush muted, Brush track, Brush green, Brush red)
+    {
+        var source = StatsSource;
+        if (source is null) return;
+        if (!source.TryGet(sha, out var st)) { source.Request(sha); return; }
+
+        var count = Ft(st.FilesChanged.ToString(), muted, 11, _uiFont, ppd);
+        dc.DrawText(count, new Point(x, centerY - count.Height / 2));
+
+        double barX = x + 24;
+        double barW = w - 28;
+        double barH = 6;
+        double barY = centerY - barH / 2;
+        if (barW < 8) return;
+        dc.DrawRoundedRectangle(track, null, new Rect(barX, barY, barW, barH), 3, 3);
+
+        int total = st.Total;
+        if (total <= 0) return;
+        double addW = Math.Round(barW * st.Additions / (double)total);
+        if (addW > 0) dc.DrawRoundedRectangle(green, null, new Rect(barX, barY, addW, barH), 3, 3);
+        double delW = barW - addW;
+        if (delW > 0) dc.DrawRoundedRectangle(red, null, new Rect(barX + addW, barY, delW, barH), 3, 3);
     }
 
     private static void DrawConnector(DrawingContext dc, Pen pen, double x1, double y1, double x2, double y2)
@@ -235,7 +308,6 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             dc.DrawLine(pen, new Point(x1, y1), new Point(x2, y2));
             return;
         }
-        // Smooth S-curve between lanes.
         var geo = new StreamGeometry();
         using (var ctx = geo.Open())
         {
@@ -245,26 +317,6 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         }
         geo.Freeze();
         dc.DrawGeometry(null, pen, geo);
-    }
-
-    private double DrawChip(DrawingContext dc, RefLabel chip, double x, double centerY, double ppd)
-    {
-        var (bgKey, fgKey) = chip.Kind switch
-        {
-            RefKind.Tag => ("Chip.Tag.Bg", "Chip.Tag.Text"),
-            RefKind.RemoteBranch => ("Chip.Remote.Bg", "Chip.Remote.Text"),
-            RefKind.Head => ("Chip.Head.Bg", "Chip.Head.Text"),
-            _ => chip.IsCurrent ? ("Chip.Head.Bg", "Chip.Head.Text") : ("Chip.Local.Bg", "Chip.Local.Text")
-        };
-        var bg = Res(bgKey, Brushes.LightGray);
-        var fg = Res(fgKey, Brushes.Black);
-
-        var label = Ft(chip.Name, fg, 10.5, _uiFont, ppd);
-        double w = label.Width + 12;
-        var rect = new Rect(x, centerY - ChipHeight / 2, w, ChipHeight);
-        dc.DrawRoundedRectangle(bg, null, rect, 8, 8);
-        dc.DrawText(label, new Point(x + 6, centerY - label.Height / 2));
-        return w;
     }
 
     private FormattedText Ft(string text, Brush brush, double size, Typeface face, double ppd, double? maxWidth = null)
@@ -283,28 +335,27 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
 
     private static int Mod(int i) => ((i % GraphPalette.Size) + GraphPalette.Size) % GraphPalette.Size;
 
-    private static string Truncate(string s, int max) => s.Length <= max ? s : s[..(max - 1)] + "…";
-
     // ------------------------------------------------------------ input
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
         Focus();
-        var p = e.GetPosition(this);
-        int index = (int)((p.Y + _offset.Y) / RowHeight);
-        if (Rows is { } rows && index >= 0 && index < rows.Count)
-            SelectedIndex = index;
+        SelectRowAt(e.GetPosition(this));
     }
 
     protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseRightButtonDown(e);
         Focus();
-        var p = e.GetPosition(this);
+        SelectRowAt(e.GetPosition(this));
+    }
+
+    private void SelectRowAt(Point p)
+    {
         int index = (int)((p.Y + _offset.Y) / RowHeight);
         if (Rows is { } rows && index >= 0 && index < rows.Count)
-            SelectedIndex = index; // select before the ContextMenu opens
+            SelectedIndex = index;
     }
 
     protected override void OnKeyDown(KeyEventArgs e)

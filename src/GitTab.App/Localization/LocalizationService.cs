@@ -95,6 +95,15 @@ public sealed class LocalizationService : ILocalizationService
         ["Panel.Details"] = "커밋 상세",
         ["Panel.Diff"] = "변경 내용",
 
+        // Graph column headers
+        ["Col.Refs"] = "브랜치 / 태그",
+        ["Col.Graph"] = "그래프",
+        ["Col.Message"] = "커밋 메시지",
+        ["Col.Changes"] = "변경",
+        ["Col.Author"] = "작성자",
+        ["Col.Date"] = "커밋 날짜",
+        ["Col.Sha"] = "SHA",
+
         // Welcome / onboarding
         ["Welcome.Title"] = "Git Tab에 오신 걸 환영해요",
         ["Welcome.Subtitle"] = "저장소 폴더를 열거나, 이 창으로 폴더를 끌어다 놓으세요.",
@@ -295,6 +304,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Panel.Branches"] = "Branches",
         ["Panel.Details"] = "Commit details",
         ["Panel.Diff"] = "Diff",
+
+        ["Col.Refs"] = "BRANCH / TAG",
+        ["Col.Graph"] = "GRAPH",
+        ["Col.Message"] = "COMMIT MESSAGE",
+        ["Col.Changes"] = "CHANGES",
+        ["Col.Author"] = "AUTHOR",
+        ["Col.Date"] = "COMMIT DATE",
+        ["Col.Sha"] = "SHA",
 
         ["Welcome.Title"] = "Welcome to Git Tab",
         ["Welcome.Subtitle"] = "Open a repository folder, or drag a folder onto this window.",

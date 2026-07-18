@@ -37,6 +37,7 @@ public interface IRepositoryService : IDisposable
     WorkingTreeStatus GetStatus();
 
     IReadOnlyList<FileChange> GetCommitChanges(string sha);
+    CommitStats GetCommitStats(string sha);
     FileDiff GetCommitFileDiff(string sha, string path);
     FileDiff GetWorkingFileDiff(string path, bool staged);
 

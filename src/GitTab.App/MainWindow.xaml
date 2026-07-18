@@ -160,11 +160,9 @@
         <!-- ================= Main content ================= -->
         <Grid Grid.Row="2" Margin="8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" MinWidth="220"/>
+                <ColumnDefinition Width="270" MinWidth="200"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*" MinWidth="340"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="440" MinWidth="300"/>
+                <ColumnDefinition Width="*" MinWidth="520"/>
             </Grid.ColumnDefinitions>
 
             <!-- ===== Left: Changes / Branches ===== -->
@@ -431,15 +429,32 @@
             <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Center" Background="Transparent"
                           VerticalAlignment="Stretch"/>
 
-            <!-- ===== Center: history graph ===== -->
-            <Border Grid.Column="2" Style="{StaticResource Card}" ClipToBounds="True">
+            <!-- ===== Right of sidebar: graph (top) + commit details (bottom) ===== -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="180"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="320" MinHeight="120"/>
+                </Grid.RowDefinitions>
+
+            <!-- ===== Graph ===== -->
+            <Border Grid.Row="0" Style="{StaticResource Card}" ClipToBounds="True">
                 <Grid>
-                    <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto"
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <controls:CommitGraphHeader Grid.Row="0" LaneCount="{Binding LaneCount}"
+                                                Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
+
+                    <ScrollViewer Grid.Row="1" CanContentScroll="True" VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
                                   Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                         <controls:CommitGraphControl
                             Rows="{Binding Rows}"
                             LaneCount="{Binding LaneCount}"
+                            StatsSource="{Binding Stats}"
                             SelectedIndex="{Binding SelectedCommitIndex, Mode=TwoWay}">
                             <controls:CommitGraphControl.ContextMenu>
                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
@@ -463,7 +478,7 @@
                     </ScrollViewer>
 
                     <!-- welcome / empty state -->
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420"
+                    <StackPanel Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420"
                                 Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}, ConverterParameter=invert}">
                         <TextBlock Text="{loc:Tr Welcome.Title}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
                         <TextBlock Text="{loc:Tr Welcome.Subtitle}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
@@ -476,11 +491,11 @@
                 </Grid>
             </Border>
 
-            <GridSplitter Grid.Column="3" Width="6" HorizontalAlignment="Center" Background="Transparent"
-                          VerticalAlignment="Stretch"/>
+            <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                          Background="Transparent"/>
 
-            <!-- ===== Right: details + diff ===== -->
-            <Border Grid.Column="4" Style="{StaticResource Card}">
+            <!-- ===== Commit details + diff (bottom) ===== -->
+            <Border Grid.Row="2" Style="{StaticResource Card}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -538,6 +553,7 @@
                     </Border>
                 </Grid>
             </Border>
+            </Grid>
         </Grid>
 
         <!-- ================= Status bar ================= -->

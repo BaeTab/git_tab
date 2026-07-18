@@ -30,6 +30,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     private readonly ISettingsService _settings;
 
+    public ICommitStatsSource Stats { get; }
+
     public MainViewModel(
         IRepositoryService repo,
         IRecentRepositoriesStore recent,
@@ -38,11 +40,13 @@ public sealed partial class MainViewModel : ObservableObject
         IThemeService theme,
         IUpdateService updates,
         ISettingsService settings,
+        ICommitStatsSource stats,
         WorkingCopyViewModel workingCopy,
         BranchesViewModel branches,
         CommitDetailsViewModel details,
         ILogger<MainViewModel> logger)
     {
+        Stats = stats;
         _repo = repo;
         _recent = recent;
         _dialogs = dialogs;
@@ -148,6 +152,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             _repo.Open(discovered);
+            Stats.Clear();
             _recent.Add(discovered);
             SyncRecent();
             RepositoryPath = discovered;

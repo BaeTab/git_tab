@@ -90,6 +90,7 @@ public partial class App : Application
         services.AddSingleton<IRecentRepositoriesStore>(sp =>
             new RecentRepositoriesStore(sp.GetRequiredService<ILogger<RecentRepositoriesStore>>()));
         services.AddSingleton<GitTab.Core.Gitignore.IGitignoreService, GitTab.Core.Gitignore.GitignoreService>();
+        services.AddSingleton<ICommitStatsSource>(sp => new CommitStatsCache(sp.GetRequiredService<IRepositoryService>()));
 
         // App services
         services.AddSingleton<ISettingsService, SettingsService>();
