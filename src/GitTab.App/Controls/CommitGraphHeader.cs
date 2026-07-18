@@ -14,9 +14,21 @@ public sealed class CommitGraphHeader : FrameworkElement
 
     public CommitGraphHeader()
     {
-        LocalizationService.Current.LanguageChanged += (_, _) => InvalidateVisual();
-        ThemeService.ThemeChanged += (_, _) => InvalidateVisual();
+        Loaded += (_, _) =>
+        {
+            LocalizationService.Current.LanguageChanged -= OnExternalInvalidate;
+            LocalizationService.Current.LanguageChanged += OnExternalInvalidate;
+            ThemeService.ThemeChanged -= OnExternalInvalidate;
+            ThemeService.ThemeChanged += OnExternalInvalidate;
+        };
+        Unloaded += (_, _) =>
+        {
+            LocalizationService.Current.LanguageChanged -= OnExternalInvalidate;
+            ThemeService.ThemeChanged -= OnExternalInvalidate;
+        };
     }
+
+    private void OnExternalInvalidate(object? sender, EventArgs e) => InvalidateVisual();
 
     public static readonly DependencyProperty LaneCountProperty = DependencyProperty.Register(
         nameof(LaneCount), typeof(int), typeof(CommitGraphHeader),
@@ -53,7 +65,8 @@ public sealed class CommitGraphHeader : FrameworkElement
         void Label(string key, double x, double? max = null)
         {
             var t = new FormattedText(loc.T(key), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
-                _font, 10.5, muted, ppd) { Trimming = TextTrimming.CharacterEllipsis, MaxLineCount = 1 };
+                _font, 10.5, muted, ppd)
+            { Trimming = TextTrimming.CharacterEllipsis, MaxLineCount = 1 };
             if (max is { } m) t.MaxTextWidth = Math.Max(1, m);
             dc.DrawText(t, new Point(x, y(t)));
         }

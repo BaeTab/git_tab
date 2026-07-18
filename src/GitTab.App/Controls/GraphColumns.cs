@@ -67,13 +67,20 @@ internal readonly struct GraphColumns
 
         return new GraphColumns
         {
-            RefsX = 8, RefsW = Math.Max(0, refsW - 8),
-            GraphX = graphX, GraphW = graphW,
-            MessageX = messageX, MessageW = messageW,
-            ChangesX = changesX, ChangesW = changesW,
-            AuthorX = authorX, AuthorW = authorW,
-            DateX = dateX, DateW = dateW,
-            ShaX = shaX, ShaW = shaW
+            RefsX = 8,
+            RefsW = Math.Max(0, refsW - 8),
+            GraphX = graphX,
+            GraphW = graphW,
+            MessageX = messageX,
+            MessageW = messageW,
+            ChangesX = changesX,
+            ChangesW = changesW,
+            AuthorX = authorX,
+            AuthorW = authorW,
+            DateX = dateX,
+            DateW = dateW,
+            ShaX = shaX,
+            ShaW = shaW
         };
     }
 }

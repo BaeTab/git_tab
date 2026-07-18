@@ -53,10 +53,23 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             return b;
         }).ToArray();
 
-        LocalizationService.Current.LanguageChanged += (_, _) => InvalidateVisual();
-        // Re-resolve themed brushes and repaint when the theme is swapped at runtime.
-        ThemeService.ThemeChanged += (_, _) => InvalidateVisual();
+        // Repaint on language/theme change — subscribe only while loaded so we don't leak the
+        // control on the static events after the window closes.
+        Loaded += (_, _) =>
+        {
+            LocalizationService.Current.LanguageChanged -= OnExternalInvalidate;
+            LocalizationService.Current.LanguageChanged += OnExternalInvalidate;
+            ThemeService.ThemeChanged -= OnExternalInvalidate;
+            ThemeService.ThemeChanged += OnExternalInvalidate;
+        };
+        Unloaded += (_, _) =>
+        {
+            LocalizationService.Current.LanguageChanged -= OnExternalInvalidate;
+            ThemeService.ThemeChanged -= OnExternalInvalidate;
+        };
     }
+
+    private void OnExternalInvalidate(object? sender, EventArgs e) => InvalidateVisual();
 
     // ------------------------------------------------------------ dependency properties
 

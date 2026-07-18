@@ -732,7 +732,7 @@ public sealed partial class MainViewModel : ObservableObject
             case "push": await Push(); break;
             case "fetch": await Fetch(); break;
             case "commit": CommitFocusRequested?.Invoke(); break;
-            // "open" / "log": the repository is open and the graph (log) is already shown.
+                // "open" / "log": the repository is open and the graph (log) is already shown.
         }
     }
 

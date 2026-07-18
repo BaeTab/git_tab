@@ -59,11 +59,14 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pinned for reproducible installers. Bump deliberately; the release still builds without
+          # a bundle if this tag/asset is unavailable (continue-on-error).
+          MINGIT_TAG: "v2.47.1.windows.1"
         run: |
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; "User-Agent" = "git-tab-release" }
-          $rel = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/git-for-windows/git/releases/latest"
+          $rel = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/git-for-windows/git/releases/tags/$env:MINGIT_TAG"
           $asset = $rel.assets | Where-Object { $_.name -match '^MinGit-.*-64-bit\.zip$' } | Select-Object -First 1
-          if (-not $asset) { throw "MinGit 64-bit asset not found" }
+          if (-not $asset) { throw "MinGit 64-bit asset not found for $env:MINGIT_TAG" }
           Write-Host "Downloading $($asset.name)"
           Invoke-WebRequest -Headers $headers -Uri $asset.browser_download_url -OutFile mingit.zip
           Expand-Archive -Path mingit.zip -DestinationPath publish\git -Force

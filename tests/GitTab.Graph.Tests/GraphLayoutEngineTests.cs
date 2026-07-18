@@ -222,11 +222,11 @@ public sealed class GraphLayoutEngineTests
         };
         var layout = Engine.Build(commits);
         foreach (var row in layout.Rows)
-        foreach (var seg in row.PassingLanes)
-        {
-            seg.FromLane.Should().BeInRange(0, layout.LaneCount - 1);
-            seg.ToLane.Should().BeInRange(0, layout.LaneCount - 1);
-            seg.ColorIndex.Should().BeGreaterThanOrEqualTo(0);
-        }
+            foreach (var seg in row.PassingLanes)
+            {
+                seg.FromLane.Should().BeInRange(0, layout.LaneCount - 1);
+                seg.ToLane.Should().BeInRange(0, layout.LaneCount - 1);
+                seg.ColorIndex.Should().BeGreaterThanOrEqualTo(0);
+            }
     }
 }
