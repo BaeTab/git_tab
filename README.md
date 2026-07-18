@@ -25,6 +25,12 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Staging & Commit** — Stage/unstage/discard individual files and commit (or amend) from the UI.
 - **Branches & Tags** — Checkout, create, delete, rename, merge, rebase; create/delete/push tags; delete remote branches.
 - **Interactive Rebase** — Reorder, squash, fixup, or drop commits with a visual planner.
+- **History & Undo** — Browse HEAD's reflog and restore to any point; one-click "undo last action".
+- **Partial Staging** — Stage individual hunks of a file (the GUI equivalent of `git add -p`).
+- **Visual 3-Way Merge** — Resolve conflicts with base / ours / theirs panes and an editable result.
+- **Create Repository & Remotes** — `git init` a new repo (with an optional `origin`) and manage remotes.
+- **GitHub/GitLab** — One-click "New PR" (opens the pre-filled Pull/Merge Request page) and "Open on web".
+- **Commit Helper** — A Conventional-Commits type dropdown for consistent messages.
 - **Stash** — Stash your changes and apply/pop/drop them later.
 - **Blame** — See which commit last changed each line of a file.
 - **Conflict Handling** — An in-progress banner with Abort/Continue; resolve by staging files.
@@ -170,6 +176,12 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **스테이징 & 커밋** — 파일 단위 스테이징/언스테이징/되돌리기, 커밋(및 amend).
 - **브랜치 & 태그** — 체크아웃·생성·삭제·이름변경·병합·리베이스, 태그 생성/삭제/푸시, 원격 브랜치 삭제.
 - **대화형 리베이스** — 커밋을 재정렬·squash·fixup·drop 하는 시각적 플래너.
+- **작업 기록 & 되돌리기** — HEAD reflog를 훑어보고 원하는 지점으로 복원, 원클릭 ‘마지막 작업 취소’.
+- **부분 스테이징** — 파일의 헝크(변경 블록) 단위로 스테이지 (GUI판 `git add -p`).
+- **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결.
+- **저장소 만들기 & 원격 관리** — `git init`으로 새 저장소 생성(원격 연결 선택) 및 원격 추가/변경/삭제.
+- **GitHub/GitLab** — 원클릭 ‘PR 만들기’(미리 채워진 PR/MR 페이지 열기), ‘웹에서 열기’.
+- **커밋 도우미** — Conventional Commits 종류 드롭다운으로 일관된 메시지.
 - **스태시** — 변경을 잠시 치워두고 나중에 apply/pop/drop.
 - **Blame** — 파일의 각 줄을 마지막으로 바꾼 커밋 표시.
 - **충돌 처리** — 진행 중 배너(중단/계속), 파일을 스테이지하여 해결.

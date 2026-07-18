@@ -3,6 +3,36 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-07-18
+
+### Added
+- **Create repository** — turn a folder into a new repo (`git init`), optionally wiring up an
+  `origin` remote, from the toolbar or welcome screen.
+- **Remotes manager** — add, change the URL of, or remove remotes.
+- **History & undo (reflog)** — browse recent HEAD positions and restore to any of them, with a
+  one-click "undo last action" — a safety net for mistaken commits/merges/resets.
+- **Partial staging** — stage individual hunks of a file (the GUI equivalent of `git add -p`) via
+  a per-hunk "stage" action.
+- **Visual 3-way merge editor** — resolve conflicts with base / ours / theirs reference panes and an
+  editable result, plus "use ours / use theirs / keep both" quick actions.
+- **Commit message helper** — a Conventional-Commits type dropdown (feat/fix/docs/…) that prefixes
+  the message.
+- **GitHub/GitLab integration** — "New PR" opens the pre-filled Pull/Merge Request page for the
+  current branch, and "Open on web" opens the repository page (no token required).
+- **Crash reports (opt-in)** — write a local crash report on unexpected errors, plus an "open logs
+  folder" action, from Settings › Diagnostics.
+- **Accessibility** — screen-reader names on toolbar actions and a UI Automation peer for the commit
+  graph that announces the selected commit; keyboard navigation throughout.
+
+### Changed
+- Large repositories load incrementally: the first page of commits loads instantly and more load as
+  you scroll, preserving your scroll position.
+- Added a `--dark` command-line flag (mirrors `--light`).
+
+### Testing
+- Regression suite expanded to 68 tests (init, remotes, reflog, credential-key parsing, auth-failure
+  detection, remote-URL/PR-URL parsing).
+
 ## [0.4.0] - 2026-07-18
 
 ### Added
@@ -43,6 +73,7 @@ All notable changes to **Git Tab** are documented here. This project follows
 - Initial release: color commit graph, commit details + diff, staging & commit, branches & tags,
   fetch/pull/push, `.gitignore` generator, light/dark themes, Korean/English UI, auto-update.
 
+[0.5.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.5.0
 [0.4.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.4.0
 [0.3.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.3.0
 [0.2.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.2.0
