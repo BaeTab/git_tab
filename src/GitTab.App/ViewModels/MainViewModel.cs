@@ -321,7 +321,7 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task<bool> RunWithAuthRetryAsync(Func<Task<GitResult>> op)
     {
         GitResult result;
-        try { result = await op().ConfigureAwait(true); }
+        try { result = await GitAuth.RunWithRetryAsync(op, _repo, _credentials, _dialogs, Loc, _logger); }
         catch (Exception ex)
         {
             _logger.LogError(ex, "network op threw");
@@ -331,51 +331,10 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (result.Success) return true;
 
-        if (IsAuthFailure(result))
-        {
-            var url = _repo.GetRemoteUrl();
-            var input = _dialogs.PromptCredentials(CredentialKey.HostLabel(url));
-            if (input is not null)
-            {
-                var key = CredentialKey.FromUrl(url);
-                if (key is not null)
-                {
-                    try { _credentials.Save(key, input.User, input.Secret); }
-                    catch (Exception ex) { _logger.LogWarning(ex, "Saving credentials failed"); }
-                }
-                try
-                {
-                    var retry = await op().ConfigureAwait(true);
-                    if (retry.Success) return true;
-                    result = retry;
-                }
-                catch (Exception ex)
-                {
-                    _dialogs.Error(ex.Message, Loc.T("Error.GitFailed"));
-                    return false;
-                }
-            }
-        }
-
         _logger.LogWarning("git failed ({Code}): {Cmd}\n{Out}", result.ExitCode, result.CommandLine, result.CombinedOutput);
         var body = string.IsNullOrWhiteSpace(result.CombinedOutput) ? result.CommandLine : result.CombinedOutput;
         _dialogs.Error(body, Loc.T("Error.GitFailed"));
         return false;
-    }
-
-    private static bool IsAuthFailure(GitResult r)
-    {
-        var s = r.CombinedOutput;
-        if (string.IsNullOrEmpty(s)) return false;
-        string[] needles =
-        {
-            "Authentication failed", "could not read Username", "could not read Password",
-            "terminal prompts disabled", "Invalid username or password",
-            "Support for password authentication", "remote: HTTP Basic",
-            "fatal: Authentication", "403 Forbidden", "401 Unauthorized",
-            "Permission denied", "Login failed", "Repository not found"
-        };
-        return needles.Any(n => s.Contains(n, StringComparison.OrdinalIgnoreCase));
     }
 
     // ---------------------------------------------------------------- commit context-menu actions

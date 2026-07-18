@@ -28,7 +28,7 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Conflict Handling** — An in-progress banner with Abort/Continue; resolve by staging files.
 - **Remotes** — Fetch, pull, push with ahead/behind tracking.
 - **GUI Authentication** — Push/pull to private HTTPS remotes with no console setup: enter a username + Personal Access Token once in a dialog, stored securely in Windows Credential Manager and reused automatically.
-- **Windows Explorer Integration** — TortoiseGit-style right-click menu (**Open / Commit / Pull / Push / Fetch / History**) on any folder; a single running instance receives the action. Toggle it from the toolbar's settings menu (no admin needed).
+- **Windows Explorer Integration** — TortoiseGit-style right-click menu (**Open / Commit / Pull / Push / Fetch / History**) on any folder. Pull/Push/Fetch/Commit open in a dedicated dialog (no need to open the full app); Open/History launch the main window. Toggle it from **Settings** (no admin needed).
 - **Bundled Git** — The installer ships portable Git, so Git Tab is a true all-in-one tool that works even without Git installed separately.
 - **Submodules** — One-click `submodule update --init --recursive`.
 - **`.gitignore` Generator** — Detects your stack (.NET, Node, Python, Java, Rust, Go, Flutter, Unity…) and generates a matching file.
@@ -171,7 +171,7 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **충돌 처리** — 진행 중 배너(중단/계속), 파일을 스테이지하여 해결.
 - **원격** — Fetch/Pull/Push + ahead/behind 추적.
 - **GUI 인증** — 콘솔 설정 없이 비공개 HTTPS 원격에 Push/Pull. 사용자 이름 + 개인 액세스 토큰(PAT)을 한 번만 대화상자에 입력하면 Windows 자격 증명 관리자에 안전하게 저장되어 이후 자동으로 사용됩니다.
-- **Windows 탐색기 통합** — 아무 폴더나 우클릭하면 TortoiseGit 스타일 메뉴(**열기 / 커밋 / 받아오기 / 올리기 / 가져오기 / 히스토리**)가 나오고, 실행 중인 창으로 바로 전달됩니다. 툴바 설정 메뉴에서 켜고 끌 수 있습니다(관리자 권한 불필요).
+- **Windows 탐색기 통합** — 아무 폴더나 우클릭하면 TortoiseGit 스타일 메뉴(**열기 / 커밋 / 받아오기 / 올리기 / 가져오기 / 히스토리**)가 나옵니다. 받아오기·올리기·가져오기·커밋은 전용 대화상자로 바로 열려(메인 앱을 열 필요 없음), 열기·히스토리는 메인 창을 엽니다. **설정**에서 켜고 끌 수 있습니다(관리자 권한 불필요).
 - **Git 번들 포함** — 설치본에 이식형 Git이 포함되어, Git이 따로 설치돼 있지 않아도 동작하는 진정한 올인원 도구입니다.
 - **서브모듈** — 원클릭 `submodule update --init --recursive`.
 - **.gitignore 생성기** — 스택 자동 감지(.NET·Node·Python·Java·Rust·Go·Flutter·Unity 등) 후 생성.

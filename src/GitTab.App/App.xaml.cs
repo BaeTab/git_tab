@@ -3,6 +3,7 @@ using System.Windows;
 using GitTab.App.Localization;
 using GitTab.App.Services;
 using GitTab.App.ViewModels;
+using GitTab.App.Views;
 using GitTab.Core.Abstractions;
 using GitTab.Core.Git;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,9 +68,18 @@ public partial class App : Application
         _logger.LogInformation("GitTab starting up. Version {Version}", AppInfo.Version);
         RegisterGlobalExceptionHandlers();
 
-        // Single instance: if Git Tab is already running, forward this command line (e.g. an
-        // Explorer "Git Tab ▸ Pull" click) to it and exit, so the action lands in the open window.
         var cmd = ParseShellCommand(e.Args);
+
+        // Explorer right-click Pull/Push/Fetch/Commit open a dedicated dialog (TortoiseGit-style)
+        // as their own short-lived process, instead of routing into the full application window.
+        if (cmd.Path is not null && cmd.Verb is "pull" or "push" or "fetch" or "commit")
+        {
+            ShowStandaloneDialog(cmd.Verb!, cmd.Path, e.Args);
+            return;
+        }
+
+        // Single instance: if Git Tab is already running, forward open/log to it and exit so the
+        // action lands in the open window instead of starting a second copy.
         _singleInstance = new SingleInstance();
         if (!_singleInstance.TryAcquire())
         {
@@ -80,11 +90,7 @@ public partial class App : Application
         }
         _singleInstance.StartServer(OnShellMessage);
 
-        // Theme (--light overrides the saved preference).
-        var theme = e.Args.Contains("--light")
-            ? AppTheme.Light
-            : Enum.TryParse<AppTheme>(settings.Current.Theme, out var savedTheme) ? savedTheme : AppTheme.Dark;
-        Services.GetRequiredService<IThemeService>().Apply(theme);
+        ApplyTheme(e.Args);
 
         var window = Services.GetRequiredService<MainWindow>();
         MainWindow = window;
@@ -145,6 +151,54 @@ public partial class App : Application
         }
         if (path is not null && verb is null) verb = "open";
         return (verb, path);
+    }
+
+    private void ApplyTheme(string[] args)
+    {
+        var settings = Services.GetRequiredService<ISettingsService>();
+        var theme = args.Contains("--light")
+            ? AppTheme.Light
+            : Enum.TryParse<AppTheme>(settings.Current.Theme, out var t) ? t : AppTheme.Dark;
+        Services.GetRequiredService<IThemeService>().Apply(theme);
+    }
+
+    // Open a standalone TortoiseGit-style dialog for a shell verb, without the main window.
+    private void ShowStandaloneDialog(string verb, string path, string[] args)
+    {
+        ApplyTheme(args);
+
+        var repo = Services.GetRequiredService<IRepositoryService>();
+        var dialogs = Services.GetRequiredService<IDialogService>();
+        var loc = Services.GetRequiredService<ILocalizationService>();
+
+        var discovered = repo.Discover(path);
+        if (discovered is null)
+        {
+            dialogs.Error(loc.T("Error.NotARepo"), loc.T("Error.OpenFailed"));
+            Shutdown(1);
+            return;
+        }
+        repo.Open(discovered);
+        var name = new DirectoryInfo(discovered).Name;
+
+        Window win;
+        if (verb == "commit")
+        {
+            var wc = Services.GetRequiredService<WorkingCopyViewModel>();
+            wc.Refresh();
+            win = new CommitWindow(name) { DataContext = wc };
+        }
+        else
+        {
+            var vm = new OperationWindowViewModel(verb, repo,
+                Services.GetRequiredService<ICredentialStore>(), dialogs, loc,
+                Services.GetRequiredService<ILogger<OperationWindowViewModel>>());
+            win = new OperationWindow { DataContext = vm };
+        }
+
+        MainWindow = win;
+        win.Show();
+        win.Activate();
     }
 
     // A forwarded command line arrived from a second instance (background thread) → run it here.
