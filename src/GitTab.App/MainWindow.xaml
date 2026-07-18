@@ -256,6 +256,9 @@
                                                         <MenuItem Header="{loc:Tr Conflict.Resolve}"
                                                                   Command="{Binding PlacementTarget.Tag.ResolveConflictCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr FileHistory.Menu}"
+                                                                  Command="{Binding PlacementTarget.Tag.FileHistoryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                         <MenuItem Header="{loc:Tr Blame}"
                                                                   Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -609,6 +612,9 @@
                                           Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
                                         <Grid.ContextMenu>
                                             <ContextMenu>
+                                                <MenuItem Header="{loc:Tr FileHistory.Menu}"
+                                                          Command="{Binding PlacementTarget.Tag.FileHistoryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                 <MenuItem Header="{loc:Tr Blame}"
                                                           Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>

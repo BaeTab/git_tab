@@ -123,4 +123,20 @@ public sealed class RepositoryServiceReadTests
         Path.GetFullPath(discovered!).TrimEnd(Path.DirectorySeparatorChar)
             .Should().BeEquivalentTo(Path.GetFullPath(repo.Path).TrimEnd(Path.DirectorySeparatorChar));
     }
+
+    [Fact]
+    public void GetFileHistory_returns_only_commits_touching_the_file()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var a1 = repo.Commit("a1", "a.txt", "1");
+        var b1 = repo.Commit("b1", "b.txt", "x");   // does not touch a.txt
+        var a2 = repo.Commit("a2", "a.txt", "12");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var shas = svc.GetFileHistory("a.txt").Select(c => c.Sha).ToList();
+        shas.Should().Contain(new[] { a1, a2 });
+        shas.Should().NotContain(b1);   // a commit that didn't touch the file is excluded
+    }
 }

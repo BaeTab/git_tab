@@ -567,6 +567,45 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    public IReadOnlyList<CommitInfo> GetFileHistory(string path, int max = 300)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var result = new List<CommitInfo>();
+
+            // Walk history newest-first and keep commits where the file's blob differs from every
+            // parent (i.e. this commit changed it). Uses tree lookups rather than LibGit2Sharp's
+            // QueryBy(path), which throws a KeyNotFoundException in some repositories.
+            ObjectId? BlobIdAt(Commit c) => c.Tree[path]?.Target.Id;
+
+            foreach (var c in repo.Commits)
+            {
+                var here = BlobIdAt(c);
+                if (here is null) continue; // file not present in this commit
+
+                bool changed = c.Parents.Any()
+                    ? c.Parents.Any(p => BlobIdAt(p) != here)
+                    : true; // root commit that introduced the file
+
+                if (!changed) continue;
+
+                result.Add(new CommitInfo
+                {
+                    Sha = c.Sha,
+                    ParentShas = c.Parents.Select(p => p.Sha).ToArray(),
+                    Summary = c.MessageShort ?? string.Empty,
+                    MessageFull = c.Message ?? string.Empty,
+                    AuthorName = c.Author?.Name ?? "(unknown)",
+                    AuthorEmail = c.Author?.Email ?? string.Empty,
+                    WhenUtc = c.Author?.When ?? DateTimeOffset.MinValue
+                });
+                if (result.Count >= max) break;
+            }
+            return result;
+        }
+    }
+
     // ---------------------------------------------------------------- writes / network
 
     public Task<GitResult> StageAsync(string path, CancellationToken ct = default)

@@ -41,6 +41,9 @@ public interface IDialogService
     /// <summary>Show the partial-staging (per-hunk) dialog.</summary>
     void ShowHunkStage(HunkStageViewModel vm);
 
+    /// <summary>Show the file-history dialog.</summary>
+    void ShowFileHistory(FileHistoryViewModel vm);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -186,6 +189,12 @@ public sealed class DialogService : IDialogService
     public void ShowHunkStage(HunkStageViewModel vm)
     {
         var win = new HunkStageDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowFileHistory(FileHistoryViewModel vm)
+    {
+        var win = new FileHistoryDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 

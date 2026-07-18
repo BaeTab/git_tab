@@ -612,6 +612,15 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void FileHistory(FileChangeViewModel? file)
+    {
+        var path = file?.Path ?? Details.SelectedFile?.Path;
+        if (path is null || !IsRepositoryOpen) return;
+        var vm = new FileHistoryViewModel(_repo, Loc, _logger, path);
+        _dialogs.ShowFileHistory(vm);
+    }
+
+    [RelayCommand]
     private void Blame(FileChangeViewModel? file)
     {
         var path = file?.Path ?? Details.SelectedFile?.Path;

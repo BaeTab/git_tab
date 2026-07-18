@@ -65,6 +65,9 @@ public interface IRepositoryService : IDisposable
     /// newest-first (used to build an interactive-rebase plan).</summary>
     IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha);
 
+    /// <summary>Commits that touched <paramref name="path"/>, newest first (file history).</summary>
+    IReadOnlyList<CommitInfo> GetFileHistory(string path, int max = 300);
+
     // ---- writes / network (git.exe) ----
     Task<GitResult> StageAsync(string path, CancellationToken ct = default);
     Task<GitResult> StageAllAsync(CancellationToken ct = default);
