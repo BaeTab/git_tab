@@ -306,6 +306,10 @@ public sealed class LocalizationService : ILocalizationService
         ["Settings.ClearCredTip"] = "현재 원격 저장소 호스트에 저장한 사용자 이름·토큰을 삭제해요. 다음 Push/Pull 때 다시 입력하게 돼요.",
         ["Settings.CredCleared"] = "저장된 자격 증명을 삭제했어요.",
         ["Settings.NoRemote"] = "삭제할 원격 자격 증명이 없어요.",
+        ["Settings.Diagnostics"] = "진단",
+        ["Settings.CrashReports"] = "오류 발생 시 크래시 리포트 저장",
+        ["Settings.CrashReports.Tip"] = "예기치 못한 오류가 나면 자세한 리포트를 내 PC(%AppData%\\GitTab\\crashes)에 저장해요. 외부로 전송되지 않아요.",
+        ["Settings.OpenLogs"] = "로그 폴더 열기",
         ["Settings.About"] = "정보",
 
         // Common / dialogs
@@ -565,6 +569,10 @@ public sealed class LocalizationService : ILocalizationService
         ["Settings.ClearCredTip"] = "Remove the username/token saved for the current remote's host. You'll be asked again on the next push/pull.",
         ["Settings.CredCleared"] = "Saved credentials were cleared.",
         ["Settings.NoRemote"] = "No remote credentials to clear.",
+        ["Settings.Diagnostics"] = "Diagnostics",
+        ["Settings.CrashReports"] = "Save a crash report on unexpected errors",
+        ["Settings.CrashReports.Tip"] = "Writes a detailed report to your PC (%AppData%\\GitTab\\crashes) when something goes wrong. Nothing is uploaded.",
+        ["Settings.OpenLogs"] = "Open logs folder",
         ["Settings.About"] = "About",
 
         ["Common.OK"] = "OK",

@@ -112,7 +112,61 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     }
 
     private static void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        => ((CommitGraphControl)d).BringIndexIntoView((int)e.NewValue);
+    {
+        var c = (CommitGraphControl)d;
+        c.BringIndexIntoView((int)e.NewValue);
+        c.AnnounceSelection();
+    }
+
+    // ------------------------------------------------------------ accessibility
+
+    protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
+        => new CommitGraphAutomationPeer(this);
+
+    /// <summary>Text a screen reader should read for the current selection.</summary>
+    internal string SelectionText
+    {
+        get
+        {
+            var rows = Rows;
+            if (rows is { Count: > 0 } && SelectedIndex >= 0 && SelectedIndex < rows.Count)
+            {
+                var r = rows[SelectedIndex];
+                return $"{r.Summary} — {r.AuthorName}, {r.ShortSha}";
+            }
+            return string.Empty;
+        }
+    }
+
+    // Speak the newly selected commit when navigating by keyboard.
+    private void AnnounceSelection()
+    {
+        if (System.Windows.Automation.Peers.UIElementAutomationPeer.FromElement(this) is not { } peer) return;
+        var text = SelectionText;
+        if (text.Length == 0) return;
+        try
+        {
+            peer.RaiseNotificationEvent(
+                System.Windows.Automation.AutomationNotificationKind.ActionCompleted,
+                System.Windows.Automation.AutomationNotificationProcessing.MostRecent,
+                text, "commitSelected");
+        }
+        catch { /* older UIA hosts may not support notifications */ }
+    }
+
+    private sealed class CommitGraphAutomationPeer : System.Windows.Automation.Peers.FrameworkElementAutomationPeer
+    {
+        public CommitGraphAutomationPeer(CommitGraphControl owner) : base(owner) { }
+
+        protected override System.Windows.Automation.Peers.AutomationControlType GetAutomationControlTypeCore()
+            => System.Windows.Automation.Peers.AutomationControlType.List;
+
+        protected override string GetNameCore()
+        {
+            var text = ((CommitGraphControl)Owner).SelectionText;
+            return text.Length > 0 ? text : base.GetNameCore();
+        }
+    }
 
     private static void OnStatsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

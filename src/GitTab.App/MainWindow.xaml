@@ -40,9 +40,12 @@
                     <TextBlock Text="{loc:Tr App.Title}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Style="{StaticResource TitleBarButton}" Content="&#xE921;" Click="OnMinimize"/>
-                    <Button x:Name="MaxRestoreButton" Style="{StaticResource TitleBarButton}" Content="&#xE922;" Click="OnMaxRestore"/>
-                    <Button Style="{StaticResource TitleBarCloseButton}" Content="&#xE8BB;" Click="OnCloseWindow"/>
+                    <Button Style="{StaticResource TitleBarButton}" Content="&#xE921;" Click="OnMinimize"
+                            AutomationProperties.Name="Minimize"/>
+                    <Button x:Name="MaxRestoreButton" Style="{StaticResource TitleBarButton}" Content="&#xE922;" Click="OnMaxRestore"
+                            AutomationProperties.Name="Maximize / Restore"/>
+                    <Button Style="{StaticResource TitleBarCloseButton}" Content="&#xE8BB;" Click="OnCloseWindow"
+                            AutomationProperties.Name="{loc:Tr Common.Close}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -107,9 +110,11 @@
                         </MenuItem>
                     </Menu>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding RefreshCommand}"
-                            Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"/>
+                            Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"
+                            AutomationProperties.Name="{loc:Tr Action.Refresh}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding OpenReflogCommand}"
                             Content="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Reflog.Tip}"
+                            AutomationProperties.Name="{loc:Tr Reflog.Title}"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ManageRemotesCommand}"
                             Content="{loc:Tr Remote.Button}" ToolTip="{loc:Tr Remote.Tip}"
@@ -162,11 +167,14 @@
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleLanguageCommand}"
                             Content="한 / EN" ToolTip="{loc:Tr Language}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleThemeCommand}"
-                            Content="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Theme.Toggle}"/>
+                            Content="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Theme.Toggle}"
+                            AutomationProperties.Name="{loc:Tr Theme.Toggle}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding CheckUpdatesCommand}"
-                            Content="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Update.Checking}"/>
+                            Content="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Update.Checking}"
+                            AutomationProperties.Name="{loc:Tr Update.Checking}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding OpenSettingsCommand}"
-                            Content="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Settings}"/>
+                            Content="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Settings}"
+                            AutomationProperties.Name="{loc:Tr Settings}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -496,6 +504,8 @@
                             Rows="{Binding Rows}"
                             LaneCount="{Binding LaneCount}"
                             StatsSource="{Binding Stats}"
+                            AutomationProperties.Name="{loc:Tr Panel.History}"
+                            KeyboardNavigation.TabIndex="0"
                             SelectedIndex="{Binding SelectedCommitIndex, Mode=TwoWay}">
                             <controls:CommitGraphControl.ContextMenu>
                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">

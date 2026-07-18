@@ -588,6 +588,23 @@ public sealed partial class MainViewModel : ObservableObject
     public string GitPath => GitTab.Core.Git.GitExecutableLocator.Resolve();
     public string AppVersion => AppInfo.Version;
 
+    public bool CrashReportsEnabled
+    {
+        get => _settings.Current.CrashReports;
+        set { _settings.Current.CrashReports = value; _settings.Save(); OnPropertyChanged(); }
+    }
+
+    [RelayCommand]
+    private void OpenLogsFolder()
+    {
+        try
+        {
+            System.IO.Directory.CreateDirectory(App.AppDataDir);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(App.AppDataDir) { UseShellExecute = true });
+        }
+        catch (Exception ex) { _logger.LogWarning(ex, "Opening logs folder failed"); }
+    }
+
     [RelayCommand]
     private void OpenSettings() => _dialogs.ShowSettings(this);
 

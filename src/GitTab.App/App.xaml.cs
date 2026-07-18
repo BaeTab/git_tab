@@ -268,6 +268,7 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             _logger?.LogError(args.Exception, "Unhandled UI exception");
+            TryWriteCrash(args.Exception, "UI thread");
             ShowFatal(args.Exception);
             args.Handled = true; // keep the app alive
         };
@@ -275,7 +276,10 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
             if (args.ExceptionObject is Exception ex)
+            {
                 _logger?.LogCritical(ex, "Unhandled non-UI exception (terminating={Terminating})", args.IsTerminating);
+                TryWriteCrash(ex, "background thread");
+            }
         };
 
         System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
@@ -283,6 +287,16 @@ public partial class App : Application
             _logger?.LogError(args.Exception, "Unobserved task exception");
             args.SetObserved();
         };
+    }
+
+    private void TryWriteCrash(Exception ex, string context)
+    {
+        try
+        {
+            if (Services?.GetService<ISettingsService>()?.Current.CrashReports == true)
+                CrashReporter.Write(AppDataDir, ex, context);
+        }
+        catch { /* never throw from the crash path */ }
     }
 
     private void ShowFatal(Exception ex)
