@@ -9,17 +9,28 @@ using ICSharpCode.AvalonEdit.Rendering;
 
 namespace GitTab.App.Controls;
 
-/// <summary>Colored unified-diff viewer built on AvalonEdit.</summary>
+/// <summary>Colored unified + side-by-side diff viewer built on AvalonEdit.</summary>
 public partial class DiffView : UserControl
 {
-    private readonly DiffBackgroundRenderer _background;
+    private readonly DiffBackgroundRenderer _unifiedBg;
+    private readonly DiffBackgroundRenderer _leftBg;
+    private readonly DiffBackgroundRenderer _rightBg;
     private DiffViewModel? _vm;
+    private bool _syncing;
 
     public DiffView()
     {
         InitializeComponent();
-        _background = new DiffBackgroundRenderer(this);
-        Editor.TextArea.TextView.BackgroundRenderers.Add(_background);
+        _unifiedBg = new DiffBackgroundRenderer(this);
+        _leftBg = new DiffBackgroundRenderer(this);
+        _rightBg = new DiffBackgroundRenderer(this);
+        Editor.TextArea.TextView.BackgroundRenderers.Add(_unifiedBg);
+        LeftEditor.TextArea.TextView.BackgroundRenderers.Add(_leftBg);
+        RightEditor.TextArea.TextView.BackgroundRenderers.Add(_rightBg);
+
+        LeftEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) => Sync(LeftEditor, RightEditor);
+        RightEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) => Sync(RightEditor, LeftEditor);
+
         DataContextChanged += OnDataContextChanged;
     }
 
@@ -28,21 +39,48 @@ public partial class DiffView : UserControl
         if (_vm is not null) _vm.PropertyChanged -= OnVmPropertyChanged;
         _vm = DataContext as DiffViewModel;
         if (_vm is not null) _vm.PropertyChanged += OnVmPropertyChanged;
-        Rebuild();
+        RebuildAll();
+        UpdateMode();
     }
 
     private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(DiffViewModel.Diff)) Rebuild();
+        if (e.PropertyName is nameof(DiffViewModel.Diff)) { RebuildAll(); UpdateMode(); }
+        else if (e.PropertyName is nameof(DiffViewModel.IsSplit)) UpdateMode();
     }
 
-    private void Rebuild()
+    private void UpdateMode()
+    {
+        bool split = _vm?.IsSplit == true;
+        Editor.Visibility = split ? Visibility.Collapsed : Visibility.Visible;
+        SplitRoot.Visibility = split ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void Sync(ICSharpCode.AvalonEdit.TextEditor from, ICSharpCode.AvalonEdit.TextEditor to)
+    {
+        if (_syncing) return;
+        _syncing = true;
+        try
+        {
+            to.ScrollToVerticalOffset(from.VerticalOffset);
+            to.ScrollToHorizontalOffset(from.HorizontalOffset);
+        }
+        finally { _syncing = false; }
+    }
+
+    private void RebuildAll()
+    {
+        BuildUnified();
+        BuildSplit();
+    }
+
+    private void BuildUnified()
     {
         var diff = _vm?.Diff;
         if (diff is null || diff.IsBinary || diff.Hunks.Count == 0)
         {
             Editor.Text = string.Empty;
-            _background.Kinds = Array.Empty<DiffLineKind>();
+            _unifiedBg.Kinds = Array.Empty<DiffLineKind>();
             Editor.TextArea.TextView.Redraw();
             return;
         }
@@ -64,11 +102,64 @@ public partial class DiffView : UserControl
                 kinds.Add(line.Kind);
             }
         }
-
         Editor.Text = sb.ToString().TrimEnd('\n');
-        _background.Kinds = kinds;
+        _unifiedBg.Kinds = kinds;
         Editor.ScrollToHome();
         Editor.TextArea.TextView.Redraw();
+    }
+
+    private void BuildSplit()
+    {
+        var diff = _vm?.Diff;
+        if (diff is null || diff.IsBinary || diff.Hunks.Count == 0)
+        {
+            LeftEditor.Text = RightEditor.Text = string.Empty;
+            _leftBg.Kinds = _rightBg.Kinds = Array.Empty<DiffLineKind>();
+            return;
+        }
+
+        var lsb = new StringBuilder();
+        var rsb = new StringBuilder();
+        var lk = new List<DiffLineKind>();
+        var rk = new List<DiffLineKind>();
+
+        void AddL(string t, DiffLineKind k) { lsb.Append(t).Append('\n'); lk.Add(k); }
+        void AddR(string t, DiffLineKind k) { rsb.Append(t).Append('\n'); rk.Add(k); }
+
+        foreach (var hunk in diff.Hunks)
+        {
+            foreach (var line in hunk.Lines)
+            {
+                switch (line.Kind)
+                {
+                    case DiffLineKind.HunkHeader:
+                        AddL(line.Text, DiffLineKind.HunkHeader);
+                        AddR(line.Text, DiffLineKind.HunkHeader);
+                        break;
+                    case DiffLineKind.Context:
+                        AddL(line.Text, DiffLineKind.Context);
+                        AddR(line.Text, DiffLineKind.Context);
+                        break;
+                    case DiffLineKind.Removed:
+                        AddL(line.Text, DiffLineKind.Removed);
+                        AddR(string.Empty, DiffLineKind.Context); // blank filler (no color)
+                        break;
+                    case DiffLineKind.Added:
+                        AddL(string.Empty, DiffLineKind.Context);
+                        AddR(line.Text, DiffLineKind.Added);
+                        break;
+                }
+            }
+        }
+
+        LeftEditor.Text = lsb.ToString().TrimEnd('\n');
+        RightEditor.Text = rsb.ToString().TrimEnd('\n');
+        _leftBg.Kinds = lk;
+        _rightBg.Kinds = rk;
+        LeftEditor.ScrollToHome();
+        RightEditor.ScrollToHome();
+        LeftEditor.TextArea.TextView.Redraw();
+        RightEditor.TextArea.TextView.Redraw();
     }
 }
 
@@ -105,8 +196,7 @@ internal sealed class DiffBackgroundRenderer : IBackgroundRenderer
 
             double top = vl.VisualTop - textView.VerticalOffset;
             double width = textView.ActualWidth + textView.HorizontalOffset;
-            var rect = new Rect(0, top, width, vl.Height);
-            drawingContext.DrawRectangle(brush, null, rect);
+            drawingContext.DrawRectangle(brush, null, new Rect(0, top, width, vl.Height));
         }
     }
 }

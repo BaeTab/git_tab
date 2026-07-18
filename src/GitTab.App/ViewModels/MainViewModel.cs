@@ -28,6 +28,8 @@ public sealed partial class MainViewModel : ObservableObject
         new Dictionary<string, IReadOnlyList<RefLabel>>();
     private bool _childrenWired;
 
+    private readonly ISettingsService _settings;
+
     public MainViewModel(
         IRepositoryService repo,
         IRecentRepositoriesStore recent,
@@ -35,6 +37,7 @@ public sealed partial class MainViewModel : ObservableObject
         ILocalizationService loc,
         IThemeService theme,
         IUpdateService updates,
+        ISettingsService settings,
         WorkingCopyViewModel workingCopy,
         BranchesViewModel branches,
         CommitDetailsViewModel details,
@@ -46,6 +49,7 @@ public sealed partial class MainViewModel : ObservableObject
         Loc = loc;
         _theme = theme;
         _updates = updates;
+        _settings = settings;
         WorkingCopy = workingCopy;
         Branches = branches;
         Details = details;
@@ -78,6 +82,17 @@ public sealed partial class MainViewModel : ObservableObject
     public CommitDetailsViewModel Details { get; }
 
     public ObservableCollection<RecentRepository> RecentRepositories { get; } = new();
+    public ObservableCollection<StashInfo> Stashes { get; } = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOperationInProgress))]
+    [NotifyPropertyChangedFor(nameof(OperationName))]
+    private RepositoryStateInfo? _repoState;
+
+    [ObservableProperty] private bool _hasSubmodules;
+
+    public bool IsOperationInProgress => RepoState?.IsInProgress == true;
+    public string OperationName => RepoState is { IsInProgress: true } s ? Loc.T("State." + s.Operation) : string.Empty;
 
     [ObservableProperty] private string? _repositoryName;
     [ObservableProperty] private string? _repositoryPath;
@@ -180,13 +195,22 @@ public sealed partial class MainViewModel : ObservableObject
                 var branches = _repo.GetBranches();
                 var refs = _repo.GetRefLabelsBySha();
                 var head = _repo.GetHead();
-                return (commits, branches, refs, head);
+                var tags = _repo.GetTags();
+                var state = _repo.GetState();
+                var stashes = _repo.GetStashes();
+                var submodules = _repo.GetSubmodulePaths();
+                return (commits, branches, refs, head, tags, state, stashes, submodules);
             });
 
             _allCommits = data.commits;
             _refsBySha = data.refs;
-            Branches.Refresh(data.branches);
+            Branches.Refresh(data.branches, data.tags);
             WorkingCopy.Refresh();
+
+            RepoState = data.state;
+            HasSubmodules = data.submodules.Count > 0;
+            Stashes.Clear();
+            foreach (var s in data.stashes) Stashes.Add(s);
 
             var current = data.branches.FirstOrDefault(b => b.IsCurrent);
             CurrentBranchName = current?.FriendlyName ?? (data.head.IsDetached ? "(detached)" : data.head.BranchFriendlyName);
@@ -194,7 +218,9 @@ public sealed partial class MainViewModel : ObservableObject
             Behind = current?.Behind ?? 0;
 
             ApplyFilter();
-            StatusText = Loc.T("Status.Ready");
+            StatusText = RepoState.IsInProgress
+                ? Loc.T("State." + RepoState.Operation)
+                : Loc.T("Status.Ready");
         }
         catch (Exception ex)
         {
@@ -339,8 +365,105 @@ public sealed partial class MainViewModel : ObservableObject
 
     // ---------------------------------------------------------------- theme / language / update
 
-    [RelayCommand] private void ToggleTheme() => _theme.Toggle();
-    [RelayCommand] private void ToggleLanguage() => Loc.Toggle();
+    // ---------------------------------------------------------------- conflicts / stash / submodule / blame / rebase
+
+    [RelayCommand] private Task AbortOperation() => RunNetworkAsync(() => _repo.AbortOperationAsync());
+    [RelayCommand] private Task ContinueOperation() => RunNetworkAsync(() => _repo.ContinueOperationAsync());
+
+    [RelayCommand]
+    private async Task StashPush()
+    {
+        if (!IsRepositoryOpen) return;
+        if (await GitUi.RunAsync(() => _repo.StashPushAsync(null, includeUntracked: true), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task StashPop(StashInfo? stash)
+    {
+        if (stash is null) return;
+        if (await GitUi.RunAsync(() => _repo.StashApplyAsync(stash.Index, pop: true), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task StashApply(StashInfo? stash)
+    {
+        if (stash is null) return;
+        if (await GitUi.RunAsync(() => _repo.StashApplyAsync(stash.Index, pop: false), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task StashDrop(StashInfo? stash)
+    {
+        if (stash is null) return;
+        if (await GitUi.RunAsync(() => _repo.StashDropAsync(stash.Index), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand] private Task SubmoduleUpdate() => RunNetworkAsync(() => _repo.SubmoduleUpdateAsync());
+
+    [RelayCommand]
+    private void Blame(FileChangeViewModel? file)
+    {
+        var path = file?.Path ?? Details.SelectedFile?.Path;
+        if (path is null || RepositoryPath is null) return;
+        try
+        {
+            var lines = _repo.GetBlame(path);
+            _dialogs.ShowBlame(path, lines);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Blame failed for {Path}", path);
+            _dialogs.Error(ex.Message, Loc.T("Common.Error"));
+        }
+    }
+
+    [RelayCommand]
+    private async Task InteractiveRebase()
+    {
+        if (SelectedCommit is null || RepositoryPath is null) return;
+        var baseSha = SelectedCommit.Sha;
+
+        IReadOnlyList<CommitInfo> above;
+        try { above = _repo.GetCommitsBetween(baseSha, "HEAD"); }
+        catch (Exception ex) { _dialogs.Error(ex.Message, Loc.T("Common.Error")); return; }
+
+        if (above.Count == 0)
+        {
+            _dialogs.Info(Loc.T("Rebase.NothingAbove"), AppInfo.ProductName);
+            return;
+        }
+
+        // Plan is oldest-first (git todo order).
+        var items = above.Reverse()
+            .Select(c => new RebaseTodoItem { Sha = c.Sha, Summary = c.Summary })
+            .ToList();
+
+        var plan = _dialogs.ShowInteractiveRebase(items);
+        if (plan is null) return;
+
+        if (await GitUi.RunAsync(() => _repo.RebaseInteractiveAsync(baseSha, plan), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    // ---------------------------------------------------------------- theme / language / update
+
+    [RelayCommand]
+    private void ToggleTheme()
+    {
+        _theme.Toggle();
+        _settings.Update(_theme.Theme, Loc.Language);
+    }
+
+    [RelayCommand]
+    private void ToggleLanguage()
+    {
+        Loc.Toggle();
+        _settings.Update(_theme.Theme, Loc.Language);
+    }
 
     [RelayCommand]
     private async Task GenerateGitignore()

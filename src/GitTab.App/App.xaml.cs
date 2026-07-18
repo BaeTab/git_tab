@@ -41,9 +41,15 @@ public partial class App : Application
 
         RegisterGlobalExceptionHandlers();
 
-        // Theme + language must be applied before any window is shown.
-        Services.GetRequiredService<IThemeService>().Apply(e.Args.Contains("--light") ? AppTheme.Light : AppTheme.Dark);
-        _ = Services.GetRequiredService<ILocalizationService>(); // sets LocalizationService.Current
+        // Theme + language: restore saved preferences before any window is shown (--light overrides).
+        var settings = Services.GetRequiredService<ISettingsService>();
+        var theme = e.Args.Contains("--light")
+            ? AppTheme.Light
+            : Enum.TryParse<AppTheme>(settings.Current.Theme, out var savedTheme) ? savedTheme : AppTheme.Dark;
+        Services.GetRequiredService<IThemeService>().Apply(theme);
+        var loc = Services.GetRequiredService<ILocalizationService>(); // sets LocalizationService.Current
+        if (Enum.TryParse<AppLanguage>(settings.Current.Language, out var savedLang))
+            loc.Language = savedLang;
 
         var window = Services.GetRequiredService<MainWindow>();
         MainWindow = window;
@@ -86,6 +92,7 @@ public partial class App : Application
         services.AddSingleton<GitTab.Core.Gitignore.IGitignoreService, GitTab.Core.Gitignore.GitignoreService>();
 
         // App services
+        services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IDialogService, DialogService>();

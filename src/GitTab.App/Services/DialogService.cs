@@ -4,6 +4,7 @@ using GitTab.App.Localization;
 using GitTab.App.ViewModels;
 using GitTab.App.Views;
 using GitTab.Core.Gitignore;
+using GitTab.Core.Models;
 using Microsoft.Win32;
 
 namespace GitTab.App.Services;
@@ -18,6 +19,11 @@ public interface IDialogService
 
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
+
+    void ShowBlame(string filePath, IReadOnlyList<BlameLine> lines);
+
+    /// <summary>Shows the interactive-rebase planner; returns the plan, or null if cancelled.</summary>
+    IReadOnlyList<RebaseTodoItem>? ShowInteractiveRebase(IReadOnlyList<RebaseTodoItem> items);
 }
 
 public sealed class DialogService : IDialogService
@@ -37,6 +43,19 @@ public sealed class DialogService : IDialogService
         var dialog = new GitignoreDialog { DataContext = vm, Owner = Owner() };
         dialog.ShowDialog();
         return vm.Written;
+    }
+
+    public void ShowBlame(string filePath, IReadOnlyList<BlameLine> lines)
+    {
+        var dialog = new BlameView(filePath, lines) { Owner = Owner() };
+        dialog.ShowDialog();
+    }
+
+    public IReadOnlyList<RebaseTodoItem>? ShowInteractiveRebase(IReadOnlyList<RebaseTodoItem> items)
+    {
+        var vm = new InteractiveRebaseViewModel(items);
+        var dialog = new InteractiveRebaseDialog { DataContext = vm, Owner = Owner() };
+        return dialog.ShowDialog() == true ? vm.Plan : null;
     }
 
     public string? PickFolder(string? title = null)

@@ -40,6 +40,16 @@ public interface IRepositoryService : IDisposable
     FileDiff GetCommitFileDiff(string sha, string path);
     FileDiff GetWorkingFileDiff(string path, bool staged);
 
+    // ---- advanced reads ----
+    RepositoryStateInfo GetState();
+    IReadOnlyList<StashInfo> GetStashes();
+    IReadOnlyList<BlameLine> GetBlame(string path);
+    IReadOnlyList<string> GetSubmodulePaths();
+
+    /// <summary>Commits reachable from <paramref name="includeSha"/> but not <paramref name="excludeSha"/>,
+    /// newest-first (used to build an interactive-rebase plan).</summary>
+    IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha);
+
     // ---- writes / network (git.exe) ----
     Task<GitResult> StageAsync(string path, CancellationToken ct = default);
     Task<GitResult> StageAllAsync(CancellationToken ct = default);
@@ -57,6 +67,23 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> FetchAsync(string? remote = null, bool prune = true, CancellationToken ct = default);
     Task<GitResult> PullAsync(CancellationToken ct = default);
     Task<GitResult> PushAsync(bool setUpstream = false, string? remote = null, string? branch = null, CancellationToken ct = default);
+
+    // ---- stash ----
+    Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default);
+    Task<GitResult> StashApplyAsync(int index, bool pop, CancellationToken ct = default);
+    Task<GitResult> StashDropAsync(int index, CancellationToken ct = default);
+
+    // ---- conflicts / in-progress operations ----
+    Task<GitResult> AbortOperationAsync(CancellationToken ct = default);
+    Task<GitResult> ContinueOperationAsync(CancellationToken ct = default);
+    Task<GitResult> MarkResolvedAsync(string path, CancellationToken ct = default);
+
+    // ---- branches / tags / remotes / rebase / submodules ----
+    Task<GitResult> DeleteRemoteBranchAsync(string remote, string branch, CancellationToken ct = default);
+    Task<GitResult> DeleteTagAsync(string name, CancellationToken ct = default);
+    Task<GitResult> PushTagAsync(string name, string? remote = null, CancellationToken ct = default);
+    Task<GitResult> RebaseInteractiveAsync(string ontoSha, IReadOnlyList<RebaseTodoItem> plan, CancellationToken ct = default);
+    Task<GitResult> SubmoduleUpdateAsync(CancellationToken ct = default);
 
     /// <summary>Raw git passthrough for advanced actions (used by higher layers sparingly).</summary>
     Task<GitResult> RunRawAsync(IReadOnlyList<string> args, CancellationToken ct = default);

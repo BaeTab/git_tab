@@ -11,8 +11,16 @@
         TextOptions.TextFormattingMode="Ideal"
         FontFamily="Segoe UI" FontSize="13">
 
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
+        <KeyBinding Modifiers="Control" Key="R" Command="{Binding RefreshCommand}"/>
+        <KeyBinding Modifiers="Control" Key="O" Command="{Binding OpenRepositoryCommand}"/>
+        <KeyBinding Modifiers="Control" Key="Return" Command="{Binding WorkingCopy.CommitCommand}"/>
+    </Window.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -51,6 +59,9 @@
                     <Button Style="{StaticResource ToolButton}" Command="{Binding GenerateGitignoreCommand}"
                             Content="{loc:Tr Gitignore.Button}" ToolTip="{loc:Tr Gitignore.Tip}"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding SubmoduleUpdateCommand}"
+                            Content="{loc:Tr Submodule.Update}" ToolTip="{loc:Tr Submodule.Update.Tip}"
+                            Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
                 </StackPanel>
 
                 <!-- remote actions -->
@@ -93,8 +104,29 @@
             </Grid>
         </Border>
 
+        <!-- ================= Conflict / in-progress operation banner ================= -->
+        <Border Grid.Row="1" Background="{DynamicResource Brush.SurfaceAlt}"
+                BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="0,0,0,2" Padding="14,9"
+                Visibility="{Binding IsOperationInProgress, Converter={StaticResource Bool2Vis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding OperationName}" FontWeight="Bold" Foreground="{DynamicResource Brush.Danger}"/>
+                    <TextBlock Text="{loc:Tr Conflict.Hint}" Style="{StaticResource MutedText}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{loc:Tr Conflict.Continue}" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
+                            Command="{Binding ContinueOperationCommand}"/>
+                    <Button Content="{loc:Tr Conflict.Abort}" Command="{Binding AbortOperationCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- ================= Main content ================= -->
-        <Grid Grid.Row="1" Margin="8">
+        <Grid Grid.Row="2" Margin="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280" MinWidth="220"/>
                 <ColumnDefinition Width="Auto"/>
@@ -277,10 +309,72 @@
                                                         <MenuItem Header="{loc:Tr Branch.Merge}"
                                                                   Command="{Binding PlacementTarget.Tag.MergeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="{loc:Tr Ctx.DeleteRemote}"
+                                                                  Command="{Binding PlacementTarget.Tag.DeleteRemoteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     </ContextMenu>
                                                 </Grid.ContextMenu>
                                                 <TextBlock Text="{Binding FriendlyName}" TextTrimming="CharacterEllipsis"
                                                            Style="{StaticResource MutedText}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <!-- Tags -->
+                                <TextBlock Text="{loc:Tr Tag.Section}" Style="{StaticResource SectionHeader}"/>
+                                <ListBox ItemsSource="{Binding Tags}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}">
+                                                <Grid.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="{loc:Tr Tag.Push}"
+                                                                  Command="{Binding PlacementTarget.Tag.PushTagCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr Tag.Delete}"
+                                                                  Command="{Binding PlacementTarget.Tag.DeleteTagCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    </ContextMenu>
+                                                </Grid.ContextMenu>
+                                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <!-- Stashes (owned by MainViewModel) -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{loc:Tr Stash.Section}" Style="{StaticResource SectionHeader}"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="+" Style="{StaticResource ToolButton}" VerticalAlignment="Center"
+                                            Command="{Binding DataContext.StashPushCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            ToolTip="{loc:Tr Stash.Push.Tip}"/>
+                                </Grid>
+                                <ListBox ItemsSource="{Binding DataContext.Stashes, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  ToolTip="{Binding Message}">
+                                                <Grid.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="{loc:Tr Stash.Pop}"
+                                                                  Command="{Binding PlacementTarget.Tag.StashPopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr Stash.Apply}"
+                                                                  Command="{Binding PlacementTarget.Tag.StashApplyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr Stash.Drop}"
+                                                                  Command="{Binding PlacementTarget.Tag.StashDropCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    </ContextMenu>
+                                                </Grid.ContextMenu>
+                                                <TextBlock Text="{Binding Message}" TextTrimming="CharacterEllipsis"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
@@ -312,6 +406,7 @@
                                     <Separator/>
                                     <MenuItem Header="{loc:Tr Ctx.Revert}" Command="{Binding RevertCommitCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CherryPick}" Command="{Binding CherryPickCommand}"/>
+                                    <MenuItem Header="{loc:Tr Ctx.InteractiveRebase}" Command="{Binding InteractiveRebaseCommand}"/>
                                     <Separator/>
                                     <MenuItem Header="{loc:Tr Ctx.ResetSoft}" Command="{Binding ResetSoftCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.ResetMixed}" Command="{Binding ResetMixedCommand}"/>
@@ -371,7 +466,15 @@
                                  MaxHeight="150" ScrollViewer.VerticalScrollBarVisibility="Auto">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid ToolTip="{Binding DisplayPath}">
+                                    <Grid ToolTip="{Binding DisplayPath}"
+                                          Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
+                                        <Grid.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{loc:Tr Blame}"
+                                                          Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            </ContextMenu>
+                                        </Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -394,7 +497,7 @@
         </Grid>
 
         <!-- ================= Status bar ================= -->
-        <Border Grid.Row="2" Background="{DynamicResource Brush.Surface}"
+        <Border Grid.Row="3" Background="{DynamicResource Brush.Surface}"
                 BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="10,4">
             <Grid>
                 <TextBlock Text="{Binding StatusText}" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>

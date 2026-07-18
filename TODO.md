@@ -1,31 +1,32 @@
 # TODO / Known Limitations
 
-Honest record of what is not implemented, stubbed, or deferred.
+Honest record of what is implemented vs. deferred.
 
-## Implemented (for reference)
-Repository open (folder / drag-drop / recent / reopen-last), color commit graph (virtualized),
-commit details + colored unified diff, staging (stage/unstage/discard/commit/amend), branches
-(checkout/create/delete/rename/merge/rebase), remotes (fetch/pull/push + ahead/behind via git CLI
-with credential-helper delegation), commit search, light/dark theme, ko/en runtime language toggle,
-beginner tooltips, TortoiseGit-style right-click context menus, `.gitignore` generator, GitHub
-release-based auto-update.
+## Implemented
+Repository open (folder / drag-drop / recent / reopen-last), color commit graph (custom-rendered,
+virtualized), commit details + colored **unified and side-by-side** diff, staging
+(stage/unstage/discard/commit/amend), branches (checkout/create/delete/rename/merge/rebase +
+**remote-branch delete**), **tags** (create/delete/push), remotes (fetch/pull/push + ahead/behind,
+credentials via git helper), commit search, light/dark theme + ko/en language **persisted across
+restarts**, beginner tooltips, TortoiseGit-style right-click context menus, `.gitignore` generator,
+**stash** (push/apply/pop/drop), **blame** view, **conflict handling** (in-progress banner with
+Abort/Continue, stage-to-resolve), **interactive rebase** (pick/squash/fixup/drop + reorder),
+**submodule update**, keyboard shortcuts (F5/Ctrl+R refresh, Ctrl+O open, Ctrl+Enter commit),
+GitHub release-based auto-update.
 
-## Not implemented / deferred
-- **Merge/rebase conflict resolution UI** — the CLI operation runs and git's output is surfaced; on
-  conflict the repository is left in the conflicted state for the user to resolve with their tools.
-  No in-app 3-way merge editor, and no "abort" button yet.
-- **Interactive rebase** (`rebase -i`) — not supported (the CLI's interactive editor isn't wired).
-- **Stash** — not implemented.
-- **Blame** — not implemented (listed in the spec's read set but not in the feature list).
-- **Remote branch deletion** from the UI (`push --delete`) — only local branch deletion is exposed.
-- **Side-by-side diff** — diff is unified only.
-- **Submodules / worktrees / LFS** — no special handling.
+## Deferred / partial (honest)
+- **Visual 3-way merge editor** — conflicts are handled via the banner (Abort/Continue) and by
+  staging resolved files, but there is no in-app side-by-side merge-conflict editor. You resolve
+  conflicts in the working tree (or your editor of choice), stage, then Continue.
+- **Interactive rebase "reword"** — excluded from the UI because the backend runs non-interactively
+  (`GIT_EDITOR=:`), so commit messages can't be edited mid-rebase. Pick/Squash/Fixup/Drop + reorder
+  are supported.
+- **Bisect** — the in-progress state is detected and shown, but there's no bisect driver UI.
+- **Submodules** — `submodule update --init --recursive` is exposed; add/remove/sync are not.
+- **Git LFS / worktrees** — no special handling.
 
-## Notes / known behavior
-- Screenshots in `docs/screenshots/` were captured with the app's `--topmost` flag because Visual
-  Studio held the foreground on the dev machine; the flag is a legitimate feature (kiosk/screenshots).
-- Push authentication is delegated to the system git credential helper (Git Credential Manager). If
-  no helper is configured, git fails fast (`GIT_TERMINAL_PROMPT=0`) and the error is shown — the app
-  does not hang or crash.
-- The in-app updater only finds an update when a GitHub Release exists with an installer asset whose
-  name ends in `.exe` (the release workflow produces `GitTab-Setup-<version>.exe`).
+## Notes
+- Screenshots in `docs/screenshots/` were captured with the `--topmost` flag (a real feature) because
+  Visual Studio held the foreground on the dev machine.
+- Push auth is delegated to the system git credential helper; with none configured git fails fast
+  (`GIT_TERMINAL_PROMPT=0`) and the error is surfaced — the app never hangs or crashes.

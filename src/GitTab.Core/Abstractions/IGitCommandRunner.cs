@@ -14,6 +14,7 @@ public interface IGitCommandRunner
     Task<GitResult> RunAsync(
         string workingDirectory,
         IReadOnlyList<string> arguments,
+        IReadOnlyDictionary<string, string>? environment = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>True if a usable git executable was found on the system.</summary>

@@ -1,3 +1,4 @@
+using System.Text;
 using GitTab.Core.Abstractions;
 using GitTab.Core.Diff;
 using GitTab.Core.Models;
@@ -366,6 +367,123 @@ public sealed class RepositoryService : IRepositoryService
         }
     }
 
+    // ---------------------------------------------------------------- advanced reads
+
+    public RepositoryStateInfo GetState()
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var op = repo.Info.CurrentOperation switch
+            {
+                CurrentOperation.Merge => RepositoryOperation.Merge,
+                CurrentOperation.Revert or CurrentOperation.RevertSequence => RepositoryOperation.Revert,
+                CurrentOperation.CherryPick or CurrentOperation.CherryPickSequence => RepositoryOperation.CherryPick,
+                CurrentOperation.Rebase or CurrentOperation.RebaseInteractive or CurrentOperation.RebaseMerge
+                    or CurrentOperation.ApplyMailboxOrRebase => RepositoryOperation.Rebase,
+                CurrentOperation.Bisect => RepositoryOperation.Bisect,
+                _ => RepositoryOperation.None
+            };
+
+            var conflicts = repo.Index.Conflicts
+                .Select(c => (c.Ours ?? c.Theirs ?? c.Ancestor)?.Path)
+                .Where(p => p is not null)
+                .Select(p => p!)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+
+            return new RepositoryStateInfo { Operation = op, ConflictedPaths = conflicts };
+        }
+    }
+
+    public IReadOnlyList<StashInfo> GetStashes()
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var list = new List<StashInfo>();
+            int i = 0;
+            foreach (var s in repo.Stashes)
+            {
+                list.Add(new StashInfo
+                {
+                    Index = i++,
+                    Message = s.Message,
+                    Sha = s.WorkTree?.Sha ?? s.Index?.Sha ?? string.Empty
+                });
+            }
+            return list;
+        }
+    }
+
+    public IReadOnlyList<BlameLine> GetBlame(string path)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var full = Path.Combine(_workingDir ?? string.Empty, path);
+            var lines = File.Exists(full) ? File.ReadAllLines(full) : Array.Empty<string>();
+            var result = new List<BlameLine>(lines.Length);
+
+            BlameHunkCollection? blame = null;
+            try { blame = repo.Blame(path); }
+            catch (Exception ex) { _logger.LogDebug(ex, "Blame failed for {Path}", path); }
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                Commit? commit = null;
+                if (blame is not null)
+                {
+                    try { commit = blame.HunkForLine(i).FinalCommit; }
+                    catch { /* line outside blame (e.g. uncommitted) */ }
+                }
+                result.Add(new BlameLine
+                {
+                    LineNumber = i + 1,
+                    Sha = commit?.Sha ?? string.Empty,
+                    Author = commit?.Author?.Name ?? string.Empty,
+                    When = commit?.Author?.When ?? DateTimeOffset.MinValue,
+                    Summary = commit?.MessageShort ?? string.Empty,
+                    Content = lines[i]
+                });
+            }
+            return result;
+        }
+    }
+
+    public IReadOnlyList<string> GetSubmodulePaths()
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            return repo.Submodules.Select(s => s.Path).ToArray();
+        }
+    }
+
+    public IReadOnlyList<CommitInfo> GetCommitsBetween(string excludeSha, string includeSha)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            var filter = new CommitFilter
+            {
+                SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Time,
+                IncludeReachableFrom = includeSha,
+                ExcludeReachableFrom = excludeSha
+            };
+            return repo.Commits.QueryBy(filter).Select(c => new CommitInfo
+            {
+                Sha = c.Sha,
+                ParentShas = c.Parents.Select(p => p.Sha).ToArray(),
+                Summary = c.MessageShort ?? string.Empty,
+                MessageFull = c.Message ?? string.Empty,
+                AuthorName = c.Author?.Name ?? "(unknown)",
+                AuthorEmail = c.Author?.Email ?? string.Empty,
+                WhenUtc = c.Author?.When ?? DateTimeOffset.MinValue
+            }).ToArray();
+        }
+    }
+
     // ---------------------------------------------------------------- writes / network
 
     public Task<GitResult> StageAsync(string path, CancellationToken ct = default)
@@ -451,6 +569,109 @@ public sealed class RepositoryService : IRepositoryService
     public Task<GitResult> RunRawAsync(IReadOnlyList<string> args, CancellationToken ct = default)
         => Run(args, ct);
 
+    // ---- stash ----
+
+    public Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default)
+    {
+        var args = new List<string> { "stash", "push" };
+        if (includeUntracked) args.Add("-u");
+        if (!string.IsNullOrWhiteSpace(message)) { args.Add("-m"); args.Add(message); }
+        return Run(args, ct);
+    }
+
+    public Task<GitResult> StashApplyAsync(int index, bool pop, CancellationToken ct = default)
+        => Run(new[] { "stash", pop ? "pop" : "apply", $"stash@{{{index}}}" }, ct);
+
+    public Task<GitResult> StashDropAsync(int index, CancellationToken ct = default)
+        => Run(new[] { "stash", "drop", $"stash@{{{index}}}" }, ct);
+
+    // ---- conflicts / in-progress operations ----
+
+    public async Task<GitResult> AbortOperationAsync(CancellationToken ct = default)
+    {
+        var cmd = GetState().Operation switch
+        {
+            RepositoryOperation.Merge => "merge",
+            RepositoryOperation.Rebase => "rebase",
+            RepositoryOperation.CherryPick => "cherry-pick",
+            RepositoryOperation.Revert => "revert",
+            _ => null
+        };
+        if (cmd is null) return GitResult.Fault("git", "진행 중인 작업이 없습니다. (No operation to abort.)");
+        return await Run(new[] { cmd, "--abort" }, ct).ConfigureAwait(false);
+    }
+
+    public async Task<GitResult> ContinueOperationAsync(CancellationToken ct = default)
+    {
+        return GetState().Operation switch
+        {
+            RepositoryOperation.Merge => await Run(new[] { "commit", "--no-edit" }, ct).ConfigureAwait(false),
+            RepositoryOperation.Rebase => await Run(new[] { "rebase", "--continue" }, ct).ConfigureAwait(false),
+            RepositoryOperation.CherryPick => await Run(new[] { "cherry-pick", "--continue" }, ct).ConfigureAwait(false),
+            RepositoryOperation.Revert => await Run(new[] { "revert", "--continue" }, ct).ConfigureAwait(false),
+            _ => GitResult.Fault("git", "진행 중인 작업이 없습니다. (No operation to continue.)")
+        };
+    }
+
+    public Task<GitResult> MarkResolvedAsync(string path, CancellationToken ct = default)
+        => Run(new[] { "add", "--", path }, ct);
+
+    // ---- branches / tags / remotes / submodules ----
+
+    public Task<GitResult> DeleteRemoteBranchAsync(string remote, string branch, CancellationToken ct = default)
+        => Run(new[] { "push", remote, "--delete", branch }, ct);
+
+    public Task<GitResult> DeleteTagAsync(string name, CancellationToken ct = default)
+        => Run(new[] { "tag", "-d", name }, ct);
+
+    public Task<GitResult> PushTagAsync(string name, string? remote = null, CancellationToken ct = default)
+        => Run(new[] { "push", remote ?? "origin", name }, ct);
+
+    public Task<GitResult> SubmoduleUpdateAsync(CancellationToken ct = default)
+        => Run(new[] { "submodule", "update", "--init", "--recursive" }, ct);
+
+    // ---- interactive rebase ----
+
+    public async Task<GitResult> RebaseInteractiveAsync(string ontoSha, IReadOnlyList<RebaseTodoItem> plan, CancellationToken ct = default)
+    {
+        var sb = new StringBuilder();
+        bool anyKeep = false;
+        foreach (var item in plan)
+        {
+            var word = item.Action switch
+            {
+                RebaseAction.Pick => "pick",
+                RebaseAction.Reword => "reword",
+                RebaseAction.Squash => "squash",
+                RebaseAction.Fixup => "fixup",
+                RebaseAction.Drop => "drop",
+                _ => "pick"
+            };
+            if (item.Action != RebaseAction.Drop) anyKeep = true;
+            var shortSha = item.Sha.Length >= 7 ? item.Sha[..7] : item.Sha;
+            sb.Append(word).Append(' ').Append(shortSha).Append(' ').Append(item.Summary).Append('\n');
+        }
+        if (!anyKeep) return GitResult.Fault("git rebase -i", "최소 한 개의 커밋은 남겨야 합니다. (Cannot drop all commits.)");
+
+        var todoPath = Path.Combine(Path.GetTempPath(), $"gittab-rebase-{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(todoPath, sb.ToString(), ct).ConfigureAwait(false);
+        try
+        {
+            // git runs GIT_SEQUENCE_EDITOR via its bundled sh; `cp <ours> "<gittodo>"` overwrites the plan.
+            var fwd = todoPath.Replace('\\', '/');
+            var env = new Dictionary<string, string>
+            {
+                ["GIT_SEQUENCE_EDITOR"] = $"cp \"{fwd}\"",
+                ["GIT_EDITOR"] = ":"
+            };
+            return await Run(new[] { "rebase", "-i", ontoSha }, env, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            try { File.Delete(todoPath); } catch { /* temp cleanup */ }
+        }
+    }
+
     private string? CurrentBranchName()
     {
         lock (_sync)
@@ -461,7 +682,10 @@ public sealed class RepositoryService : IRepositoryService
     }
 
     private Task<GitResult> Run(IReadOnlyList<string> args, CancellationToken ct)
-        => _git.RunAsync(EnsureWorkingDir(), args, ct);
+        => _git.RunAsync(EnsureWorkingDir(), args, cancellationToken: ct);
+
+    private Task<GitResult> Run(IReadOnlyList<string> args, IReadOnlyDictionary<string, string> env, CancellationToken ct)
+        => _git.RunAsync(EnsureWorkingDir(), args, env, ct);
 
     // ---------------------------------------------------------------- helpers
 

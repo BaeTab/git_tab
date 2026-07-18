@@ -18,6 +18,8 @@ public sealed partial class DiffViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(PlaceholderText))]
     private string _placeholderKey = "Diff.SelectFile";
 
+    [ObservableProperty] private bool _isSplit;
+
     public bool HasContent => Diff is { IsBinary: false } d && d.Hunks.Count > 0;
     public bool IsBinary => Diff?.IsBinary == true;
     public bool ShowPlaceholder => !HasContent;

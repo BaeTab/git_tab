@@ -160,6 +160,41 @@ public sealed class LocalizationService : ILocalizationService
         ["Gitignore.Append"] = "기존 파일에 추가",
         ["Gitignore.Exists"] = "이미 .gitignore가 있어요.",
 
+        // In-progress operations / conflicts
+        ["State.Merge"] = "머지 진행 중",
+        ["State.Rebase"] = "리베이스 진행 중",
+        ["State.CherryPick"] = "체리픽 진행 중",
+        ["State.Revert"] = "되돌리기 진행 중",
+        ["State.Bisect"] = "이분 탐색 진행 중",
+        ["Conflict.Hint"] = "충돌 파일을 해결(＋로 스테이지)한 뒤 ‘계속’을, 취소하려면 ‘중단’을 누르세요.",
+        ["Conflict.Continue"] = "계속",
+        ["Conflict.Abort"] = "중단",
+
+        // Stash
+        ["Stash.Section"] = "스태시",
+        ["Stash.Push"] = "변경 스태시",
+        ["Stash.Push.Tip"] = "지금의 변경을 잠시 치워두고 작업 폴더를 깨끗하게 만들어요. 나중에 되살릴 수 있어요.",
+        ["Stash.Pop"] = "적용 후 삭제 (pop)",
+        ["Stash.Apply"] = "적용",
+        ["Stash.Drop"] = "삭제",
+        ["Stash.Empty"] = "스태시가 없어요",
+
+        // Tags
+        ["Tag.Section"] = "태그",
+        ["Tag.Push"] = "원격에 올리기",
+        ["Tag.Delete"] = "태그 삭제",
+        ["Confirm.DeleteTagTitle"] = "태그를 삭제할까요?",
+        ["Confirm.DeleteTagBody"] = "‘{0}’ 태그를 삭제해요. 계속할까요?",
+
+        // Submodule / blame / rebase
+        ["Submodule.Update"] = "서브모듈 업데이트",
+        ["Submodule.Update.Tip"] = "서브모듈을 초기화하고 지정된 커밋으로 맞춰요.",
+        ["Blame"] = "Blame (줄별 작성자)",
+        ["Blame.Tip"] = "파일의 각 줄을 마지막으로 바꾼 커밋을 보여줘요.",
+        ["Ctx.DeleteRemote"] = "원격 브랜치 삭제",
+        ["Ctx.InteractiveRebase"] = "이 커밋 위로 대화형 리베이스",
+        ["Rebase.NothingAbove"] = "이 커밋 위에 재배치할 커밋이 없어요.",
+
         // Commit details
         ["Details.Author"] = "작성자",
         ["Details.Date"] = "날짜",
@@ -173,6 +208,8 @@ public sealed class LocalizationService : ILocalizationService
         ["Diff.Binary"] = "바이너리 파일이라 변경 내용을 미리 볼 수 없어요.",
         ["Diff.NoChanges"] = "표시할 변경이 없어요.",
         ["Diff.SelectFile"] = "파일을 선택하면 바뀐 줄이 색으로 표시돼요.",
+        ["Diff.Split"] = "좌우 비교",
+        ["Diff.SplitTip"] = "삭제된 줄과 추가된 줄을 왼쪽·오른쪽으로 나란히 비교해요.",
 
         // Remote / status
         ["Remote.Ahead"] = "▲{0}",
@@ -311,6 +348,37 @@ public sealed class LocalizationService : ILocalizationService
         ["Gitignore.Append"] = "Append to existing",
         ["Gitignore.Exists"] = "A .gitignore already exists.",
 
+        ["State.Merge"] = "Merging",
+        ["State.Rebase"] = "Rebasing",
+        ["State.CherryPick"] = "Cherry-picking",
+        ["State.Revert"] = "Reverting",
+        ["State.Bisect"] = "Bisecting",
+        ["Conflict.Hint"] = "Resolve the conflicted files (stage with ＋), then Continue — or Abort to cancel.",
+        ["Conflict.Continue"] = "Continue",
+        ["Conflict.Abort"] = "Abort",
+
+        ["Stash.Section"] = "Stashes",
+        ["Stash.Push"] = "Stash changes",
+        ["Stash.Push.Tip"] = "Set your current changes aside so the working tree is clean; restore them later.",
+        ["Stash.Pop"] = "Apply & drop (pop)",
+        ["Stash.Apply"] = "Apply",
+        ["Stash.Drop"] = "Drop",
+        ["Stash.Empty"] = "No stashes",
+
+        ["Tag.Section"] = "Tags",
+        ["Tag.Push"] = "Push to remote",
+        ["Tag.Delete"] = "Delete tag",
+        ["Confirm.DeleteTagTitle"] = "Delete tag?",
+        ["Confirm.DeleteTagBody"] = "The tag '{0}' will be deleted. Continue?",
+
+        ["Submodule.Update"] = "Update submodules",
+        ["Submodule.Update.Tip"] = "Initialize submodules and check out their pinned commits.",
+        ["Blame"] = "Blame (per-line authorship)",
+        ["Blame.Tip"] = "Show which commit last changed each line of the file.",
+        ["Ctx.DeleteRemote"] = "Delete remote branch",
+        ["Ctx.InteractiveRebase"] = "Interactive rebase onto this commit",
+        ["Rebase.NothingAbove"] = "No commits above this one to rebase.",
+
         ["Details.Author"] = "Author",
         ["Details.Date"] = "Date",
         ["Details.Commit"] = "Commit",
@@ -322,6 +390,8 @@ public sealed class LocalizationService : ILocalizationService
         ["Diff.Binary"] = "Binary file — no preview available.",
         ["Diff.NoChanges"] = "No changes to show.",
         ["Diff.SelectFile"] = "Select a file to see changed lines highlighted.",
+        ["Diff.Split"] = "Split",
+        ["Diff.SplitTip"] = "Compare removed and added lines side by side.",
 
         ["Remote.Ahead"] = "▲{0}",
         ["Remote.Behind"] = "▼{0}",

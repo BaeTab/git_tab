@@ -30,11 +30,12 @@ public sealed partial class BranchesViewModel : ObservableObject
 
     public ObservableCollection<BranchNodeViewModel> Local { get; } = new();
     public ObservableCollection<BranchNodeViewModel> Remote { get; } = new();
+    public ObservableCollection<TagInfo> Tags { get; } = new();
 
     [ObservableProperty] private BranchNodeViewModel? _selectedBranch;
     [ObservableProperty] private string? _currentBranchName;
 
-    public void Refresh(IReadOnlyList<BranchInfo> branches)
+    public void Refresh(IReadOnlyList<BranchInfo> branches, IReadOnlyList<TagInfo> tags)
     {
         var selected = SelectedBranch?.FriendlyName;
         Local.Clear();
@@ -46,12 +47,17 @@ public sealed partial class BranchesViewModel : ObservableObject
             if (b.IsCurrent) CurrentBranchName = b.FriendlyName;
         }
         SelectedBranch = Local.Concat(Remote).FirstOrDefault(n => n.FriendlyName == selected);
+
+        Tags.Clear();
+        foreach (var t in tags.OrderByDescending(t => t.Name, StringComparer.OrdinalIgnoreCase))
+            Tags.Add(t);
     }
 
     public void Clear()
     {
         Local.Clear();
         Remote.Clear();
+        Tags.Clear();
         CurrentBranchName = null;
     }
 
@@ -117,6 +123,35 @@ public sealed partial class BranchesViewModel : ObservableObject
     {
         if (node is null || node.IsCurrent) return;
         if (await GitUi.RunAsync(() => _repo.RebaseAsync(node.FriendlyName), _dialogs, _loc, _logger))
+            await NotifyChanged();
+    }
+
+    [RelayCommand]
+    private async Task DeleteRemote(BranchNodeViewModel? node)
+    {
+        if (node is null || !node.IsRemote) return;
+        var remote = node.RemoteName ?? "origin";
+        if (!_dialogs.Confirm(_loc.T("Confirm.DeleteBranchBody", node.FriendlyName), _loc.T("Confirm.DeleteBranchTitle")))
+            return;
+        if (await GitUi.RunAsync(() => _repo.DeleteRemoteBranchAsync(remote, node.ShortName), _dialogs, _loc, _logger))
+            await NotifyChanged();
+    }
+
+    [RelayCommand]
+    private async Task DeleteTag(TagInfo? tag)
+    {
+        if (tag is null) return;
+        if (!_dialogs.Confirm(_loc.T("Confirm.DeleteTagBody", tag.Name), _loc.T("Confirm.DeleteTagTitle")))
+            return;
+        if (await GitUi.RunAsync(() => _repo.DeleteTagAsync(tag.Name), _dialogs, _loc, _logger))
+            await NotifyChanged();
+    }
+
+    [RelayCommand]
+    private async Task PushTag(TagInfo? tag)
+    {
+        if (tag is null) return;
+        if (await GitUi.RunAsync(() => _repo.PushTagAsync(tag.Name), _dialogs, _loc, _logger))
             await NotifyChanged();
     }
 }

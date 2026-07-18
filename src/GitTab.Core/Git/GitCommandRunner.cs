@@ -27,6 +27,7 @@ public sealed class GitCommandRunner : IGitCommandRunner
     public async Task<GitResult> RunAsync(
         string workingDirectory,
         IReadOnlyList<string> arguments,
+        IReadOnlyDictionary<string, string>? environment = null,
         CancellationToken cancellationToken = default)
     {
         var commandLine = "git " + string.Join(' ', arguments.Select(Quote));
@@ -51,6 +52,13 @@ public sealed class GitCommandRunner : IGitCommandRunner
         psi.Environment["GIT_PAGER"] = "cat";
         psi.Environment["PAGER"] = "cat";
         psi.Environment["LC_ALL"] = "C";
+        // Never open an interactive editor (would hang a windowless process). ":" is the shell
+        // no-op that git runs via its bundled sh, so --continue/merge keep their default messages.
+        psi.Environment["GIT_EDITOR"] = ":";
+
+        if (environment is not null)
+            foreach (var kv in environment)
+                psi.Environment[kv.Key] = kv.Value;
 
         using var process = new Process { StartInfo = psi };
         var stdout = new StringBuilder();
@@ -124,7 +132,7 @@ public sealed class GitCommandRunner : IGitCommandRunner
     {
         try
         {
-            var r = await RunAsync(Environment.CurrentDirectory, new[] { "--version" }, cancellationToken)
+            var r = await RunAsync(Environment.CurrentDirectory, new[] { "--version" }, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             return r.Success && r.StandardOutput.Contains("git version", StringComparison.OrdinalIgnoreCase);
         }
