@@ -17,6 +17,8 @@
 
     <SolidColorBrush x:Key="Diff.AddBg"   Color="#14271D"/>
     <SolidColorBrush x:Key="Diff.DelBg"   Color="#2A181B"/>
+    <SolidColorBrush x:Key="Diff.AddWordBg" Color="#2C6B43"/>
+    <SolidColorBrush x:Key="Diff.DelWordBg" Color="#6E2A34"/>
     <SolidColorBrush x:Key="Diff.HunkBg"  Color="#1D2233"/>
     <SolidColorBrush x:Key="Diff.AddText" Color="#6BD08B"/>
     <SolidColorBrush x:Key="Diff.DelText" Color="#F08A93"/>
