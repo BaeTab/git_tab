@@ -44,6 +44,9 @@ public interface IDialogService
     /// <summary>Show the file-history dialog.</summary>
     void ShowFileHistory(FileHistoryViewModel vm);
 
+    /// <summary>Show the Ctrl+P command palette; returns true if the user confirmed a command.</summary>
+    bool ShowCommandPalette(CommandPaletteViewModel vm);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -196,6 +199,12 @@ public sealed class DialogService : IDialogService
     {
         var win = new FileHistoryDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
+    }
+
+    public bool ShowCommandPalette(CommandPaletteViewModel vm)
+    {
+        var win = new CommandPaletteWindow { DataContext = vm, Owner = Owner() };
+        return win.ShowDialog() == true;
     }
 
     public CredentialInput? PromptCredentials(string host)

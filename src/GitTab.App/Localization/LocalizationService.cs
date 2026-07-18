@@ -132,6 +132,7 @@ public sealed class LocalizationService : ILocalizationService
         ["Theme.Dark"] = "다크",
         ["Search.Placeholder"] = "메시지 · 작성자 · 해시로 검색",
         ["Search.Tip"] = "커밋 메시지, 작성자 이름, 또는 커밋 해시로 걸러서 찾아요.",
+        ["Palette.Placeholder"] = "명령 검색… (Ctrl+P)",
 
         // Panels
         ["Panel.History"] = "히스토리",
@@ -439,6 +440,7 @@ public sealed class LocalizationService : ILocalizationService
         ["Theme.Dark"] = "Dark",
         ["Search.Placeholder"] = "Search message · author · hash",
         ["Search.Tip"] = "Filter commits by message text, author name, or commit hash.",
+        ["Palette.Placeholder"] = "Search commands… (Ctrl+P)",
 
         ["Panel.History"] = "History",
         ["Panel.Changes"] = "Changes",

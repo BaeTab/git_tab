@@ -16,6 +16,7 @@
         <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
         <KeyBinding Modifiers="Control" Key="R" Command="{Binding RefreshCommand}"/>
         <KeyBinding Modifiers="Control" Key="O" Command="{Binding OpenRepositoryCommand}"/>
+        <KeyBinding Modifiers="Control" Key="P" Command="{Binding OpenCommandPaletteCommand}"/>
         <KeyBinding Modifiers="Control" Key="Return" Command="{Binding WorkingCopy.CommitCommand}"/>
     </Window.InputBindings>
 

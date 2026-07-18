@@ -740,6 +740,50 @@ public sealed partial class MainViewModel : ObservableObject
     private void OpenSettings() => _dialogs.ShowSettings(this);
 
     [RelayCommand]
+    private void OpenCommandPalette()
+    {
+        var vm = new CommandPaletteViewModel(BuildPalette());
+        if (_dialogs.ShowCommandPalette(vm) && vm.Chosen is { } chosen)
+            chosen.Execute();
+    }
+
+    private IReadOnlyList<PaletteItem> BuildPalette()
+    {
+        PaletteItem P(string key, IRelayCommand cmd) => new(Loc.T(key), () =>
+        {
+            if (cmd.CanExecute(null)) cmd.Execute(null);
+        });
+
+        var list = new List<PaletteItem>
+        {
+            P("Action.Open", OpenRepositoryCommand),
+            P("Repo.Create", CreateRepositoryCommand),
+            P("Clone.Action", CloneCommand),
+            P("Settings.Title", OpenSettingsCommand),
+            P("Theme.Toggle", ToggleThemeCommand),
+            P("Language", ToggleLanguageCommand),
+            P("Update.Checking", CheckUpdatesCommand),
+        };
+        if (IsRepositoryOpen)
+        {
+            list.AddRange(new[]
+            {
+                P("Action.Refresh", RefreshCommand),
+                P("Action.Fetch", FetchCommand),
+                P("Action.Pull", PullCommand),
+                P("Action.Push", PushCommand),
+                P("Reflog.Title", OpenReflogCommand),
+                P("Remote.Manage", ManageRemotesCommand),
+                P("Hosting.PR", CreatePullRequestCommand),
+                P("Hosting.Web", OpenRemoteWebCommand),
+                P("Gitignore.Title", GenerateGitignoreCommand),
+                P("Stash.Push", StashPushCommand),
+            });
+        }
+        return list;
+    }
+
+    [RelayCommand]
     private void ClearCredentials()
     {
         if (!IsRepositoryOpen) { _dialogs.Info(Loc.T("Settings.NoRemote"), Loc.T("Settings.Title")); return; }
