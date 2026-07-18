@@ -22,6 +22,12 @@ public partial class MainWindow : Window
         StateChanged += (_, _) => UpdateMaxRestoreGlyph();
         // A shell "commit" action focuses the staging tab.
         vm.CommitFocusRequested += () => LeftTabs.SelectedIndex = 0;
+        // Incremental loading: pull the next page when the graph is scrolled near the bottom.
+        CommitGraph.NearEnd += (_, _) =>
+        {
+            if (_vm.LoadMoreCommand.CanExecute(null))
+                _vm.LoadMoreCommand.Execute(null);
+        };
     }
 
     /// <summary>Bring the window to the foreground when an Explorer right-click routes here.</summary>

@@ -505,6 +505,7 @@
                                   HorizontalScrollBarVisibility="Disabled"
                                   Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                         <controls:CommitGraphControl
+                            x:Name="CommitGraph"
                             Rows="{Binding Rows}"
                             LaneCount="{Binding LaneCount}"
                             StatsSource="{Binding Stats}"

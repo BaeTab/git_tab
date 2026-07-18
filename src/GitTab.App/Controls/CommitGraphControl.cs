@@ -102,10 +102,22 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         set => SetValue(StatsSourceProperty, value);
     }
 
+    /// <summary>Raised when the view is scrolled near the bottom — the host loads more commits.</summary>
+    public event EventHandler? NearEnd;
+    private bool _nearEndRaised;
+
     private static void OnRowsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var c = (CommitGraphControl)d;
-        c._offset = new Vector(0, 0);
+        // Preserve the scroll position when rows are *appended* (incremental load keeps the same
+        // newest commit at the top); reset to the top on a fresh repo / filter change.
+        var oldRows = e.OldValue as IReadOnlyList<CommitRowViewModel>;
+        var newRows = e.NewValue as IReadOnlyList<CommitRowViewModel>;
+        bool append = oldRows is { Count: > 0 } && newRows is { Count: > 0 }
+                      && newRows.Count >= oldRows.Count
+                      && oldRows[0].Sha == newRows[0].Sha;
+        if (!append) c._offset = new Vector(0, 0);
+        c._nearEndRaised = false;
         c.InvalidateMeasure();
         c.InvalidateVisual();
         c.ScrollOwner?.InvalidateScrollInfo();
@@ -475,6 +487,12 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         _offset.Y = clamped;
         ScrollOwner?.InvalidateScrollInfo();
         InvalidateVisual();
+
+        // Ask the host to load more commits when within ~8 rows of the bottom (fires once per run).
+        bool nearEnd = _extent.Height > _viewport.Height
+                       && _offset.Y + _viewport.Height >= _extent.Height - RowHeight * 8;
+        if (nearEnd && !_nearEndRaised) { _nearEndRaised = true; NearEnd?.Invoke(this, EventArgs.Empty); }
+        else if (!nearEnd) _nearEndRaised = false;
     }
 
     public Rect MakeVisible(Visual visual, Rect rectangle) => rectangle;

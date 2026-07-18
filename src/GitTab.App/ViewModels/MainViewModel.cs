@@ -33,6 +33,11 @@ public sealed partial class MainViewModel : ObservableObject
         new Dictionary<string, IReadOnlyList<RefLabel>>();
     private bool _childrenWired;
 
+    // Incremental loading: start with one page, load more as the user scrolls toward the bottom,
+    // so opening a huge repository is fast.
+    private const int CommitPageSize = 1500;
+    private int _commitLimit = CommitPageSize;
+
     private readonly ISettingsService _settings;
 
     public ICommitStatsSource Stats { get; }
@@ -122,6 +127,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private int _selectedCommitIndex = -1;
     [ObservableProperty] private string _searchText = string.Empty;
 
+    [ObservableProperty] private bool _hasMoreCommits;
+    [ObservableProperty] private bool _isLoadingMore;
+
     partial void OnSelectedCommitIndexChanged(int value)
     {
         if (Rows.Count > 0 && value >= 0 && value < Rows.Count)
@@ -200,6 +208,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             _repo.Open(discovered);
+            _commitLimit = CommitPageSize;   // start each repo at the first page
             Stats.Clear();
             _recent.Add(discovered);
             SyncRecent();
@@ -244,7 +253,7 @@ public sealed partial class MainViewModel : ObservableObject
             _repo.Refresh();
             var data = await Task.Run(() =>
             {
-                var commits = _repo.GetCommits(5000);
+                var commits = _repo.GetCommits(_commitLimit);
                 var branches = _repo.GetBranches();
                 var refs = _repo.GetRefLabelsBySha();
                 var head = _repo.GetHead();
@@ -257,6 +266,7 @@ public sealed partial class MainViewModel : ObservableObject
 
             _allCommits = data.commits;
             _refsBySha = data.refs;
+            HasMoreCommits = data.commits.Count >= _commitLimit;
             Branches.Refresh(data.branches, data.tags);
             WorkingCopy.Refresh();
 
@@ -284,6 +294,35 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    /// <summary>Load the next page of older commits (triggered when scrolling toward the bottom).</summary>
+    [RelayCommand]
+    private async Task LoadMore()
+    {
+        if (IsLoadingMore || !HasMoreCommits || !IsRepositoryOpen) return;
+        IsLoadingMore = true;
+        try
+        {
+            _commitLimit += CommitPageSize;
+            var loaded = await Task.Run(() =>
+            {
+                _repo.Refresh();
+                return (commits: _repo.GetCommits(_commitLimit), refs: _repo.GetRefLabelsBySha());
+            });
+            _allCommits = loaded.commits;
+            _refsBySha = loaded.refs;
+            HasMoreCommits = loaded.commits.Count >= _commitLimit;
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Load more commits failed");
+        }
+        finally
+        {
+            IsLoadingMore = false;
         }
     }
 
