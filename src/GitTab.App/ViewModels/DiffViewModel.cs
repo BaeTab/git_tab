@@ -28,7 +28,8 @@ public sealed partial class DiffViewModel : ObservableObject
     public void Show(FileDiff diff)
     {
         Diff = diff;
-        if (diff.IsBinary) PlaceholderKey = "Diff.Binary";
+        if (diff.IsTooLarge) PlaceholderKey = "Diff.TooLarge";
+        else if (diff.IsBinary) PlaceholderKey = "Diff.Binary";
         else if (diff.Hunks.Count == 0) PlaceholderKey = "Diff.NoChanges";
     }
 

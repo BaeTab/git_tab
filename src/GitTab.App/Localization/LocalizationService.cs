@@ -294,6 +294,7 @@ public sealed class LocalizationService : ILocalizationService
 
         // Diff
         ["Diff.Binary"] = "바이너리 파일이라 변경 내용을 미리 볼 수 없어요.",
+        ["Diff.TooLarge"] = "변경 내용이 너무 커서 미리보기를 생략했어요.",
         ["Diff.NoChanges"] = "표시할 변경이 없어요.",
         ["Diff.SelectFile"] = "파일을 선택하면 바뀐 줄이 색으로 표시돼요.",
         ["Diff.Split"] = "좌우 비교",
@@ -601,6 +602,7 @@ public sealed class LocalizationService : ILocalizationService
         ["Details.SelectCommit"] = "Select a commit on the left to see its details.",
 
         ["Diff.Binary"] = "Binary file — no preview available.",
+        ["Diff.TooLarge"] = "Change is too large — preview skipped.",
         ["Diff.NoChanges"] = "No changes to show.",
         ["Diff.SelectFile"] = "Select a file to see changed lines highlighted.",
         ["Diff.Split"] = "Split",

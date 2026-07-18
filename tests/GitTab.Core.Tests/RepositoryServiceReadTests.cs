@@ -155,4 +155,32 @@ public sealed class RepositoryServiceReadTests
         var changes = svc.GetChangesBetween(main, "feature");
         changes.Should().Contain(c => c.Path == "b.txt" && c.Kind == FileChangeKind.Added);
     }
+
+    [Fact]
+    public void GetCommitFileDiff_skips_very_large_changes()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var big = string.Join("\n", Enumerable.Range(0, 60000).Select(_ => new string('x', 40))); // ~2.4 MB
+        var sha = repo.Commit("big", "big.txt", big);
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var diff = svc.GetCommitFileDiff(sha, "big.txt");
+        diff.IsTooLarge.Should().BeTrue();
+        diff.Hunks.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Empty_repo_reads_do_not_throw()
+    {
+        using var repo = TestRepository.CreateEmpty(); // no commits yet (unborn HEAD)
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        svc.GetCommits().Should().BeEmpty();
+        svc.GetStatus().IsClean.Should().BeTrue();
+        svc.GetState().IsInProgress.Should().BeFalse();
+        svc.GetHead().IsUnborn.Should().BeTrue();
+    }
 }

@@ -35,6 +35,9 @@ public sealed class FileDiff
     public string? OldPath { get; init; }
     public bool IsBinary { get; init; }
 
+    /// <summary>True when the diff was skipped because the file/change is very large (avoids freezing the UI).</summary>
+    public bool IsTooLarge { get; init; }
+
     /// <summary>Raw unified diff text (as produced by git/libgit2), for verbatim display.</summary>
     public string RawPatch { get; init; } = string.Empty;
 

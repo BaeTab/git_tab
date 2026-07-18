@@ -355,8 +355,7 @@ public sealed class RepositoryService : IRepositoryService
             if (entry is null)
                 return new FileDiff { Path = path, RawPatch = string.Empty };
 
-            return UnifiedDiffParser.Parse(entry.Path, entry.OldPath != entry.Path ? entry.OldPath : null,
-                entry.Patch ?? string.Empty, entry.IsBinaryComparison);
+            return ParseEntry(entry);
         }
     }
 
@@ -396,8 +395,7 @@ public sealed class RepositoryService : IRepositoryService
             if (from is null || to is null) return new FileDiff { Path = path, RawPatch = string.Empty };
             var entry = repo.Diff.Compare<Patch>(from, to, new[] { path }).FirstOrDefault();
             if (entry is null) return new FileDiff { Path = path, RawPatch = string.Empty };
-            return UnifiedDiffParser.Parse(entry.Path, entry.OldPath != entry.Path ? entry.OldPath : null,
-                entry.Patch ?? string.Empty, entry.IsBinaryComparison);
+            return ParseEntry(entry);
         }
     }
 
@@ -421,9 +419,24 @@ public sealed class RepositoryService : IRepositoryService
             if (entry is null)
                 return new FileDiff { Path = path, RawPatch = string.Empty };
 
-            return UnifiedDiffParser.Parse(entry.Path, entry.OldPath != entry.Path ? entry.OldPath : null,
-                entry.Patch ?? string.Empty, entry.IsBinaryComparison);
+            return ParseEntry(entry);
         }
+    }
+
+    // Very large diffs are skipped rather than parsed/rendered, which would freeze the UI.
+    private const int MaxDiffChars = 2_000_000;
+
+    private static FileDiff ParseEntry(PatchEntryChanges entry)
+    {
+        var old = entry.OldPath != entry.Path ? entry.OldPath : null;
+        if (entry.IsBinaryComparison)
+            return new FileDiff { Path = entry.Path, OldPath = old, IsBinary = true };
+
+        var text = entry.Patch ?? string.Empty;
+        if (text.Length > MaxDiffChars)
+            return new FileDiff { Path = entry.Path, OldPath = old, IsTooLarge = true };
+
+        return UnifiedDiffParser.Parse(entry.Path, old, text, false);
     }
 
     // ---------------------------------------------------------------- advanced reads
