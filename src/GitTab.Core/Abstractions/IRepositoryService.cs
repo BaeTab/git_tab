@@ -115,6 +115,11 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> StashDropAsync(int index, CancellationToken ct = default);
 
     // ---- conflicts / in-progress operations ----
+    bool IsBisecting();
+    Task<GitResult> BisectStartAsync(string goodSha, string badSha, CancellationToken ct = default);
+    Task<GitResult> BisectMarkAsync(string term, CancellationToken ct = default);
+    Task<GitResult> BisectResetAsync(CancellationToken ct = default);
+
     Task<GitResult> AbortOperationAsync(CancellationToken ct = default);
     Task<GitResult> ContinueOperationAsync(CancellationToken ct = default);
     Task<GitResult> MarkResolvedAsync(string path, CancellationToken ct = default);

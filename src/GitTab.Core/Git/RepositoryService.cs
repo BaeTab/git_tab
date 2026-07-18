@@ -763,6 +763,33 @@ public sealed class RepositoryService : IRepositoryService
     public Task<GitResult> RunRawAsync(IReadOnlyList<string> args, CancellationToken ct = default)
         => Run(args, ct);
 
+    public bool IsBisecting()
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            return File.Exists(Path.Combine(repo.Info.Path, "BISECT_LOG"));
+        }
+    }
+
+    public async Task<GitResult> BisectStartAsync(string goodSha, string badSha, CancellationToken ct = default)
+    {
+        if (Guard(goodSha, badSha) is { } bad) return bad;
+        var start = await Run(new[] { "bisect", "start" }, ct).ConfigureAwait(false);
+        if (!start.Success) return start;
+        var badResult = await Run(new[] { "bisect", "bad", badSha }, ct).ConfigureAwait(false);
+        if (!badResult.Success) return badResult;
+        return await Run(new[] { "bisect", "good", goodSha }, ct).ConfigureAwait(false);
+    }
+
+    public Task<GitResult> BisectMarkAsync(string term, CancellationToken ct = default)
+        => term is "good" or "bad" or "skip"
+            ? Run(new[] { "bisect", term }, ct)
+            : Task.FromResult(GitResult.Fault("git bisect", "잘못된 bisect 명령입니다."));
+
+    public Task<GitResult> BisectResetAsync(CancellationToken ct = default)
+        => Run(new[] { "bisect", "reset" }, ct);
+
     public async Task<IReadOnlyList<CommitInfo>> SearchContentAsync(string term, bool useRegex, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(term)) return Array.Empty<CommitInfo>();

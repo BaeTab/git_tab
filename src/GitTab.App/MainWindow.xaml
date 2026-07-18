@@ -227,6 +227,31 @@
             </Grid>
         </Border>
 
+        <!-- ================= Bisect banner ================= -->
+        <Border Grid.Row="1" Background="{DynamicResource Brush.SurfaceAlt}"
+                BorderBrush="{DynamicResource Brush.Accent}" BorderThickness="0,0,0,2" Padding="14,9"
+                Visibility="{Binding IsBisecting, Converter={StaticResource Bool2Vis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{loc:Tr Bisect.Title}" FontWeight="Bold" Foreground="{DynamicResource Brush.Accent}"/>
+                    <TextBlock Text="{Binding BisectStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                               FontFamily="Consolas" FontSize="11.5" MaxHeight="60"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{loc:Tr Bisect.Good}" Style="{StaticResource AccentButton}" Margin="0,0,6,0"
+                            Command="{Binding BisectGoodCommand}" ToolTip="{loc:Tr Bisect.Good.Tip}"/>
+                    <Button Content="{loc:Tr Bisect.Bad}" Margin="0,0,6,0"
+                            Command="{Binding BisectBadCommand}" ToolTip="{loc:Tr Bisect.Bad.Tip}"/>
+                    <Button Content="{loc:Tr Bisect.Skip}" Margin="0,0,6,0" Command="{Binding BisectSkipCommand}"/>
+                    <Button Content="{loc:Tr Bisect.Reset}" Command="{Binding BisectResetCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- ================= Main content ================= -->
         <Grid Grid.Row="2" Margin="8">
             <Grid.ColumnDefinitions>
@@ -546,6 +571,7 @@
                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                     <MenuItem Header="{loc:Tr Ctx.CheckoutCommit}" Command="{Binding CheckoutCommitCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.Reword}" Command="{Binding RewordCommitCommand}"/>
+                                    <MenuItem Header="{loc:Tr Ctx.StartBisect}" Command="{Binding StartBisectCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CreateBranch}" Command="{Binding CreateBranchHereCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CreateTag}" Command="{Binding CreateTagHereCommand}"/>
                                     <Separator/>

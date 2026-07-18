@@ -293,6 +293,28 @@ public sealed class RepositoryServiceWriteTests
         summaries.Should().NotContain("original first");
     }
 
+    [Fact]
+    public async Task Bisect_start_marks_bisecting_then_reset_clears_it()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var good = repo.Commit("c1", "a.txt", "1");
+        repo.Commit("c2", "a.txt", "12");
+        repo.Commit("c3", "a.txt", "123");
+        repo.Commit("c4", "a.txt", "1234");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+        svc.IsBisecting().Should().BeFalse();
+
+        var start = await svc.BisectStartAsync(goodSha: good, badSha: "HEAD");
+        start.Success.Should().BeTrue(start.CombinedOutput);
+        svc.IsBisecting().Should().BeTrue();
+
+        var reset = await svc.BisectResetAsync();
+        reset.Success.Should().BeTrue(reset.CombinedOutput);
+        svc.IsBisecting().Should().BeFalse();
+    }
+
     private static void TryDelete(string dir)
     {
         try

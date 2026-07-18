@@ -105,12 +105,17 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOperationInProgress))]
     [NotifyPropertyChangedFor(nameof(OperationName))]
+    [NotifyPropertyChangedFor(nameof(IsBisecting))]
     private RepositoryStateInfo? _repoState;
 
     [ObservableProperty] private bool _hasSubmodules;
+    [ObservableProperty] private string _bisectStatus = string.Empty;
 
-    public bool IsOperationInProgress => RepoState?.IsInProgress == true;
-    public string OperationName => RepoState is { IsInProgress: true } s ? Loc.T("State." + s.Operation) : string.Empty;
+    // Bisect has its own banner; the conflict banner (abort/continue) is only for merge/rebase/etc.
+    public bool IsOperationInProgress =>
+        RepoState?.IsInProgress == true && RepoState.Operation != RepositoryOperation.Bisect;
+    public bool IsBisecting => RepoState?.Operation == RepositoryOperation.Bisect;
+    public string OperationName => IsOperationInProgress ? Loc.T("State." + RepoState!.Operation) : string.Empty;
 
     [ObservableProperty] private string? _repositoryName;
     [ObservableProperty] private string? _repositoryPath;
@@ -626,6 +631,45 @@ public sealed partial class MainViewModel : ObservableObject
     // ---------------------------------------------------------------- theme / language / update
 
     // ---------------------------------------------------------------- conflicts / stash / submodule / blame / rebase
+
+    // ---- bisect ----
+
+    [RelayCommand]
+    private async Task StartBisect()
+    {
+        if (SelectedCommit is null || !IsRepositoryOpen) return;
+        if (!_dialogs.Confirm(Loc.T("Bisect.StartConfirm"), Loc.T("Bisect.Title"))) return;
+        await RunBisectAsync(() => _repo.BisectStartAsync(goodSha: SelectedCommit.Sha, badSha: "HEAD"));
+    }
+
+    [RelayCommand] private Task BisectGood() => RunBisectAsync(() => _repo.BisectMarkAsync("good"));
+    [RelayCommand] private Task BisectBad() => RunBisectAsync(() => _repo.BisectMarkAsync("bad"));
+    [RelayCommand] private Task BisectSkip() => RunBisectAsync(() => _repo.BisectMarkAsync("skip"));
+
+    [RelayCommand]
+    private async Task BisectReset()
+    {
+        if (await GitUi.RunAsync(() => _repo.BisectResetAsync(), _dialogs, Loc, _logger))
+        {
+            BisectStatus = string.Empty;
+            await ReloadAllAsync();
+        }
+    }
+
+    private async Task RunBisectAsync(Func<Task<GitResult>> op)
+    {
+        GitResult result;
+        try { result = await op().ConfigureAwait(true); }
+        catch (Exception ex) { _dialogs.Error(ex.Message, Loc.T("Common.Error")); return; }
+        if (!result.Success)
+        {
+            var body = string.IsNullOrWhiteSpace(result.CombinedOutput) ? result.CommandLine : result.CombinedOutput;
+            _dialogs.Error(body, Loc.T("Error.GitFailed"));
+            return;
+        }
+        BisectStatus = result.CombinedOutput.Trim();
+        await ReloadAllAsync();
+    }
 
     [RelayCommand] private Task AbortOperation() => RunNetworkAsync(ct => _repo.AbortOperationAsync(ct));
     [RelayCommand] private Task ContinueOperation() => RunNetworkAsync(ct => _repo.ContinueOperationAsync(ct));
