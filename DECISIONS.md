@@ -1,0 +1,14 @@
+# DECISIONS
+
+Running log of design/implementation decisions. One line each. Newest at top.
+
+- **Product name = "Braid".** The app *braids* branch lanes together in its color commit-graph; short, searchable, evokes the core differentiator. Namespaces `Braid.*` replace the spec's placeholder `GitClient.*` (structure/intent identical: Core/Graph never reference WPF).
+- **Target `net8.0` / `net8.0-windows`** per fixed stack. Built with .NET SDK 9 (backward-compatible); .NET 8 Desktop Runtime 8.0.29 is installed locally so the app builds *and* runs.
+- **FluentAssertions pinned to 6.12.1** (Apache-2.0). v8+ moved to a commercial license — forbidden by the OSS-only redistribution rule.
+- **LibGit2Sharp 0.31.0** for all read paths (log/branch/status/diff). MIT (libgit2: GPLv2 + linking exception) — redistributable.
+- **Write/network operations shell out to `git.exe`** (commit/stage/checkout/branch/merge/rebase/fetch/pull/push) for auth + stability, hidden behind `IGitCommandRunner`.
+- **Graph project is fully standalone** — defines its own `GraphCommit` input record instead of depending on Core, so the layout engine is unit-testable in isolation with zero git dependency.
+- **Custom `CommitGraphControl : FrameworkElement` with `OnRender`** (not XAML DataTemplate) + manual viewport virtualization, per the perf requirement.
+- **Credentials delegated to git credential helper** — no in-app credential UI (security + license risk avoidance).
+- **Auto-update via GitHub Releases** — app checks the `latest` release, compares SemVer, downloads the InnoSetup installer asset, and launches it. No custom update server.
+- **H.Soft / Hyun-woo Bae branding retained** — this is the personal `github.com/BaeTab` repo, not the company GitLab, so personal branding is permitted.

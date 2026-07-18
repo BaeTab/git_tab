@@ -1,0 +1,55 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+build/
+bld/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Publish / packaging output
+publish/
+dist/
+[Rr]eleases/
+*.nupkg
+*.snupkg
+
+# NuGet
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# App runtime data / logs
+*.log
+
+# InnoSetup compiled installers
+installer/Output/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Secrets / signing (never commit)
+*.pfx
+*.snk
+keystore.properties
+*.jks
