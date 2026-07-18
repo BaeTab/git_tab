@@ -2,7 +2,9 @@
 
 Running log of design/implementation decisions. One line each. Newest at top.
 
-- **Product name = "Braid".** The app *braids* branch lanes together in its color commit-graph; short, searchable, evokes the core differentiator. Namespaces `Braid.*` replace the spec's placeholder `GitClient.*` (structure/intent identical: Core/Graph never reference WPF).
+- **Product name = "Git Tab"** (display), `GitTab` for identifiers/assembly (exe `GitTab.exe`), matching the `git_tab` repo. Namespaces `GitTab.*` replace the spec's placeholder `GitClient.*` (structure/intent identical: Core/Graph never reference WPF). _(Renamed from the earlier working title "Braid" at the user's request.)_
+- **Reopen last repository on startup** (or a repo path passed as a CLI arg) so the app resumes where the user left off — also enables an "Open in Git Tab" shell action.
+- **Right-click context menus (TortoiseGit-style)** on commits (checkout/branch/tag/reset/revert/cherry-pick/copy), branches (checkout/merge/rebase/rename/delete), and files (stage/unstage/discard).
 - **Target `net8.0` / `net8.0-windows`** per fixed stack. Built with .NET SDK 9 (backward-compatible); .NET 8 Desktop Runtime 8.0.29 is installed locally so the app builds *and* runs.
 - **FluentAssertions pinned to 6.12.1** (Apache-2.0). v8+ moved to a commercial license — forbidden by the OSS-only redistribution rule.
 - **LibGit2Sharp 0.31.0** for all read paths (log/branch/status/diff). MIT (libgit2: GPLv2 + linking exception) — redistributable.

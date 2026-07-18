@@ -1,0 +1,75 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 0.2.0, no leading 'v')"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Test
+        run: dotnet test GitTab.sln -c Release
+
+      - name: Publish (framework-dependent single file)
+        run: >
+          dotnet publish src/GitTab.App/GitTab.App.csproj -c Release -r win-x64
+          --self-contained false -p:PublishSingleFile=true -o publish
+
+      # Derive the release version from the pushed tag (strip the leading
+      # "v"), or from the workflow_dispatch "version" input when triggered
+      # manually. Exposed as steps.version.outputs.version for later steps.
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "Resolved version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      # The .iss script guards its own AppVersion define with #ifndef, so
+      # passing /DAppVersion here overrides the fallback "0.1.0" baked into
+      # the script and stamps the installer + OutputBaseFilename with the
+      # exact tag/input version.
+      - name: Compile installer with Inno Setup
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.version }} installer\GitTab_installer.iss
+
+      # softprops/action-gh-release publishes the GitHub Release and
+      # attaches the installer. The filename (GitTab-Setup-<version>.exe)
+      # ends in .exe, which is what the in-app auto-updater looks for.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.version.outputs.version) || github.ref_name }}
+          files: dist/GitTab-Setup-*.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

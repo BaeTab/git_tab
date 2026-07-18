@@ -1,0 +1,60 @@
+using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
+using System.Windows.Media;
+using GitTab.App.Localization;
+
+namespace GitTab.App.Converters;
+
+/// <summary>Resolves a theme resource key (string) to its Brush.</summary>
+public sealed class ResourceKeyToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
+        => value is string key && Application.Current.TryFindResource(key) is Brush b ? b : Brushes.Gray;
+
+    public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture)
+        => Binding.DoNothing;
+}
+
+/// <summary>bool -> Visibility. ConverterParameter "invert" flips the mapping.</summary>
+public sealed class BoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var b = value is bool v && v;
+        if (parameter is string s && s.Equals("invert", StringComparison.OrdinalIgnoreCase)) b = !b;
+        return b ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture)
+        => value is Visibility vis && vis == Visibility.Visible;
+}
+
+/// <summary>Non-empty string / non-null / non-zero-count -> Visible.</summary>
+public sealed class HasValueToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        bool has = value switch
+        {
+            null => false,
+            string s => !string.IsNullOrWhiteSpace(s),
+            int i => i != 0,
+            System.Collections.ICollection c => c.Count > 0,
+            _ => true
+        };
+        if (parameter is string p && p.Equals("invert", StringComparison.OrdinalIgnoreCase)) has = !has;
+        return has ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
+}
+
+/// <summary>Localizes a resource key at bind time (does not live-update on language toggle).</summary>
+public sealed class LocKeyConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
+        => value is string key ? LocalizationService.Current.T(key) : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
+}

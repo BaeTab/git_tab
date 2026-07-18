@@ -1,0 +1,19 @@
+<Application x:Class="GitTab.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GitTab.App"
+             xmlns:conv="clr-namespace:GitTab.App.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/GitTab;component/Themes/Common.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <conv:BoolToVisibilityConverter x:Key="Bool2Vis"/>
+            <conv:HasValueToVisibilityConverter x:Key="HasValue2Vis"/>
+            <conv:ResourceKeyToBrushConverter x:Key="Key2Brush"/>
+            <conv:LocKeyConverter x:Key="LocKey"/>
+            <BooleanToVisibilityConverter x:Key="StdBool2Vis"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

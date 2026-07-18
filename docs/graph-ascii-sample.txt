@@ -1,4 +1,4 @@
-Braid GraphLayoutEngine — ASCII validation sample
+Git Tab GraphLayoutEngine — ASCII validation sample
 Generated from a scratch repo with a feature branch (merged) + a parallel topic branch.
 Compare the two graphs below: they describe the same history and the same shape.
 
@@ -19,9 +19,9 @@ Compare the two graphs below: they describe the same history and the same shape.
 * 3e6f1dc A base
 
 ============================================================
-  Braid.Graph.GraphLayoutEngine  (our algorithm)
+  GitTab.Graph.GraphLayoutEngine  (our algorithm)
 ============================================================
-# Braid GraphLayoutEngine — C:\TEMP\gradle-tmp\claude\D--myrepo-BaeTab-git-tab\f94d3b3d-a52c-48a5-85c7-77b1ec08936a\scratchpad\graphtest
+# Git Tab GraphLayoutEngine — C:\TEMP\gradle-tmp\claude\D--myrepo-BaeTab-git-tab\f94d3b3d-a52c-48a5-85c7-77b1ec08936a\scratchpad\graphtest
 # 9 commits, 2 lane(s)
 
 ●  3b01d15  H main3
