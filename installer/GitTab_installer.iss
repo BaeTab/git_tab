@@ -61,6 +61,9 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Register the Explorer right-click menu on install (checked by default). Uses the app's own
+; headless --register-shell so the exact installed exe path is written.
+Name: "shellmenu"; Description: "Windows 탐색기 우클릭 메뉴에 Git Tab 추가 (열기/커밋/풀/푸시)"; GroupDescription: "탐색기 통합:"
 
 [Files]
 ; Copy the whole publish output — single-file publish still emits the LibGit2Sharp
@@ -78,7 +81,15 @@ Name: "{group}\{cm:UninstallProgram,Git Tab}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\Git Tab"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
+; Register the Explorer right-click menu as the *original* (non-elevated) user, so the keys land
+; in that user's HKCU — the setup itself runs elevated, whose HKCU is the wrong hive. runhidden
+; keeps the brief headless run invisible.
+Filename: "{app}\{#AppExeName}"; Parameters: "--register-shell"; Flags: runasoriginaluser runhidden nowait; Tasks: shellmenu
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,Git Tab}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+; Remove the Explorer menu on uninstall (before the exe is deleted), again as the original user.
+Filename: "{app}\{#AppExeName}"; Parameters: "--unregister-shell"; Flags: runasoriginaluser runhidden; RunOnceId: "UnregisterShellMenu"
 
 [Code]
 // Runs `dotnet --list-runtimes` and checks the captured output for a line

@@ -16,6 +16,8 @@
 
 Git Tab is a native Windows Git client that brings the power of **visual branch management** to your fingertips. Like GitKraken and SourceTree, Git Tab renders commits as an interactive, color-coded graph where branches "braid" together—making it easy to understand your repository's history at a glance. Built entirely in C# with WPF, Git Tab is lightweight, fast, and deeply integrated with Windows.
 
+> 📖 **New to Git?** The beginner-friendly **[Wiki](docs/wiki/Home.md)** walks you through installation, Git basics, authentication, and every feature in plain language.
+
 ### Features
 
 - **Color Commit Graph** — Branches get distinct colors; commits line up in a virtualized, interactive graph that handles tens of thousands of commits without lag.
@@ -158,6 +160,8 @@ Git Tab is released under the **MIT License**. See [LICENSE](LICENSE) for detail
 ### Git Tab란?
 
 Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Windows Git 클라이언트입니다. GitKraken과 SourceTree처럼, Git Tab는 커밋을 색상으로 구분된 인터랙티브 그래프로 렌더링하며, 브랜치들이 함께 "꼰다(braid)"는 개념으로 저장소의 히스토리를 한눈에 파악할 수 있습니다. C#과 WPF로 완전히 작성되었으며 가볍고 빠르며 Windows와 깊게 통합됩니다.
+
+> 📖 **Git이 처음이신가요?** 초보자용 **[위키](docs/wiki/Home.md)**에서 설치·Git 기초·인증·모든 기능을 쉬운 말로 안내합니다.
 
 ### 주요 기능
 
