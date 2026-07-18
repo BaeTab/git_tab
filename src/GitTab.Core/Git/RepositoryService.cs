@@ -596,11 +596,25 @@ public sealed class RepositoryService : IRepositoryService
         return Run(args, ct);
     }
 
+    // Reject a user-provided name/ref/URL that git could mistake for an option (argument injection).
+    private static GitResult? Guard(params string?[] values)
+    {
+        foreach (var v in values)
+            if (!GitArg.IsSafe(v))
+                return GitResult.Fault("git",
+                    $"안전하지 않은 인자입니다: '{v ?? "(빈 값)"}' — '-'로 시작하거나 제어문자를 포함할 수 없습니다. " +
+                    "(Unsafe argument: cannot start with '-' or contain control characters.)");
+        return null;
+    }
+
     public Task<GitResult> CheckoutAsync(string branchFriendlyName, CancellationToken ct = default)
-        => Run(new[] { "checkout", branchFriendlyName }, ct);
+        => Guard(branchFriendlyName) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "checkout", branchFriendlyName }, ct);
 
     public Task<GitResult> CreateBranchAsync(string name, bool checkout, string? startPoint = null, CancellationToken ct = default)
     {
+        if (Guard(name) is { } bad) return Task.FromResult(bad);
+        if (!string.IsNullOrWhiteSpace(startPoint) && Guard(startPoint) is { } badStart) return Task.FromResult(badStart);
         var args = new List<string>();
         if (checkout) { args.Add("checkout"); args.Add("-b"); args.Add(name); }
         else { args.Add("branch"); args.Add(name); }
@@ -609,16 +623,20 @@ public sealed class RepositoryService : IRepositoryService
     }
 
     public Task<GitResult> DeleteBranchAsync(string friendlyName, bool force, CancellationToken ct = default)
-        => Run(new[] { "branch", force ? "-D" : "-d", friendlyName }, ct);
+        => Guard(friendlyName) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "branch", force ? "-D" : "-d", friendlyName }, ct);
 
     public Task<GitResult> RenameBranchAsync(string oldName, string newName, CancellationToken ct = default)
-        => Run(new[] { "branch", "-m", oldName, newName }, ct);
+        => Guard(oldName, newName) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "branch", "-m", oldName, newName }, ct);
 
     public Task<GitResult> MergeAsync(string branchFriendlyName, CancellationToken ct = default)
-        => Run(new[] { "merge", "--no-edit", branchFriendlyName }, ct);
+        => Guard(branchFriendlyName) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "merge", "--no-edit", branchFriendlyName }, ct);
 
     public Task<GitResult> RebaseAsync(string ontoBranchFriendlyName, CancellationToken ct = default)
-        => Run(new[] { "rebase", ontoBranchFriendlyName }, ct);
+        => Guard(ontoBranchFriendlyName) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "rebase", ontoBranchFriendlyName }, ct);
 
     public Task<GitResult> FetchAsync(string? remote = null, bool prune = true, CancellationToken ct = default)
     {
@@ -711,22 +729,37 @@ public sealed class RepositoryService : IRepositoryService
     // ---- branches / tags / remotes / submodules ----
 
     public Task<GitResult> AddRemoteAsync(string name, string url, CancellationToken ct = default)
-        => Run(new[] { "remote", "add", name, url }, ct);
+        => Guard(name, url) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "remote", "add", name, url }, ct);
 
     public Task<GitResult> SetRemoteUrlAsync(string name, string url, CancellationToken ct = default)
-        => Run(new[] { "remote", "set-url", name, url }, ct);
+        => Guard(name, url) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "remote", "set-url", name, url }, ct);
 
     public Task<GitResult> RemoveRemoteAsync(string name, CancellationToken ct = default)
-        => Run(new[] { "remote", "remove", name }, ct);
+        => Guard(name) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "remote", "remove", name }, ct);
 
     public Task<GitResult> DeleteRemoteBranchAsync(string remote, string branch, CancellationToken ct = default)
-        => Run(new[] { "push", remote, "--delete", branch }, ct);
+        => Guard(remote, branch) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "push", remote, "--delete", branch }, ct);
+
+    public Task<GitResult> CreateTagAsync(string name, string? target = null, CancellationToken ct = default)
+    {
+        if (Guard(name) is { } bad) return Task.FromResult(bad);
+        if (!string.IsNullOrWhiteSpace(target) && Guard(target) is { } badTarget) return Task.FromResult(badTarget);
+        var args = new List<string> { "tag", name };
+        if (!string.IsNullOrWhiteSpace(target)) args.Add(target);
+        return Run(args, ct);
+    }
 
     public Task<GitResult> DeleteTagAsync(string name, CancellationToken ct = default)
-        => Run(new[] { "tag", "-d", name }, ct);
+        => Guard(name) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "tag", "-d", name }, ct);
 
     public Task<GitResult> PushTagAsync(string name, string? remote = null, CancellationToken ct = default)
-        => Run(new[] { "push", remote ?? "origin", name }, ct);
+        => Guard(name, remote ?? "origin") is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "push", remote ?? "origin", name }, ct);
 
     public Task<GitResult> SubmoduleUpdateAsync(CancellationToken ct = default)
         => Run(new[] { "submodule", "update", "--init", "--recursive" }, ct);

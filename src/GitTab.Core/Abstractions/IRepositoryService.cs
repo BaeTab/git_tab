@@ -86,6 +86,7 @@ public interface IRepositoryService : IDisposable
     /// <summary>Create a new repository at <paramref name="path"/> (git init, creating the folder if needed).</summary>
     Task<GitResult> InitAsync(string path, string? initialBranch = "main", CancellationToken ct = default);
 
+    Task<GitResult> CreateTagAsync(string name, string? target = null, CancellationToken ct = default);
     Task<GitResult> AddRemoteAsync(string name, string url, CancellationToken ct = default);
     Task<GitResult> SetRemoteUrlAsync(string name, string url, CancellationToken ct = default);
     Task<GitResult> RemoveRemoteAsync(string name, CancellationToken ct = default);

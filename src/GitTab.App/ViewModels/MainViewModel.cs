@@ -468,7 +468,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (SelectedCommit is null) return;
         var name = _dialogs.Prompt(Loc.T("Branch.NewName.Prompt"), "Tag");
         if (string.IsNullOrWhiteSpace(name)) return;
-        if (await GitUi.RunAsync(() => _repo.RunRawAsync(new[] { "tag", name, SelectedCommit.Sha }), _dialogs, Loc, _logger))
+        if (await GitUi.RunAsync(() => _repo.CreateTagAsync(name, SelectedCommit.Sha), _dialogs, Loc, _logger))
             await ReloadAllAsync();
     }
 

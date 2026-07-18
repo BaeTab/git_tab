@@ -8,7 +8,8 @@ namespace GitTab.Core.Tests;
 
 /// <summary>
 /// Integration tests that drive real git.exe through RepositoryService, validating the trickier
-/// plumbing (interactive rebase sequence editor, conflict abort, stash, blame, init, remotes, reflog).
+/// plumbing (interactive rebase sequence editor, conflict abort, stash, blame, init, remotes,
+/// reflog) plus argument-injection hardening.
 /// </summary>
 public sealed class RepositoryServiceWriteTests
 {
@@ -40,7 +41,6 @@ public sealed class RepositoryServiceWriteTests
         using var svc = NewService();
         svc.Open(repo.Path);
 
-        // Replay B, C onto A, squashing C into B (plan is oldest-first).
         var plan = new List<RebaseTodoItem>
         {
             new() { Sha = b, Summary = "B", Action = RebaseAction.Pick },
@@ -50,7 +50,7 @@ public sealed class RepositoryServiceWriteTests
 
         result.Success.Should().BeTrue(result.CombinedOutput);
         svc.Refresh();
-        svc.GetCommits().Should().HaveCount(2); // A + (B+C squashed)
+        svc.GetCommits().Should().HaveCount(2);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public sealed class RepositoryServiceWriteTests
         svc.Open(repo.Path);
 
         var merge = await svc.MergeAsync("feature");
-        merge.Success.Should().BeFalse(); // conflict
+        merge.Success.Should().BeFalse();
 
         svc.Refresh();
         var state = svc.GetState();
@@ -117,8 +117,8 @@ public sealed class RepositoryServiceWriteTests
         var blame = svc.GetBlame("f.txt");
 
         blame.Should().HaveCountGreaterThanOrEqualTo(2);
-        blame[0].Sha.Should().Be(c1);   // line 1 unchanged since first commit
-        blame[1].Sha.Should().Be(c2);   // line 2 changed in second commit
+        blame[0].Sha.Should().Be(c1);
+        blame[1].Sha.Should().Be(c2);
         blame[1].Content.Should().Contain("BETA2");
     }
 
@@ -199,6 +199,49 @@ public sealed class RepositoryServiceWriteTests
         svc.GetState().Operation.Should().Be(RepositoryOperation.None);
         svc.GetState().IsInProgress.Should().BeFalse();
         svc.GetSubmodulePaths().Should().BeEmpty();
+    }
+
+    // ---------------------------------------------------------------- argument-injection hardening
+
+    [Theory]
+    [InlineData("main")]
+    [InlineData("feature/x")]
+    [InlineData("release-1.0")]
+    public void GitArg_accepts_normal_names(string name)
+        => GitArg.IsSafe(name).Should().BeTrue();
+
+    [Theory]
+    [InlineData("--upload-pack=evil")]
+    [InlineData("-D")]
+    [InlineData("")]
+    [InlineData(null)]
+    [InlineData("-ctrl")]
+    public void GitArg_rejects_option_like_or_control(string? name)
+        => GitArg.IsSafe(name).Should().BeFalse();
+
+    [Fact]
+    public async Task Checkout_rejects_option_like_ref_without_running_git()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var result = await svc.CheckoutAsync("--evil");
+        result.Success.Should().BeFalse();
+        result.CombinedOutput.Should().Contain("Unsafe");
+    }
+
+    [Fact]
+    public async Task CreateTag_rejects_option_like_name()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.CreateTagAsync("-x")).Success.Should().BeFalse();
+        (await svc.CreateTagAsync("v1.0")).Success.Should().BeTrue();
     }
 
     private static void TryDelete(string dir)
