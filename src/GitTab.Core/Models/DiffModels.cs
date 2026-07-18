@@ -6,7 +6,6 @@ public enum DiffLineKind
     Added,
     Removed,
     HunkHeader,
-    FileHeader,
     NoNewline
 }
 

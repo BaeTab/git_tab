@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
-using GitTab.App.Localization;
 
 namespace GitTab.App.Converters;
 
@@ -60,13 +59,4 @@ public sealed class EnumBooleanConverter : IValueConverter
         => value is true && parameter is string name && Enum.TryParse(targetType, name, out var e)
             ? e!
             : Binding.DoNothing;
-}
-
-/// <summary>Localizes a resource key at bind time (does not live-update on language toggle).</summary>
-public sealed class LocKeyConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
-        => value is string key ? LocalizationService.Current.T(key) : string.Empty;
-
-    public object ConvertBack(object value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }

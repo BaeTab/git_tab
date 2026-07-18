@@ -27,7 +27,6 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     private const double ChipHeight = 17;
 
     private readonly Pen[] _lanePens;
-    private readonly Brush[] _laneBrushes;
     private readonly Typeface _uiFont = new("Segoe UI");
     private readonly Typeface _uiBold = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
     private readonly Typeface _monoFont = new("Consolas");
@@ -45,12 +44,6 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             var p = new Pen(new SolidColorBrush(c), LaneThickness) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
             p.Freeze();
             return p;
-        }).ToArray();
-        _laneBrushes = GraphPalette.Colors.Select(c =>
-        {
-            var b = new SolidColorBrush(c);
-            b.Freeze();
-            return b;
         }).ToArray();
 
         // Repaint on language/theme change — subscribe only while loaded so we don't leak the
@@ -292,8 +285,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             // ----- avatar node -----
             double nodeX = LaneX(row.GraphRow.NodeLane);
             var lanePen = _lanePens[Mod(row.GraphRow.ColorIndex)];
-            var avColor = AuthorAvatar.ColorFor(string.IsNullOrEmpty(row.Commit.AuthorEmail) ? row.AuthorName : row.Commit.AuthorEmail);
-            var avBrush = new SolidColorBrush(avColor);
+            var avBrush = AuthorAvatar.BrushFor(string.IsNullOrEmpty(row.Commit.AuthorEmail) ? row.AuthorName : row.Commit.AuthorEmail);
             if (row.IsHead)
                 dc.DrawEllipse(null, new Pen(accentBrush, 2.2), new Point(nodeX, centerY), NodeRadius + 3, NodeRadius + 3);
             dc.DrawEllipse(avBrush, nodeStroke, new Point(nodeX, centerY), NodeRadius, NodeRadius);

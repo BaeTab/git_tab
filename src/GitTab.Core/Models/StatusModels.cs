@@ -27,8 +27,6 @@ public sealed class FileChange
     /// <summary>True if this entry is staged (in the index); false if it is a working-tree change.</summary>
     public bool IsStaged { get; init; }
 
-    public bool IsBinary { get; init; }
-
     public string DisplayPath => OldPath is { Length: > 0 } && OldPath != Path
         ? $"{OldPath} → {Path}"
         : Path;

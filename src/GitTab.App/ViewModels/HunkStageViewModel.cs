@@ -70,7 +70,6 @@ public sealed partial class HunkStageViewModel : ObservableObject
                 var block = string.Join("\n", current).TrimEnd('\n');
                 Hunks.Add(new HunkItem
                 {
-                    Index = Hunks.Count + 1,
                     HunkHeader = current[0],
                     Text = block,
                     Patch = _header + "\n" + block + "\n"
@@ -113,7 +112,6 @@ public sealed partial class HunkStageViewModel : ObservableObject
 /// <summary>One hunk of a file's diff, plus the self-contained patch that stages just it.</summary>
 public sealed class HunkItem
 {
-    public required int Index { get; init; }
     public required string HunkHeader { get; init; }
     public required string Text { get; init; }
     public required string Patch { get; init; }

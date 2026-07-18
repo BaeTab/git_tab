@@ -29,7 +29,6 @@ public sealed class RepositoryService : IRepositoryService
     }
 
     public string? CurrentRepositoryPath => _workingDir ?? _repoPath;
-    public bool IsOpen => _repo is not null;
 
     public string? Discover(string path)
     {
@@ -200,13 +199,13 @@ public sealed class RepositoryService : IRepositoryService
         lock (_sync)
         {
             var repo = EnsureOpen();
-            var map = new Dictionary<string, List<RefLabel>>(StringComparer.Ordinal);
+            var map = new Dictionary<string, IReadOnlyList<RefLabel>>(StringComparer.Ordinal);
 
             void AddLabel(string? sha, RefLabel label)
             {
                 if (string.IsNullOrEmpty(sha)) return;
                 if (!map.TryGetValue(sha, out var l)) map[sha] = l = new List<RefLabel>();
-                l.Add(label);
+                ((List<RefLabel>)l).Add(label);
             }
 
             foreach (var b in repo.Branches)
@@ -238,7 +237,7 @@ public sealed class RepositoryService : IRepositoryService
                 });
             }
 
-            return map.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<RefLabel>)kv.Value, StringComparer.Ordinal);
+            return map;
         }
     }
 
@@ -588,8 +587,7 @@ public sealed class RepositoryService : IRepositoryService
                     Sha = sha,
                     ShortSha = sha.Length >= 7 ? sha[..7] : sha,
                     Message = e.Message ?? string.Empty,
-                    When = e.Committer?.When ?? default,
-                    Committer = e.Committer?.Name
+                    When = e.Committer?.When ?? default
                 });
                 if (++i >= max) break;
             }

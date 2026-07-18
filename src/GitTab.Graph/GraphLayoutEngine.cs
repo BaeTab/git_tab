@@ -34,6 +34,7 @@ public sealed class GraphLayoutEngine
 
         var rows = new List<GraphRow>(commits.Count);
         var active = new List<string?>();
+        var lanesAbove = new List<string?>();   // reused per-row scratch (pre-mutation lane snapshot)
         int maxLanes = 0;
 
         foreach (var commit in commits)
@@ -41,7 +42,8 @@ public sealed class GraphLayoutEngine
             var sha = commit.Sha;
 
             // Snapshot the lane state *before* this commit — these are the incoming edges.
-            var lanesAbove = new List<string?>(active);
+            lanesAbove.Clear();
+            lanesAbove.AddRange(active);
 
             // --- (a) node lane: leftmost lane already waiting for this commit, else a fresh lane.
             int nodeLane = -1;
@@ -56,8 +58,8 @@ public sealed class GraphLayoutEngine
             if (nodeLane < 0)
                 nodeLane = AllocateLane(active, null); // branch tip / head with no child above
 
-            // --- (c) route parents onto lanes.
-            var parentLanes = new List<(string Sha, int Lane)>(commit.ParentShas.Count);
+            // --- (c) route parents onto lanes. Only the lane index is needed downstream.
+            var parentLanes = new List<int>(commit.ParentShas.Count);
             for (int k = 0; k < commit.ParentShas.Count; k++)
             {
                 var parent = commit.ParentShas[k];
@@ -79,7 +81,7 @@ public sealed class GraphLayoutEngine
                     // Additional parents (merge) open a new lane (diagonal branch downward).
                     lane = AllocateLane(active, parent);
                 }
-                parentLanes.Add((parent, lane));
+                parentLanes.Add(lane);
             }
             // Root commit (no parents): its lane simply ends — leave active[nodeLane] == null.
 
@@ -99,12 +101,21 @@ public sealed class GraphLayoutEngine
                     segments.Add(new LaneSegment(i, i, Color(i), LaneKind.Straight));       // full-height pass-through
             }
 
-            // Outgoing from node to each distinct parent lane.
-            var emitted = new HashSet<int>();
-            foreach (var (_, lane) in parentLanes)
+            // Outgoing from node to each distinct parent lane. The single-parent case (the vast
+            // majority) needs no dedup, so we avoid allocating a HashSet per row.
+            if (parentLanes.Count == 1)
             {
-                if (!emitted.Add(lane)) continue;
-                segments.Add(new LaneSegment(nodeLane, lane, Color(lane), LaneKind.Branch)); // bottom half from node
+                int lane = parentLanes[0];
+                segments.Add(new LaneSegment(nodeLane, lane, Color(lane), LaneKind.Branch));
+            }
+            else if (parentLanes.Count > 1)
+            {
+                var emitted = new HashSet<int>();
+                foreach (var lane in parentLanes)
+                {
+                    if (!emitted.Add(lane)) continue;
+                    segments.Add(new LaneSegment(nodeLane, lane, Color(lane), LaneKind.Branch)); // bottom half from node
+                }
             }
 
             rows.Add(new GraphRow

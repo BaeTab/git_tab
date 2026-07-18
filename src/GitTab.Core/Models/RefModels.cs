@@ -5,8 +5,7 @@ public enum RefKind
     LocalBranch,
     RemoteBranch,
     Tag,
-    Head,
-    Stash
+    Head
 }
 
 /// <summary>A branch/tag/HEAD label attached to a commit row (rendered as a chip).</summary>
@@ -63,5 +62,4 @@ public sealed class ReflogEntry
     public required string ShortSha { get; init; }
     public required string Message { get; init; }     // e.g. "commit: ...", "pull", "reset: ..."
     public required DateTimeOffset When { get; init; }
-    public string? Committer { get; init; }
 }

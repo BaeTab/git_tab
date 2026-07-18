@@ -12,9 +12,7 @@
             <conv:BoolToVisibilityConverter x:Key="Bool2Vis"/>
             <conv:HasValueToVisibilityConverter x:Key="HasValue2Vis"/>
             <conv:ResourceKeyToBrushConverter x:Key="Key2Brush"/>
-            <conv:LocKeyConverter x:Key="LocKey"/>
             <conv:EnumBooleanConverter x:Key="EnumBool"/>
-            <BooleanToVisibilityConverter x:Key="StdBool2Vis"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

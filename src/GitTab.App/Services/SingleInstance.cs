@@ -19,13 +19,10 @@ public sealed class SingleInstance : IDisposable
     private Mutex? _mutex;
     private CancellationTokenSource? _cts;
 
-    public bool IsPrimary { get; private set; }
-
     /// <summary>Returns true if this process is the first (primary) instance.</summary>
     public bool TryAcquire()
     {
         _mutex = new Mutex(initiallyOwned: true, MutexName, out bool createdNew);
-        IsPrimary = createdNew;
         return createdNew;
     }
 

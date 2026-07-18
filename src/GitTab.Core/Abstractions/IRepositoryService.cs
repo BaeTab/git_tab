@@ -10,7 +10,6 @@ namespace GitTab.Core.Abstractions;
 public interface IRepositoryService : IDisposable
 {
     string? CurrentRepositoryPath { get; }
-    bool IsOpen { get; }
 
     /// <summary>Returns the repository working directory if <paramref name="path"/> is inside a
     /// git repo (or is one), otherwise null.</summary>

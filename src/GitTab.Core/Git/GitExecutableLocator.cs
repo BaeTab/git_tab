@@ -19,13 +19,6 @@ public static class GitExecutableLocator
         return "git";
     }
 
-    /// <summary>True if a concrete git.exe file was found (i.e. not relying on PATH).</summary>
-    public static bool IsBundledOrInstalled() => Candidates().Any(File.Exists);
-
-    /// <summary>The bundled portable-git path, whether or not it currently exists.</summary>
-    public static string BundledPath =>
-        Path.Combine(AppContext.BaseDirectory, "git", "cmd", "git.exe");
-
     private static IEnumerable<string> Candidates()
     {
         var baseDir = AppContext.BaseDirectory;

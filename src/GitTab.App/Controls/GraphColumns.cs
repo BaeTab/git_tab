@@ -10,9 +10,7 @@ namespace GitTab.App.Controls;
 internal readonly struct GraphColumns
 {
     public double RefsX { get; init; }
-    public double RefsW { get; init; }
     public double GraphX { get; init; }
-    public double GraphW { get; init; }
     public double MessageX { get; init; }
     public double MessageW { get; init; }
     public double ChangesX { get; init; }
@@ -68,9 +66,7 @@ internal readonly struct GraphColumns
         return new GraphColumns
         {
             RefsX = 8,
-            RefsW = Math.Max(0, refsW - 8),
             GraphX = graphX,
-            GraphW = graphW,
             MessageX = messageX,
             MessageW = messageW,
             ChangesX = changesX,
@@ -96,7 +92,26 @@ internal static class AuthorAvatar
         Color.FromRgb(0x8D,0x6E,0x63), Color.FromRgb(0x78,0x92,0x62), Color.FromRgb(0x5C,0x8A,0x9E),
     };
 
-    public static Color ColorFor(string? key)
+    // Frozen brushes, one per palette color, built once — the graph draws these every frame per
+    // visible row, so we must never allocate a brush in the render loop.
+    private static readonly SolidColorBrush[] Brushes = BuildBrushes();
+
+    private static SolidColorBrush[] BuildBrushes()
+    {
+        var arr = new SolidColorBrush[Palette.Length];
+        for (int i = 0; i < Palette.Length; i++)
+        {
+            var b = new SolidColorBrush(Palette[i]);
+            b.Freeze();
+            arr[i] = b;
+        }
+        return arr;
+    }
+
+    /// <summary>A stable, frozen avatar brush for the given key (name/email). Reused across renders.</summary>
+    public static Brush BrushFor(string? key) => Brushes[IndexFor(key)];
+
+    private static int IndexFor(string? key)
     {
         key ??= string.Empty;
         uint h = 2166136261;
@@ -104,7 +119,7 @@ internal static class AuthorAvatar
         {
             foreach (var c in key) { h ^= c; h *= 16777619; }
         }
-        return Palette[h % (uint)Palette.Length];
+        return (int)(h % (uint)Palette.Length);
     }
 
     public static string Initial(string? name)

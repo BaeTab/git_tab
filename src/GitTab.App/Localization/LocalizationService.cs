@@ -29,14 +29,9 @@ public sealed class LocalizationService : ILocalizationService
             // Refresh every indexer binding and notify listeners.
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(Binding.IndexerName));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Language)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsKorean)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEnglish)));
             LanguageChanged?.Invoke(this, EventArgs.Empty);
         }
     }
-
-    public bool IsKorean => _language == AppLanguage.Korean;
-    public bool IsEnglish => _language == AppLanguage.English;
 
     public string this[string key] => T(key);
 

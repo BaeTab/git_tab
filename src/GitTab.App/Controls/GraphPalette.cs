@@ -20,6 +20,4 @@ public static class GraphPalette
     };
 
     public static int Size => Colors.Length;
-
-    public static Color At(int colorIndex) => Colors[((colorIndex % Size) + Size) % Size];
 }

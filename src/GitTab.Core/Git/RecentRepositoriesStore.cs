@@ -58,24 +58,6 @@ public sealed class RecentRepositoriesStore : IRecentRepositoriesStore
         }
     }
 
-    public void Remove(string path)
-    {
-        var normalized = Normalize(path);
-        lock (_sync)
-        {
-            var list = Load().Where(r => !PathEquals(r.Path, normalized)).ToList();
-            Save(list);
-        }
-    }
-
-    public void Clear()
-    {
-        lock (_sync)
-        {
-            Save(new List<RecentRepository>());
-        }
-    }
-
     private List<RecentRepository> Load()
     {
         try

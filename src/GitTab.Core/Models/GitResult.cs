@@ -13,9 +13,6 @@ public sealed class GitResult
     /// <summary>True when git exited 0.</summary>
     public bool Success => ExitCode == 0;
 
-    /// <summary>True when the process could not be started / timed out (exit code &lt; 0).</summary>
-    public bool Faulted => ExitCode < 0;
-
     /// <summary>Combined stderr+stdout, trimmed — convenient for surfacing to the user.</summary>
     public string CombinedOutput
     {
