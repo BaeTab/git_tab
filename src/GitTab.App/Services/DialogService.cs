@@ -35,6 +35,9 @@ public interface IDialogService
     /// <summary>Show the reflog "history &amp; undo" dialog.</summary>
     void ShowReflog(ReflogViewModel vm);
 
+    /// <summary>Show the partial-staging (per-hunk) dialog.</summary>
+    void ShowHunkStage(HunkStageViewModel vm);
+
     /// <summary>Shows the .gitignore generator for the repo; returns true if a file was written.</summary>
     bool ShowGitignoreGenerator(string workingDir);
 
@@ -168,6 +171,12 @@ public sealed class DialogService : IDialogService
     public void ShowReflog(ReflogViewModel vm)
     {
         var win = new ReflogDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowHunkStage(HunkStageViewModel vm)
+    {
+        var win = new HunkStageDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 

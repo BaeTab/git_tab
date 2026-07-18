@@ -119,6 +119,19 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task StagePartial(FileChangeViewModel? file)
+    {
+        if (file is null) return;
+        var vm = new HunkStageViewModel(_repo, _dialogs, _loc, _logger, file.Path);
+        _dialogs.ShowHunkStage(vm);
+        if (vm.Changed)
+        {
+            Refresh();
+            if (RepositoryChanged is not null) await RepositoryChanged.Invoke();
+        }
+    }
+
+    [RelayCommand]
     private async Task Discard(FileChangeViewModel? file)
     {
         if (file is null) return;

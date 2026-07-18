@@ -256,6 +256,10 @@
                                                            Foreground="{Binding StatusColorKey, Converter={StaticResource Key2Brush}}"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding DisplayPath}" TextTrimming="CharacterEllipsis"/>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                                    <Button Content="±" Style="{StaticResource ToolButton}" Padding="6,0"
+                                                            Command="{Binding DataContext.StagePartialCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}" ToolTip="{loc:Tr WC.StagePartial.Tip}"
+                                                            AutomationProperties.Name="{loc:Tr WC.StagePartial}"/>
                                                     <Button Content="+" Style="{StaticResource ToolButton}" Padding="6,0"
                                                             Command="{Binding DataContext.StageCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                             CommandParameter="{Binding}" ToolTip="{loc:Tr WC.Stage.Tip}"/>
