@@ -3,6 +3,13 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] - 2026-07-18
+
+### Fixed
+- Toolbar: the right-hand controls (language / theme / update / settings) were cut off at narrow /
+  non-maximized window widths. The management buttons now scroll horizontally while the network
+  actions, search, and right-hand controls stay pinned and visible.
+
 ## [0.6.0] - 2026-07-18
 
 ### Added
@@ -96,6 +103,7 @@ All notable changes to **Git Tab** are documented here. This project follows
 - Initial release: color commit graph, commit details + diff, staging & commit, branches & tags,
   fetch/pull/push, `.gitignore` generator, light/dark themes, Korean/English UI, auto-update.
 
+[0.6.1]: https://github.com/BaeTab/git_tab/releases/tag/v0.6.1
 [0.6.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.6.0
 [0.5.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.5.0
 [0.4.0]: https://github.com/BaeTab/git_tab/releases/tag/v0.4.0

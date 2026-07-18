@@ -64,14 +64,17 @@
                 BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="8,6">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- Management actions scroll horizontally when the window is narrow, so the network
+                     actions and the right-hand controls stay visible. -->
+                <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                 <!-- open / recent / refresh -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal">
                     <Button Style="{StaticResource AccentButton}" Command="{Binding OpenRepositoryCommand}"
                             ToolTip="{loc:Tr Action.Open.Tip}">
                         <StackPanel Orientation="Horizontal">
@@ -143,8 +146,9 @@
                             Content="{loc:Tr Submodule.Update}" ToolTip="{loc:Tr Submodule.Update.Tip}"
                             Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
                 </StackPanel>
+                </ScrollViewer>
 
-                <!-- remote actions -->
+                <!-- remote actions (always visible) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                     <Border Style="{StaticResource ToolbarSeparator}"/>
@@ -175,7 +179,7 @@
                 </StackPanel>
 
                 <!-- search -->
-                <Grid Grid.Column="2" MaxWidth="360" HorizontalAlignment="Right" Margin="8,0"
+                <Grid Grid.Column="2" Width="220" Margin="8,0" VerticalAlignment="Center"
                       Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
                              ToolTip="{loc:Tr Search.Tip}"/>
@@ -184,7 +188,7 @@
                                Visibility="{Binding SearchText, Converter={StaticResource HasValue2Vis}, ConverterParameter=invert}"/>
                 </Grid>
 
-                <!-- language / theme / update -->
+                <!-- language / theme / update / settings (always visible) -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
                     <Border Style="{StaticResource ToolbarSeparator}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleLanguageCommand}"
