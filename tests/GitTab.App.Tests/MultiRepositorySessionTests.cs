@@ -43,10 +43,11 @@ public sealed class MultiRepositorySessionTests
         var updates = Substitute.For<IUpdateService>();
         var shell = Substitute.For<IShellIntegrationService>();
         var settings = Substitute.For<ISettingsService>();
+        var keybindings = Substitute.For<IKeybindingService>();
 
         return new MainViewModel(
             discoverRepo, recent, dialogs, loc, theme, updates, shell,
-            credentials, settings, factory, NullLogger<MainViewModel>.Instance);
+            credentials, settings, keybindings, factory, NullLogger<MainViewModel>.Instance);
     }
 
     [Fact]

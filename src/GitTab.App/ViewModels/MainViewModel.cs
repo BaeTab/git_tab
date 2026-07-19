@@ -30,6 +30,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IShellIntegrationService _shell;
     private readonly ICredentialStore _credentials;
     private readonly ISettingsService _settings;
+    private readonly IKeybindingService _keybindings;
     private readonly RepositorySessionFactory _factory;
     private readonly ILogger<MainViewModel> _logger;
 
@@ -54,6 +55,7 @@ public sealed partial class MainViewModel : ObservableObject
         IShellIntegrationService shell,
         ICredentialStore credentials,
         ISettingsService settings,
+        IKeybindingService keybindings,
         RepositorySessionFactory factory,
         ILogger<MainViewModel> logger)
     {
@@ -66,6 +68,7 @@ public sealed partial class MainViewModel : ObservableObject
         _shell = shell;
         _credentials = credentials;
         _settings = settings;
+        _keybindings = keybindings;
         _factory = factory;
         _logger = logger;
 
@@ -336,6 +339,38 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void FocusSearch() => SearchFocusRequested?.Invoke();
 
+    // ---------------------------------------------------------------- keybinding-stable command forwarders
+    //
+    // The window builds its InputBindings from these — not directly from ActiveSession's commands —
+    // because ActiveSession changes every time the user switches tabs. A KeyBinding built against
+    // "ActiveSession.RefreshCommand" today would keep pointing at *today's* session forever; routing
+    // through a parameterless shell command that reads ActiveSession live means the same KeyBinding
+    // instance keeps working no matter which tab is active.
+
+    [RelayCommand]
+    private async Task RefreshActive()
+    {
+        if (ActiveSession?.RefreshCommand is { } cmd && cmd.CanExecute(null))
+            await cmd.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    private async Task FetchActive()
+    {
+        if (ActiveSession?.FetchCommand is { } cmd && cmd.CanExecute(null))
+            await cmd.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    private async Task CommitActive()
+    {
+        if (ActiveSession?.WorkingCopy?.CommitCommand is { } cmd && cmd.CanExecute(null))
+            await cmd.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    private void CloseActiveTab() => CloseTab(ActiveSession);
+
     // ---------------------------------------------------------------- theme / language / update
 
     [RelayCommand]
@@ -486,6 +521,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenSettings() => _dialogs.ShowSettings(this);
+
+    [RelayCommand]
+    private void OpenKeybindings() => _dialogs.ShowKeybindings(new KeybindingsViewModel(_keybindings, Loc));
 
     // ---------------------------------------------------------------- command palette
 

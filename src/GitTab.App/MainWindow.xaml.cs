@@ -1,7 +1,9 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
+using GitTab.App.Services;
 using GitTab.App.ViewModels;
 
 namespace GitTab.App;
@@ -13,11 +15,13 @@ public partial class MainWindow : Window
     private static readonly string GlyphRestore = char.ConvertFromUtf32(0xE923);
 
     private readonly MainViewModel _vm;
+    private readonly IKeybindingService _keybindings;
 
-    public MainWindow(MainViewModel vm)
+    public MainWindow(MainViewModel vm, IKeybindingService keybindings)
     {
         InitializeComponent();
         _vm = vm;
+        _keybindings = keybindings;
         DataContext = vm;
         StateChanged += (_, _) => UpdateMaxRestoreGlyph();
         // A shell "commit" action focuses the staging tab.
@@ -31,6 +35,56 @@ public partial class MainWindow : Window
             if (_vm.ActiveSession?.LoadMoreCommand is { } cmd && cmd.CanExecute(null))
                 cmd.Execute(null);
         };
+
+        // Keyboard shortcuts are user-customizable (see the Keybindings dialog): build them from the
+        // saved/default gestures now, and again whenever the user changes one.
+        RebuildShortcuts();
+        _keybindings.BindingsChanged += RebuildShortcuts;
+        Closed += (_, _) => _keybindings.BindingsChanged -= RebuildShortcuts;
+    }
+
+    /// <summary>
+    /// (Re)builds <see cref="Window.InputBindings"/> from the keybinding service's current gestures.
+    /// Each action maps to a stable, parameterless command on <see cref="MainViewModel"/> so the
+    /// binding keeps working regardless of which repository tab is active (see the
+    /// "keybinding-stable command forwarders" region in <see cref="MainViewModel"/>).
+    /// </summary>
+    public void RebuildShortcuts()
+    {
+        InputBindings.Clear();
+
+        var commands = new Dictionary<string, ICommand>(StringComparer.Ordinal)
+        {
+            ["OpenRepository"] = _vm.OpenRepositoryCommand,
+            ["CreateRepository"] = _vm.CreateRepositoryCommand,
+            ["CommandPalette"] = _vm.OpenCommandPaletteCommand,
+            ["FocusSearch"] = _vm.FocusSearchCommand,
+            ["CloseTab"] = _vm.CloseActiveTabCommand,
+            ["NextTab"] = _vm.NextTabCommand,
+            ["PreviousTab"] = _vm.PreviousTabCommand,
+            ["Refresh"] = _vm.RefreshActiveCommand,
+            ["Fetch"] = _vm.FetchActiveCommand,
+            ["Commit"] = _vm.CommitActiveCommand,
+        };
+
+        var converter = new KeyGestureConverter();
+        foreach (var action in _keybindings.Actions)
+        {
+            if (!commands.TryGetValue(action.Id, out var command)) continue;
+            var gestureText = _keybindings.GetGesture(action.Id);
+            if (string.IsNullOrWhiteSpace(gestureText)) continue;
+
+            try
+            {
+                if (converter.ConvertFromString(gestureText) is KeyGesture gesture)
+                    InputBindings.Add(new KeyBinding(command, gesture));
+            }
+            catch (Exception)
+            {
+                // Invalid/unparseable gesture text (corrupt settings file, etc.) — skip it rather
+                // than crash the shell; the action just has no shortcut until reset in the dialog.
+            }
+        }
     }
 
     // Selecting a file leaf in the changed-files tree drives the diff panel.

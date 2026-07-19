@@ -61,6 +61,9 @@ public interface IDialogService
     /// <summary>Show the saved-credentials manager dialog.</summary>
     void ShowCredentials(CredentialsViewModel vm);
 
+    /// <summary>Show the keyboard-shortcuts (rebind) dialog.</summary>
+    void ShowKeybindings(KeybindingsViewModel vm);
+
     /// <summary>Show the GitHub/GitLab pull-requests &amp; issues dialog.</summary>
     void ShowHosting(HostingViewModel vm);
 
@@ -281,6 +284,12 @@ public sealed class DialogService : IDialogService
     public void ShowCredentials(CredentialsViewModel vm)
     {
         var win = new CredentialsDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowKeybindings(KeybindingsViewModel vm)
+    {
+        var win = new KeybindingsDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 

@@ -1,0 +1,124 @@
+<Window x:Class="GitTab.App.Views.KeybindingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GitTab.App.Localization"
+        Title="{loc:Tr Keybind.Title}"
+        Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
+        Width="640" Height="580" MinWidth="500" MinHeight="360"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window}"
+        FontFamily="Segoe UI" FontSize="13">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="{loc:Tr Keybind.Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
+            <TextBlock Text="{loc:Tr Keybind.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- conflict summary banner -->
+        <Border Grid.Row="1" Background="{DynamicResource Brush.SurfaceAlt}"
+                BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="0,0,0,2" Padding="12,7" Margin="0,0,0,10"
+                Visibility="{Binding HasConflicts, Converter={StaticResource Bool2Vis}}">
+            <TextBlock Text="{loc:Tr Keybind.ConflictBanner}" Foreground="{DynamicResource Brush.Danger}"
+                       FontWeight="SemiBold" TextWrapping="Wrap"/>
+        </Border>
+
+        <!-- column headers -->
+        <Grid Grid.Row="2" Margin="4,0,4,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="180"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="{loc:Tr Keybind.Col.Action}" Style="{StaticResource SectionHeader}" Margin="6,0,0,0"/>
+            <TextBlock Grid.Column="1" Text="{loc:Tr Keybind.Col.Shortcut}" Style="{StaticResource SectionHeader}" Margin="0"/>
+        </Grid>
+
+        <Border Grid.Row="3" Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="1" CornerRadius="6">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="6,7">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConflicted}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}"/>
+                                                <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="86"/>
+                                        <ColumnDefinition Width="70"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource Brush.Text}"/>
+                                            <TextBlock Text="{loc:Tr Keybind.Customized}" FontSize="10.5" Margin="6,0,0,0"
+                                                       VerticalAlignment="Center" Style="{StaticResource MutedText}"
+                                                       Visibility="{Binding IsCustomized, Converter={StaticResource Bool2Vis}}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{loc:Tr Keybind.Conflict}" FontSize="11" Foreground="{DynamicResource Brush.Danger}"
+                                                   Visibility="{Binding IsConflicted, Converter={StaticResource Bool2Vis}}"/>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontFamily="Consolas"
+                                               Text="{Binding GestureText}" Foreground="{DynamicResource Brush.Text}"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <Button Grid.Column="2" Padding="8,4" Margin="0,0,6,0" Focusable="True"
+                                            Click="OnRebindClick" PreviewKeyDown="OnRebindKeyDown" LostKeyboardFocus="OnRebindLostFocus">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                <Setter Property="Content" Value="{loc:Tr Keybind.Rebind}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                                        <Setter Property="Content" Value="{loc:Tr Keybind.PressKey}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+
+                                    <Button Grid.Column="3" Content="{loc:Tr Keybind.Reset}" Padding="8,4"
+                                            IsEnabled="{Binding IsCustomized}"
+                                            Command="{Binding DataContext.ResetRowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="4" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" HorizontalAlignment="Left" Content="{loc:Tr Keybind.ResetAll}" MinWidth="120"
+                    Command="{Binding ResetAllBindingsCommand}"/>
+            <Button Grid.Column="1" Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True" MinWidth="88"
+                    Style="{StaticResource AccentButton}"/>
+        </Grid>
+    </Grid>
+</Window>

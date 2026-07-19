@@ -13,19 +13,9 @@
         TextOptions.TextFormattingMode="Ideal"
         FontFamily="Segoe UI" FontSize="13">
 
-    <Window.InputBindings>
-        <KeyBinding Key="F5" Command="{Binding ActiveSession.RefreshCommand}"/>
-        <KeyBinding Modifiers="Control" Key="R" Command="{Binding ActiveSession.RefreshCommand}"/>
-        <KeyBinding Modifiers="Control" Key="O" Command="{Binding OpenRepositoryCommand}"/>
-        <KeyBinding Modifiers="Control" Key="P" Command="{Binding OpenCommandPaletteCommand}"/>
-        <KeyBinding Modifiers="Control" Key="Return" Command="{Binding ActiveSession.WorkingCopy.CommitCommand}"/>
-        <KeyBinding Modifiers="Control" Key="N" Command="{Binding CreateRepositoryCommand}"/>
-        <KeyBinding Modifiers="Control" Key="F" Command="{Binding FocusSearchCommand}"/>
-        <KeyBinding Modifiers="Control" Key="W" Command="{Binding CloseTabCommand}" CommandParameter="{Binding ActiveSession}"/>
-        <KeyBinding Modifiers="Control" Key="Tab" Command="{Binding NextTabCommand}"/>
-        <KeyBinding Modifiers="Control+Shift" Key="Tab" Command="{Binding PreviousTabCommand}"/>
-        <KeyBinding Key="F7" Command="{Binding ActiveSession.FetchCommand}"/>
-    </Window.InputBindings>
+    <!-- Keyboard shortcuts are user-customizable: MainWindow.xaml.cs builds Window.InputBindings at
+         runtime from KeybindingService (saved overrides, or the built-in defaults), and rebuilds them
+         whenever the user changes a binding in the Keybindings dialog. See RebuildShortcuts(). -->
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" CornerRadius="0"
@@ -157,6 +147,7 @@
                             <Separator/>
                             <MenuItem Header="{loc:Tr Patch.Apply}" Command="{Binding ActiveSession.ApplyPatchCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.Credentials}" Command="{Binding ManageCredentialsCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Keybindings}" Command="{Binding OpenKeybindingsCommand}"/>
                             <Separator/>
                             <MenuItem Header="{loc:Tr Menu.Hosting}" Command="{Binding ActiveSession.OpenHostingCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.OpenInEditor}" Command="{Binding ActiveSession.OpenInEditorCommand}"/>
