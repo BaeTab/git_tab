@@ -102,7 +102,23 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
     partial void OnSelectedFileChanged(FileChangeViewModel? value)
     {
         if (value is null) { Diff.Clear(); return; }
-        try { Diff.Show(_repo.GetWorkingFileDiff(value.Path, value.IsStaged)); }
+        var path = value.Path;
+        var staged = value.IsStaged;
+        try
+        {
+            if (DiffViewModel.IsImagePath(path))
+            {
+                var oldBytes = _repo.GetBlobBytes("HEAD", path);
+                Diff.ShowImage(oldBytes, _repo.GetWorkingBytes(path), path);
+            }
+            else
+            {
+                Diff.Refetch = async ignore => ignore
+                    ? await _repo.GetWorkingFileDiffIgnoreWsAsync(path, staged)
+                    : _repo.GetWorkingFileDiff(path, staged);
+                Diff.Show(_repo.GetWorkingFileDiff(path, staged));
+            }
+        }
         catch (Exception ex) { _logger.LogWarning(ex, "Failed to load working diff for {File}", value.Path); Diff.Clear(); }
     }
 

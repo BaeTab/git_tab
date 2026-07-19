@@ -156,6 +156,38 @@ public sealed class RepositoryServiceAdvancedTests
     }
 
     [Fact]
+    public void Blob_bytes_are_read_at_a_commit_and_in_the_working_tree()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var sha = repo.Commit("add", "data.bin", "ORIGINAL");
+        repo.WriteFile("data.bin", "WORKING");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        System.Text.Encoding.UTF8.GetString(svc.GetBlobBytes(sha, "data.bin")!).Should().Be("ORIGINAL");
+        System.Text.Encoding.UTF8.GetString(svc.GetWorkingBytes("data.bin")!).Should().Be("WORKING");
+        svc.GetBlobBytes(sha, "missing.bin").Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Ignore_whitespace_diff_drops_a_whitespace_only_change()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("base", "f.txt", "int x = 1;\n");
+        repo.WriteFile("f.txt", "int   x   =   1;\n");   // same tokens, only spacing changed
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var normal = svc.GetWorkingFileDiff("f.txt", staged: false);
+        normal.Hunks.Should().NotBeEmpty("the raw diff sees the spacing change");
+
+        var ignored = await svc.GetWorkingFileDiffIgnoreWsAsync("f.txt", staged: false);
+        ignored.Hunks.Should().BeEmpty("git diff -w ignores whitespace-only changes");
+    }
+
+    [Fact]
     public async Task Option_like_arguments_are_rejected_by_the_guard()
     {
         using var repo = TestRepository.CreateEmpty();

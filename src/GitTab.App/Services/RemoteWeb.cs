@@ -51,6 +51,16 @@ public static class RemoteWeb
         return $"https://{r.Host}/{r.Owner}/{r.Repo}";
     }
 
+    /// <summary>The web URL for issue/PR <paramref name="number"/> (GitHub/GitLab), or null.</summary>
+    public static string? IssueUrl(string? remoteUrl, int number)
+    {
+        if (Parse(remoteUrl) is not { } r) return null;
+        if (r.Host.Contains("gitlab", StringComparison.OrdinalIgnoreCase))
+            return $"https://{r.Host}/{r.Owner}/{r.Repo}/-/issues/{number}";
+        // GitHub's /issues/<n> redirects to the PR page when <n> is a PR, so it's a safe default.
+        return $"https://{r.Host}/{r.Owner}/{r.Repo}/issues/{number}";
+    }
+
     /// <summary>URL that opens the "create pull/merge request" page for <paramref name="branch"/>,
     /// pre-filled. Supports GitHub and GitLab; null otherwise.</summary>
     public static string? PullRequestUrl(string? remoteUrl, string? branch)

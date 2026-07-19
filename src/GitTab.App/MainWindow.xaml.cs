@@ -22,6 +22,8 @@ public partial class MainWindow : Window
         StateChanged += (_, _) => UpdateMaxRestoreGlyph();
         // A shell "commit" action focuses the staging tab.
         vm.CommitFocusRequested += () => LeftTabs.SelectedIndex = 0;
+        // Ctrl+F jumps to the graph search box.
+        vm.SearchFocusRequested += () => { SearchBox.Focus(); SearchBox.SelectAll(); };
         // Incremental loading: pull the next page when the graph is scrolled near the bottom.
         CommitGraph.NearEnd += (_, _) =>
         {

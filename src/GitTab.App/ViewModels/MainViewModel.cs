@@ -28,6 +28,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Raised when a shell "commit" action asks the window to focus the staging panel.</summary>
     public event Action? CommitFocusRequested;
 
+    /// <summary>Raised when the user presses Ctrl+F to jump to the graph search box.</summary>
+    public event Action? SearchFocusRequested;
+
     private IReadOnlyList<CommitInfo> _allCommits = Array.Empty<CommitInfo>();
     private IReadOnlyDictionary<string, IReadOnlyList<RefLabel>> _refsBySha =
         new Dictionary<string, IReadOnlyList<RefLabel>>();
@@ -101,6 +104,86 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<RecentRepository> RecentRepositories { get; } = new();
     public ObservableCollection<StashInfo> Stashes { get; } = new();
+
+    // ---- multi-repository tabs ----
+    public ObservableCollection<RepositoryTab> Tabs { get; } = new();
+
+    /// <summary>Guards re-entrancy while we programmatically change the active tab.</summary>
+    private bool _switchingTab;
+
+    [ObservableProperty] private RepositoryTab? _activeTab;
+
+    partial void OnActiveTabChanged(RepositoryTab? value)
+    {
+        if (_switchingTab || value is null) return;
+        if (string.Equals(value.Path, RepositoryPath, StringComparison.OrdinalIgnoreCase)) return;
+        _ = OpenPath(value.Path);
+    }
+
+    /// <summary>Add (or focus) the tab for <paramref name="path"/> without re-triggering an open.</summary>
+    private void TrackTab(string path, string name)
+    {
+        var tab = Tabs.FirstOrDefault(t => string.Equals(t.Path, path, StringComparison.OrdinalIgnoreCase));
+        if (tab is null) { tab = new RepositoryTab(path, name); Tabs.Add(tab); }
+        _switchingTab = true;
+        ActiveTab = tab;
+        _switchingTab = false;
+    }
+
+    [RelayCommand]
+    private async Task CloseTab(RepositoryTab? tab)
+    {
+        if (tab is null) return;
+        bool wasActive = ReferenceEquals(tab, ActiveTab);
+        int idx = Tabs.IndexOf(tab);
+        Tabs.Remove(tab);
+        if (!wasActive) return;
+
+        if (Tabs.Count == 0)
+        {
+            _switchingTab = true;
+            ActiveTab = null;
+            _switchingTab = false;
+            CloseActiveRepository();
+        }
+        else
+        {
+            // Activating a neighbour re-opens it through OnActiveTabChanged.
+            ActiveTab = Tabs[Math.Min(idx, Tabs.Count - 1)];
+        }
+        await Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private void NextTab()
+    {
+        if (Tabs.Count < 2 || ActiveTab is null) return;
+        ActiveTab = Tabs[(Tabs.IndexOf(ActiveTab) + 1) % Tabs.Count];
+    }
+
+    [RelayCommand]
+    private void PreviousTab()
+    {
+        if (Tabs.Count < 2 || ActiveTab is null) return;
+        ActiveTab = Tabs[(Tabs.IndexOf(ActiveTab) - 1 + Tabs.Count) % Tabs.Count];
+    }
+
+    [RelayCommand]
+    private void FocusSearch() => SearchFocusRequested?.Invoke();
+
+    private void CloseActiveRepository()
+    {
+        try { _repo.Close(); } catch (Exception ex) { _logger.LogWarning(ex, "Close failed"); }
+        IsRepositoryOpen = false;
+        RepositoryPath = null;
+        RepositoryName = null;
+        Rows = Array.Empty<CommitRowViewModel>();
+        _allCommits = Array.Empty<CommitInfo>();
+        SelectedCommitIndex = -1;
+        Stashes.Clear();
+        RepoState = null;
+        StatusText = Loc.T("Status.NoRepo");
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOperationInProgress))]
@@ -406,6 +489,7 @@ public sealed partial class MainViewModel : ObservableObject
             RepositoryPath = discovered;
             RepositoryName = new DirectoryInfo(discovered).Name;
             IsRepositoryOpen = true;
+            TrackTab(discovered, RepositoryName);
             WireChildren();
             await ReloadAllAsync();
             _ = CheckForUpdatesAsync(silent: true);

@@ -1,4 +1,5 @@
 using System.IO;
+using GitTab.Core.Diff;
 using GitTab.Core.Models;
 using LibGit2Sharp;
 
@@ -276,6 +277,56 @@ public sealed partial class RepositoryService
 
     public Task<GitResult> SparseCheckoutDisableAsync(CancellationToken ct = default)
         => Run(new[] { "sparse-checkout", "disable" }, ct);
+
+    // ---------------------------------------------------------------- image diff / raw bytes
+
+    /// <summary>Raw bytes of <paramref name="path"/> as of commit <paramref name="sha"/>, or null if absent.</summary>
+    public byte[]? GetBlobBytes(string sha, string path)
+    {
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            if (repo.Lookup<Commit>(sha) is not { } commit) return null;
+            if (commit[path]?.Target is not Blob blob) return null;
+            using var s = blob.GetContentStream();
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            return ms.ToArray();
+        }
+    }
+
+    /// <summary>Raw bytes of the working-tree file, or null if it doesn't exist.</summary>
+    public byte[]? GetWorkingBytes(string path)
+    {
+        var full = Path.Combine(EnsureWorkingDir(), path);
+        return File.Exists(full) ? File.ReadAllBytes(full) : null;
+    }
+
+    // ---------------------------------------------------------------- whitespace-ignoring diff
+
+    /// <summary>A commit file diff produced by git with whitespace changes ignored (git diff -w).</summary>
+    public async Task<FileDiff> GetCommitFileDiffIgnoreWsAsync(string sha, string path, CancellationToken ct = default)
+    {
+        if (!GitArg.IsSafe(sha)) return new FileDiff { Path = path };
+        var r = await Run(new[] { "show", "--format=", "-w", sha, "--", path }, ct).ConfigureAwait(false);
+        return ParseRawDiff(path, r.StandardOutput);
+    }
+
+    /// <summary>A working-tree file diff with whitespace changes ignored (git diff -w).</summary>
+    public async Task<FileDiff> GetWorkingFileDiffIgnoreWsAsync(string path, bool staged, CancellationToken ct = default)
+    {
+        var args = new List<string> { "diff", "-w" };
+        if (staged) args.Add("--staged");
+        args.Add("--");
+        args.Add(path);
+        var r = await Run(args, ct).ConfigureAwait(false);
+        return ParseRawDiff(path, r.StandardOutput);
+    }
+
+    private static FileDiff ParseRawDiff(string path, string raw)
+        => string.IsNullOrWhiteSpace(raw)
+            ? new FileDiff { Path = path }
+            : UnifiedDiffParser.Parse(path, null, raw, isBinary: false);
 
     // ---------------------------------------------------------------- helpers
 

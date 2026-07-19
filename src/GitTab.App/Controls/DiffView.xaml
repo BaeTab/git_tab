@@ -9,12 +9,17 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- toolbar: split/unified toggle -->
+        <!-- toolbar: ignore-whitespace + split/unified toggle -->
         <Border Grid.Row="0" Background="{DynamicResource Brush.Surface}" Padding="6,3"
                 Visibility="{Binding HasContent, Converter={StaticResource Bool2Vis}}">
-            <ToggleButton Content="{loc:Tr Diff.Split}" IsChecked="{Binding IsSplit}"
-                          HorizontalAlignment="Right" ToolTip="{loc:Tr Diff.SplitTip}"
-                          Foreground="{DynamicResource Brush.Text}" Padding="8,2" Cursor="Hand"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <CheckBox Content="{loc:Tr Diff.IgnoreWhitespace}" IsChecked="{Binding IgnoreWhitespace}"
+                          VerticalAlignment="Center" Margin="0,0,12,0"
+                          Foreground="{DynamicResource Brush.Text}"/>
+                <ToggleButton Content="{loc:Tr Diff.Split}" IsChecked="{Binding IsSplit}"
+                              ToolTip="{loc:Tr Diff.SplitTip}"
+                              Foreground="{DynamicResource Brush.Text}" Padding="8,2" Cursor="Hand"/>
+            </StackPanel>
         </Border>
 
         <Grid Grid.Row="1">
@@ -43,6 +48,31 @@
                                    WordWrap="False" ShowLineNumbers="False"
                                    Background="{DynamicResource Brush.Surface}" Foreground="{DynamicResource Brush.Text}"
                                    HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+            </Grid>
+
+            <!-- image before/after -->
+            <Grid Background="{DynamicResource Brush.Surface}"
+                  Visibility="{Binding IsImage, Converter={StaticResource Bool2Vis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <DockPanel Grid.Column="0" Margin="8">
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Diff.ImageOld}" Style="{StaticResource MutedText}"
+                               HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                    <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
+                        <Image Source="{Binding OldImage}" Stretch="Uniform" StretchDirection="DownOnly" Margin="6"/>
+                    </Border>
+                </DockPanel>
+                <Border Grid.Column="1" Background="{DynamicResource Brush.Border}"/>
+                <DockPanel Grid.Column="2" Margin="8">
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Diff.ImageNew}" Style="{StaticResource MutedText}"
+                               HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                    <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
+                        <Image Source="{Binding NewImage}" Stretch="Uniform" StretchDirection="DownOnly" Margin="6"/>
+                    </Border>
+                </DockPanel>
             </Grid>
 
             <!-- placeholder -->

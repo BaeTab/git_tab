@@ -165,6 +165,14 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> SubmoduleSyncAsync(CancellationToken ct = default);
     Task<GitResult> SubmoduleDeinitAsync(string path, bool force, CancellationToken ct = default);
 
+    // ---- image diff / raw bytes ----
+    byte[]? GetBlobBytes(string sha, string path);
+    byte[]? GetWorkingBytes(string path);
+
+    // ---- whitespace-ignoring diff ----
+    Task<FileDiff> GetCommitFileDiffIgnoreWsAsync(string sha, string path, CancellationToken ct = default);
+    Task<FileDiff> GetWorkingFileDiffIgnoreWsAsync(string path, bool staged, CancellationToken ct = default);
+
     // ---- patch import/export ----
     Task<GitResult> ExportCommitPatchAsync(string sha, string filePath, CancellationToken ct = default);
     Task<GitResult> ApplyPatchAsync(string patchFile, bool asCommits, CancellationToken ct = default);

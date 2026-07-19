@@ -65,8 +65,13 @@ public partial class DiffView : UserControl
         _syncing = true;
         try
         {
-            to.ScrollToVerticalOffset(from.VerticalOffset);
-            to.ScrollToHorizontalOffset(from.HorizontalOffset);
+            // Only scroll when the target is actually off — reissuing ScrollTo to an already-clamped
+            // offset (e.g. when one pane is longer and the other bottoms out) makes AvalonEdit raise
+            // ScrollOffsetChanged again, which oscillates and shows up as scroll "stutter".
+            if (Math.Abs(to.VerticalOffset - from.VerticalOffset) > 0.5)
+                to.ScrollToVerticalOffset(from.VerticalOffset);
+            if (Math.Abs(to.HorizontalOffset - from.HorizontalOffset) > 0.5)
+                to.ScrollToHorizontalOffset(from.HorizontalOffset);
         }
         finally { _syncing = false; }
     }

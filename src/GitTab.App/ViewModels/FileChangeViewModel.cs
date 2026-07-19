@@ -12,6 +12,28 @@ public sealed class FileChangeViewModel
     public bool IsStaged => Model.IsStaged;
     public FileChangeKind Kind => Model.Kind;
 
+    /// <summary>The file's parent folder (for grouping), or "/" when at the repository root.</summary>
+    public string Folder
+    {
+        get
+        {
+            var p = Model.Path.Replace('\\', '/');
+            int slash = p.LastIndexOf('/');
+            return slash <= 0 ? "/" : p[..slash];
+        }
+    }
+
+    /// <summary>Just the file name, shown under a folder group.</summary>
+    public string FileName
+    {
+        get
+        {
+            var p = Model.Path.Replace('\\', '/');
+            int slash = p.LastIndexOf('/');
+            return slash < 0 ? p : p[(slash + 1)..];
+        }
+    }
+
     public string StatusLetter => Kind switch
     {
         FileChangeKind.Added => "A",

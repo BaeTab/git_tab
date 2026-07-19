@@ -76,6 +76,31 @@ public sealed partial class BranchesViewModel : ObservableObject
         if (await GitUi.RunAsync(op, _dialogs, _loc, _logger)) await NotifyChanged();
     }
 
+    /// <summary>Delete local branches already merged into HEAD (housekeeping). Skips the current
+    /// branch and the usual long-lived branches (main/master/develop).</summary>
+    [RelayCommand]
+    private async Task PruneMerged()
+    {
+        var r = await _repo.RunRawAsync(new[] { "branch", "--merged" });
+        if (!r.Success) { _dialogs.Error(r.CombinedOutput, _loc.T("Error.GitFailed")); return; }
+
+        var protectedNames = new HashSet<string>(StringComparer.Ordinal) { "main", "master", "develop" };
+        var merged = r.StandardOutput.Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0 && !l.StartsWith("*", StringComparison.Ordinal))
+            .Where(l => !protectedNames.Contains(l))
+            .ToList();
+
+        if (merged.Count == 0) { _dialogs.Info(_loc.T("Branch.NoStale"), _loc.T("Branch.PruneMerged")); return; }
+        if (!_dialogs.Confirm(_loc.T("Branch.PruneConfirm", string.Join(", ", merged)), _loc.T("Branch.PruneMerged")))
+            return;
+
+        bool any = false;
+        foreach (var b in merged)
+            any |= await GitUi.RunAsync(() => _repo.DeleteBranchAsync(b, force: false), _dialogs, _loc, _logger);
+        if (any) await NotifyChanged();
+    }
+
     [RelayCommand]
     private async Task NewBranch()
     {

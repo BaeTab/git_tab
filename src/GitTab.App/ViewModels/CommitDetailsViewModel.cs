@@ -16,6 +16,10 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
     {
         _repo = repo;
         _logger = logger;
+
+        // Group the changed-files list by folder so large commits are easy to browse.
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Files);
+        view.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(FileChangeViewModel.Folder)));
     }
 
     public DiffViewModel Diff { get; } = new();
@@ -39,6 +43,9 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
     /// <summary>True when the selected commit carries a signature (so the badge is shown).</summary>
     [ObservableProperty] private bool _hasSignature;
 
+    /// <summary>The repo's remote URL, used to turn <c>#123</c> in messages into issue links.</summary>
+    [ObservableProperty] private string? _remoteUrl;
+
     public bool HasCommit => Commit is not null;
     public string Sha => Commit?.Sha ?? string.Empty;
     public string ShortSha => Commit?.ShortSha ?? string.Empty;
@@ -57,6 +64,8 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
         HasSignature = false;
         SignatureText = string.Empty;
         if (commit is null) return;
+
+        try { RemoteUrl = _repo.GetRemoteUrl(); } catch { RemoteUrl = null; }
 
         try
         {
@@ -96,9 +105,23 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
     partial void OnSelectedFileChanged(FileChangeViewModel? value)
     {
         if (Commit is null || value is null) { Diff.Clear(); return; }
+        var sha = Commit.Sha;
+        var path = value.Path;
         try
         {
-            Diff.Show(_repo.GetCommitFileDiff(Commit.Sha, value.Path));
+            if (DiffViewModel.IsImagePath(path))
+            {
+                var parent = Commit.ParentShas.FirstOrDefault();
+                var oldBytes = parent is null ? null : _repo.GetBlobBytes(parent, path);
+                Diff.ShowImage(oldBytes, _repo.GetBlobBytes(sha, path), path);
+            }
+            else
+            {
+                Diff.Refetch = async ignore => ignore
+                    ? await _repo.GetCommitFileDiffIgnoreWsAsync(sha, path)
+                    : _repo.GetCommitFileDiff(sha, path);
+                Diff.Show(_repo.GetCommitFileDiff(sha, path));
+            }
         }
         catch (Exception ex)
         {
