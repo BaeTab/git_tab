@@ -3,6 +3,20 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-07-19
+
+Background fetch, and easier-on-the-eyes diffs.
+
+### Added
+- **Background fetch** — every few minutes Git Tab quietly fetches each open repository (no prompt, no
+  spinner, the graph stays put) and refreshes the "commits behind" count; the branch badge shows an
+  accent outline when there's something to pull. Toggle it in Settings.
+
+### Changed
+- **Softer diff syntax colors** — diff syntax highlighting no longer uses the harsh, saturated keyword
+  blue that AvalonEdit ships for a white editor. Colors are toned down (capped saturation,
+  theme-normalized lightness) so they read comfortably on the dark (and light) surface.
+
 ## [1.7.0] - 2026-07-19
 
 Architecture: fully independent repository tabs.

@@ -1,6 +1,6 @@
 # TODO / Known Limitations
 
-Honest record of what's done, what's left, and what's intentionally limited. Current release: **v1.7.0**.
+Honest record of what's done, what's left, and what's intentionally limited. Current release: **v1.8.0**.
 
 ## ✅ Implemented (through v1.5.0)
 
@@ -28,7 +28,8 @@ Honest record of what's done, what's left, and what's intentionally limited. Cur
   "add to .gitignore", `.gitignore` generator, 3-way conflict resolver + abort/continue banner.
 - **App** — light/dark theme, ko/en (persisted), command palette (Ctrl+P), keyboard shortcuts,
   Explorer right-click integration + standalone dialogs, single-instance, crash-report opt-in,
-  accessibility first pass, GitHub release-based auto-update (SHA-256 verified).
+  accessibility first pass, **periodic background fetch** (per-repo "behind" indicator),
+  GitHub release-based auto-update (SHA-256 verified).
 
 ## 🔭 Remaining
 
@@ -37,8 +38,6 @@ Honest record of what's done, what's left, and what's intentionally limited. Cur
 - **Update channels** (stable/beta) + delta updates.
 - **Accessibility** — item-level AutomationPeer, graph alt-text, high-contrast theme, font scaling.
 - **More locales** — Japanese / Chinese / Spanish (i18n infra + a XAML-key coverage test are in place).
-- **Periodic background fetch** + "N commits behind" notification.
-- **UI-automation / integration test** expansion.
 
 ### Deferred features (worth doing, not tied to a tier)
 - Diff **moved-code detection** (`--color-moved`). *(Expand/collapse context shipped in 1.6.0.)*
