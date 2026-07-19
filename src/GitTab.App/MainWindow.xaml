@@ -14,17 +14,17 @@
         FontFamily="Segoe UI" FontSize="13">
 
     <Window.InputBindings>
-        <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
-        <KeyBinding Modifiers="Control" Key="R" Command="{Binding RefreshCommand}"/>
+        <KeyBinding Key="F5" Command="{Binding ActiveSession.RefreshCommand}"/>
+        <KeyBinding Modifiers="Control" Key="R" Command="{Binding ActiveSession.RefreshCommand}"/>
         <KeyBinding Modifiers="Control" Key="O" Command="{Binding OpenRepositoryCommand}"/>
         <KeyBinding Modifiers="Control" Key="P" Command="{Binding OpenCommandPaletteCommand}"/>
-        <KeyBinding Modifiers="Control" Key="Return" Command="{Binding WorkingCopy.CommitCommand}"/>
+        <KeyBinding Modifiers="Control" Key="Return" Command="{Binding ActiveSession.WorkingCopy.CommitCommand}"/>
         <KeyBinding Modifiers="Control" Key="N" Command="{Binding CreateRepositoryCommand}"/>
         <KeyBinding Modifiers="Control" Key="F" Command="{Binding FocusSearchCommand}"/>
-        <KeyBinding Modifiers="Control" Key="W" Command="{Binding CloseTabCommand}" CommandParameter="{Binding ActiveTab}"/>
+        <KeyBinding Modifiers="Control" Key="W" Command="{Binding CloseTabCommand}" CommandParameter="{Binding ActiveSession}"/>
         <KeyBinding Modifiers="Control" Key="Tab" Command="{Binding NextTabCommand}"/>
         <KeyBinding Modifiers="Control+Shift" Key="Tab" Command="{Binding PreviousTabCommand}"/>
-        <KeyBinding Key="F7" Command="{Binding FetchCommand}"/>
+        <KeyBinding Key="F7" Command="{Binding ActiveSession.FetchCommand}"/>
     </Window.InputBindings>
 
     <shell:WindowChrome.WindowChrome>
@@ -127,7 +127,7 @@
                             </MenuItem.ItemContainerStyle>
                         </MenuItem>
                     </Menu>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding RefreshCommand}"
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding ActiveSession.RefreshCommand}"
                             Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"
                             AutomationProperties.Name="{loc:Tr Action.Refresh}"/>
 
@@ -139,38 +139,38 @@
                             <MenuItem.Header>
                                 <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                             </MenuItem.Header>
-                            <MenuItem Header="{loc:Tr Reflog.Title}" Command="{Binding OpenReflogCommand}"/>
-                            <MenuItem Header="{loc:Tr Compare.Title}" Command="{Binding CompareCommand}"/>
-                            <MenuItem Header="{loc:Tr Search.Content}" Command="{Binding ContentSearchCommand}"/>
+                            <MenuItem Header="{loc:Tr Reflog.Title}" Command="{Binding ActiveSession.OpenReflogCommand}"/>
+                            <MenuItem Header="{loc:Tr Compare.Title}" Command="{Binding ActiveSession.CompareCommand}"/>
+                            <MenuItem Header="{loc:Tr Search.Content}" Command="{Binding ActiveSession.ContentSearchCommand}"/>
                             <Separator/>
-                            <MenuItem Header="{loc:Tr Remote.Manage}" Command="{Binding ManageRemotesCommand}"/>
-                            <MenuItem Header="{loc:Tr Gitignore.Title}" Command="{Binding GenerateGitignoreCommand}"/>
+                            <MenuItem Header="{loc:Tr Remote.Manage}" Command="{Binding ActiveSession.ManageRemotesCommand}"/>
+                            <MenuItem Header="{loc:Tr Gitignore.Title}" Command="{Binding ActiveSession.GenerateGitignoreCommand}"/>
                             <Separator/>
-                            <MenuItem Header="{loc:Tr Menu.Worktrees}" Command="{Binding ManageWorktreesCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Lfs}" Command="{Binding ManageLfsCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Submodules}" Command="{Binding ManageSubmodulesCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Sparse}" Command="{Binding ManageSparseCheckoutCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Worktrees}" Command="{Binding ActiveSession.ManageWorktreesCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Lfs}" Command="{Binding ActiveSession.ManageLfsCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Submodules}" Command="{Binding ActiveSession.ManageSubmodulesCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Sparse}" Command="{Binding ActiveSession.ManageSparseCheckoutCommand}"/>
                             <Separator/>
-                            <MenuItem Header="{loc:Tr Patch.Apply}" Command="{Binding ApplyPatchCommand}"/>
+                            <MenuItem Header="{loc:Tr Patch.Apply}" Command="{Binding ActiveSession.ApplyPatchCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.Credentials}" Command="{Binding ManageCredentialsCommand}"/>
                             <Separator/>
-                            <MenuItem Header="{loc:Tr Menu.Hosting}" Command="{Binding OpenHostingCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.OpenInEditor}" Command="{Binding OpenInEditorCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Statistics}" Command="{Binding ShowStatisticsCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Changelog}" Command="{Binding GenerateChangelogCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Config}" Command="{Binding EditConfigCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.ForcePush}" Command="{Binding ForcePushCommand}"/>
-                            <MenuItem Header="{loc:Tr Menu.Bookmarks}" ItemsSource="{Binding Bookmarks}">
+                            <MenuItem Header="{loc:Tr Menu.Hosting}" Command="{Binding ActiveSession.OpenHostingCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.OpenInEditor}" Command="{Binding ActiveSession.OpenInEditorCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Statistics}" Command="{Binding ActiveSession.ShowStatisticsCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Changelog}" Command="{Binding ActiveSession.GenerateChangelogCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Config}" Command="{Binding ActiveSession.EditConfigCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.ForcePush}" Command="{Binding ActiveSession.ForcePushCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Bookmarks}" ItemsSource="{Binding ActiveSession.Bookmarks}">
                                 <MenuItem.ItemContainerStyle>
                                     <Style TargetType="MenuItem">
                                         <Setter Property="Header" Value="{Binding Summary}"/>
-                                        <Setter Property="Command" Value="{Binding DataContext.JumpToBookmarkCommand, RelativeSource={RelativeSource AncestorType=Menu}}"/>
+                                        <Setter Property="Command" Value="{Binding DataContext.ActiveSession.JumpToBookmarkCommand, RelativeSource={RelativeSource AncestorType=Menu}}"/>
                                         <Setter Property="CommandParameter" Value="{Binding}"/>
                                     </Style>
                                 </MenuItem.ItemContainerStyle>
                             </MenuItem>
-                            <MenuItem Header="{loc:Tr Submodule.Update}" Command="{Binding SubmoduleUpdateCommand}"
-                                      Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
+                            <MenuItem Header="{loc:Tr Submodule.Update}" Command="{Binding ActiveSession.SubmoduleUpdateCommand}"
+                                      Visibility="{Binding ActiveSession.HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
                         </MenuItem>
                     </Menu>
                 </StackPanel>
@@ -184,23 +184,23 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,6,0"/>
-                            <TextBlock Text="{Binding CurrentBranchName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ActiveSession.CurrentBranchName}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Style="{StaticResource MutedText}" FontSize="11">
-                                <Run Text="↑"/><Run Text="{Binding Ahead}"/><Run Text=" ↓"/><Run Text="{Binding Behind}"/>
+                                <Run Text="↑"/><Run Text="{Binding ActiveSession.Ahead}"/><Run Text=" ↓"/><Run Text="{Binding ActiveSession.Behind}"/>
                             </TextBlock>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource ToolbarSeparator}"/>
-                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE895;" Command="{Binding FetchCommand}"
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE895;" Command="{Binding ActiveSession.FetchCommand}"
                             Content="{loc:Tr Action.Fetch}" ToolTip="{loc:Tr Action.Fetch.Tip}"/>
-                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE896;" Command="{Binding PullCommand}"
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE896;" Command="{Binding ActiveSession.PullCommand}"
                             Content="{loc:Tr Action.Pull}" ToolTip="{loc:Tr Action.Pull.Tip}"/>
-                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE898;" Command="{Binding PushCommand}"
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE898;" Command="{Binding ActiveSession.PushCommand}"
                             Content="{loc:Tr Action.Push}" ToolTip="{loc:Tr Action.Push.Tip}"/>
                     <Border Style="{StaticResource ToolbarSeparator}"/>
-                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE8A7;" Command="{Binding CreatePullRequestCommand}"
+                    <Button Style="{StaticResource IconTextButton}" Tag="&#xE8A7;" Command="{Binding ActiveSession.CreatePullRequestCommand}"
                             Content="{loc:Tr Hosting.PR}" ToolTip="{loc:Tr Hosting.PR.Tip}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding OpenRemoteWebCommand}"
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding ActiveSession.OpenRemoteWebCommand}"
                             Content="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Hosting.Web.Tip}"
                             AutomationProperties.Name="{loc:Tr Hosting.Web}"/>
                 </StackPanel>
@@ -208,11 +208,11 @@
                 <!-- search -->
                 <Grid Width="220" Margin="8,0" VerticalAlignment="Center"
                       Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
-                    <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                    <TextBox x:Name="SearchBox" Text="{Binding ActiveSession.SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
                              ToolTip="{loc:Tr Search.Tip}"/>
                     <TextBlock Text="{loc:Tr Search.Placeholder}" Style="{StaticResource MutedText}"
                                Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False"
-                               Visibility="{Binding SearchText, Converter={StaticResource HasValue2Vis}, ConverterParameter=invert}"/>
+                               Visibility="{Binding ActiveSession.SearchText, Converter={StaticResource HasValue2Vis}, ConverterParameter=invert}"/>
                 </Grid>
                 </WrapPanel>
 
@@ -238,7 +238,7 @@
         <Border Grid.Row="1" Background="{DynamicResource Brush.Surface}"
                 BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,3"
                 Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
-            <ListBox ItemsSource="{Binding Tabs}" SelectedItem="{Binding ActiveTab}"
+            <ListBox ItemsSource="{Binding Sessions}" SelectedItem="{Binding ActiveSession}"
                      Background="Transparent" BorderThickness="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled">
                 <ListBox.ItemsPanel>
@@ -257,7 +257,7 @@
                                             <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
                                                        VerticalAlignment="Center" Margin="0,0,6,0"
                                                        Foreground="{DynamicResource Brush.TextMuted}"/>
-                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center"
+                                            <TextBlock Text="{Binding RepositoryName}" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource Brush.Text}"/>
                                             <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="9"
                                                     Margin="8,0,0,0" Padding="3,1" VerticalAlignment="Center"
@@ -284,7 +284,8 @@
         <!-- ================= Conflict / in-progress operation banner ================= -->
         <Border Grid.Row="2" Background="{DynamicResource Brush.SurfaceAlt}"
                 BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="0,0,0,2" Padding="14,9"
-                Visibility="{Binding IsOperationInProgress, Converter={StaticResource Bool2Vis}}">
+                DataContext="{Binding ActiveSession}"
+                Visibility="{Binding IsOperationInProgress, Converter={StaticResource Bool2Vis}, FallbackValue=Collapsed}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -305,7 +306,8 @@
         <!-- ================= Bisect banner ================= -->
         <Border Grid.Row="2" Background="{DynamicResource Brush.SurfaceAlt}"
                 BorderBrush="{DynamicResource Brush.Accent}" BorderThickness="0,0,0,2" Padding="14,9"
-                Visibility="{Binding IsBisecting, Converter={StaticResource Bool2Vis}}">
+                DataContext="{Binding ActiveSession}"
+                Visibility="{Binding IsBisecting, Converter={StaticResource Bool2Vis}, FallbackValue=Collapsed}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -327,8 +329,8 @@
             </Grid>
         </Border>
 
-        <!-- ================= Main content ================= -->
-        <Grid Grid.Row="3" Margin="8">
+        <!-- ================= Main content (scoped to the active repository session) ================= -->
+        <Grid Grid.Row="3" Margin="8" DataContext="{Binding ActiveSession}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="270" MinWidth="200"/>
                 <ColumnDefinition Width="Auto"/>
@@ -658,11 +660,11 @@
                     </Grid.RowDefinitions>
 
                     <controls:CommitGraphHeader Grid.Row="0" LaneCount="{Binding LaneCount}"
-                                                Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
+                                                Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}, FallbackValue=Collapsed}"/>
 
                     <ScrollViewer Grid.Row="1" CanContentScroll="True" VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
+                                  Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}, FallbackValue=Collapsed}">
                         <controls:CommitGraphControl
                             x:Name="CommitGraph"
                             Rows="{Binding Rows}"
@@ -697,8 +699,9 @@
                         </controls:CommitGraphControl>
                     </ScrollViewer>
 
-                    <!-- welcome / empty state -->
+                    <!-- welcome / empty state (bound to the app shell, since it shows when no session is active) -->
                     <StackPanel Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420"
+                                DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                                 Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}, ConverterParameter=invert}">
                         <TextBlock Text="{loc:Tr Welcome.Title}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
                         <TextBlock Text="{loc:Tr Welcome.Subtitle}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
@@ -731,7 +734,7 @@
 
                     <!-- left: commit info + changed files -->
                     <Grid Grid.Column="0" DataContext="{Binding Details}"
-                          Visibility="{Binding HasCommit, Converter={StaticResource Bool2Vis}}">
+                          Visibility="{Binding HasCommit, Converter={StaticResource Bool2Vis}, FallbackValue=Collapsed}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>

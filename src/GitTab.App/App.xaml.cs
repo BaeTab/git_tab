@@ -257,10 +257,13 @@ public partial class App : Application
         services.AddSingleton<GitTab.App.Services.Hosting.IHostingClient, GitTab.App.Services.Hosting.HostingClient>();
         services.AddSingleton<GitTab.App.Services.Hosting.GitHubDeviceFlow>();
 
-        // ViewModels
+        // ViewModels. WorkingCopy/Branches/CommitDetails + the commit-stats source stay registered as
+        // singletons for the standalone Explorer "commit" dialog path (ShowStandaloneDialog). The main
+        // window instead gets one independent set per repository tab via RepositorySessionFactory.
         services.AddSingleton<WorkingCopyViewModel>();
         services.AddSingleton<BranchesViewModel>();
         services.AddSingleton<CommitDetailsViewModel>();
+        services.AddSingleton<RepositorySessionFactory>();
         services.AddSingleton<MainViewModel>();
 
         // Windows

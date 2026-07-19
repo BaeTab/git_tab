@@ -25,10 +25,11 @@ public partial class MainWindow : Window
         // Ctrl+F jumps to the graph search box.
         vm.SearchFocusRequested += () => { SearchBox.Focus(); SearchBox.SelectAll(); };
         // Incremental loading: pull the next page when the graph is scrolled near the bottom.
+        // LoadMore lives on the active repository session (each tab loads independently).
         CommitGraph.NearEnd += (_, _) =>
         {
-            if (_vm.LoadMoreCommand.CanExecute(null))
-                _vm.LoadMoreCommand.Execute(null);
+            if (_vm.ActiveSession?.LoadMoreCommand is { } cmd && cmd.CanExecute(null))
+                cmd.Execute(null);
         };
     }
 
