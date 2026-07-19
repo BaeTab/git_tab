@@ -3,6 +3,18 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] - 2026-07-19
+
+### Added
+- **Personalization settings** — a new Settings section to make Git Tab yours:
+  - **Custom accent color** (presets or any `#RRGGBB`) layered over any theme, plus a **UI font** and a
+    separate **diff (monospace) font & size**.
+  - **Graph appearance** — row density (compact / normal / comfortable) and a toggle for the luminous
+    node/lane glow.
+  - **Diff defaults** — default view (unified / split), context lines, ignore-whitespace, and word-wrap.
+  - **Behavior & display** — background-fetch interval, reopen-last-repo on startup, and relative vs.
+    absolute commit dates.
+
 ## [2.2.0] - 2026-07-19
 
 ### Added
