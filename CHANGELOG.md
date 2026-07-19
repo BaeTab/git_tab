@@ -3,6 +3,29 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - 2026-07-19
+
+Major release: a big batch of power features, accessibility, and more languages.
+
+### Added
+- **Diff moved-code detection** — a block of lines deleted in one place and re-added elsewhere in the
+  same file is now tinted as *moved* (blue for the new spot, violet for the old) instead of plain
+  red/green, like `git`'s color-moved.
+- **Open a diff in its own window** — a pop-out button on the diff toolbar opens the change in a
+  resizable window; press F11 (or the header button) for borderless fullscreen.
+- **In-app PR/issue comments** — view a pull/merge request's or issue's conversation and post a new
+  comment, for both GitHub and GitLab (uses your stored token).
+- **Customizable keyboard shortcuts** — rebind any of the app's shortcuts, with live key-chord capture,
+  conflict detection, and reset-to-default; saved to disk.
+- **More languages** — Japanese, Chinese (Simplified) and Spanish, alongside Korean and English (5 total),
+  picked from a toolbar dropdown or Settings.
+- **Accessibility** — a high-contrast theme and a UI/text zoom (100–150%) in Settings.
+- **Beta update channel** — opt in (Settings) to receive pre-release builds when checking for updates.
+
+### Changed
+- The merge-conflict resolver now shows a clear "(no common ancestor)" note when there is no merge base
+  (e.g. a newly added file), instead of a blank pane.
+
 ## [1.8.0] - 2026-07-19
 
 Background fetch, and easier-on-the-eyes diffs.
