@@ -3,6 +3,18 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-07-19
+
+### Added
+- **Theme gallery** — six new built-in themes alongside Light / Dark / High-Contrast: **Midnight,
+  Nord, Dracula, Solarized, Rosé Pine** (8 in total). Pick one from the toolbar palette menu or in
+  Settings; your choice is saved.
+
+### Changed
+- **Prettier commit graph** — lanes now have a soft luminous glow, commit nodes are glossy gradient
+  "orbs" (author-colored, with a halo), the current commit (HEAD) gets an accent glow, the selected row
+  has an accent gradient bar, and rows highlight on hover.
+
 ## [2.1.0] - 2026-07-19
 
 ### Added
