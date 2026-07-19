@@ -6,6 +6,17 @@
 
 ---
 
+> ### ⚠️ On v1.4.1 or earlier? A one-time manual update is required
+> Those builds have an auto-updater bug (it locked the downloaded installer while verifying it), so
+> in-app updates fail with *"Couldn't check for updates."* Fixed in **v1.4.2** — but since the fix
+> ships in the new version, please **[download the latest installer manually](https://github.com/BaeTab/git_tab/releases/latest)** once.
+> Auto-update works normally afterward.
+>
+> **v1.4.1 이하 사용자는 이번 한 번만 수동 업데이트가 필요합니다.** (자동 업데이터 버그로 인앱 업데이트가
+> "업데이트를 확인하지 못했어요"로 실패 → v1.4.2에서 수정. [최신 설치본 직접 내려받기](https://github.com/BaeTab/git_tab/releases/latest))
+
+---
+
 ## English
 
 [![Build Status](https://github.com/BaeTab/git_tab/actions/workflows/build.yml/badge.svg)](https://github.com/BaeTab/git_tab/actions/workflows/build.yml)
