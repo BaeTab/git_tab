@@ -20,11 +20,14 @@ GitHub release-based auto-update.
   full 3-way editor with the common ancestor pane or free-form hunk editing; complex conflicts may
   still be easier to resolve in a dedicated merge tool.
 
+## Shipped in 1.2.0 (Tier 1/2)
+
+Graph search/filter, diff syntax highlighting, commit/tag signing + verify badge, credential
+management UI, worktrees, Git LFS, deeper submodules, patch import/export, line-level staging,
+richer stash (diff preview + stash-to-branch), sparse-checkout, and blobless partial clone.
+
 ## Roadmap — planned (Tier 3/4/5)
 
-Tier 1 (graph search/filter, diff syntax highlighting, commit/tag signing + verify, credential
-management UI) and Tier 2 (worktrees, Git LFS, deeper submodules, patch import/export, line-level
-staging, richer stash, sparse-checkout / partial clone) are being built toward the next release.
 The following are captured for later:
 
 ### Tier 3 — UX / productivity

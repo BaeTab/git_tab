@@ -3,6 +3,35 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-07-19
+
+A large power-user batch, plus toolbar and theming polish.
+
+### Added
+- **Commit & tag signing** — sign commits (`-S`) and create signed/annotated tags with GPG or SSH;
+  the commit details panel shows a **verified-signature badge**.
+- **Diff syntax highlighting** — code in the diff view is colored per language (by file extension),
+  on top of the existing line and word-level highlighting.
+- **Saved-credentials manager** — view and delete the PATs stored in Windows Credential Manager.
+- **Worktrees** — list, add, remove, and prune linked working trees.
+- **Git LFS** — track/untrack patterns, pull, and see tracked-file status.
+- **Submodules (richer)** — add, sync, deinit, and per-submodule status (beyond update).
+- **Patch import/export** — export a commit as a `.patch` (format-patch) and apply patches
+  (`git apply` or `git am`).
+- **Line-level staging** — stage only the checked lines of a hunk (GUI `git add -p`).
+- **Stash (richer)** — preview a stash's diff and turn a stash into a branch.
+- **Sparse checkout** — set/list/disable checkout patterns, plus **blobless partial clone**
+  (`--filter=blob:none`) for large repositories.
+
+### Changed
+- **Toolbar** no longer scrolls horizontally — secondary/management actions collapse into a single
+  overflow (**≡**) menu.
+- The **commit-type combo box** is now themed to match light/dark.
+
+### Engineering
+- Regression suite grown to 123 tests (line-level patch builder, worktrees, signing config,
+  stash, sparse-checkout, and more). Core service split into a partial file for readability.
+
 ## [1.1.0] - 2026-07-18
 
 Power-user history editing and sharper diffs.
