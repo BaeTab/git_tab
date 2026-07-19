@@ -15,10 +15,8 @@
         <TextBlock Text="{loc:Tr Settings.Appearance}" Style="{StaticResource SectionHeader}"/>
         <StackPanel Orientation="Horizontal" Margin="0,8,0,6">
             <TextBlock Text="{loc:Tr Settings.Theme}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <RadioButton GroupName="theme" Content="{loc:Tr Theme.Light}" Margin="0,0,18,0"
-                         IsChecked="{Binding IsLightTheme, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-            <RadioButton GroupName="theme" Content="{loc:Tr Theme.Dark}"
-                         IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedThemeOption, Mode=TwoWay}"
+                      DisplayMemberPath="Name" MinWidth="160"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
             <TextBlock Text="{loc:Tr Language}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
@@ -66,9 +64,6 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
-        <CheckBox Content="{loc:Tr Settings.HighContrast}" Margin="0,6,0,2"
-                  IsChecked="{Binding HighContrastEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <TextBlock Text="{loc:Tr Settings.HighContrast.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
         <CheckBox Content="{loc:Tr Settings.CrashReports}" Margin="0,8,0,2"
                   IsChecked="{Binding CrashReportsEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
         <TextBlock Text="{loc:Tr Settings.CrashReports.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>

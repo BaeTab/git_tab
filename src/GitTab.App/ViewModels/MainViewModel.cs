@@ -381,6 +381,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDarkTheme));
         OnPropertyChanged(nameof(IsLightTheme));
         OnPropertyChanged(nameof(HighContrastEnabled));
+        OnPropertyChanged(nameof(SelectedThemeOption));
     }
 
     [RelayCommand]
@@ -443,6 +444,39 @@ public sealed partial class MainViewModel : ObservableObject
     {
         get => _theme.Theme == AppTheme.Light;
         set { if (value && _theme.Theme != AppTheme.Light) ToggleTheme(); }
+    }
+
+    /// <summary>A selectable built-in theme with its display name (brand names shown untranslated).</summary>
+    public sealed record ThemeOption(AppTheme Value, string Name);
+
+    public IReadOnlyList<ThemeOption> ThemeOptions { get; } = new[]
+    {
+        new ThemeOption(AppTheme.Dark, "Dark"),
+        new ThemeOption(AppTheme.Light, "Light"),
+        new ThemeOption(AppTheme.Midnight, "Midnight"),
+        new ThemeOption(AppTheme.Nord, "Nord"),
+        new ThemeOption(AppTheme.Dracula, "Dracula"),
+        new ThemeOption(AppTheme.Solarized, "Solarized"),
+        new ThemeOption(AppTheme.Rose, "Rosé Pine"),
+        new ThemeOption(AppTheme.HighContrast, "High Contrast"),
+    };
+
+    public ThemeOption? SelectedThemeOption
+    {
+        get => ThemeOptions.FirstOrDefault(o => o.Value == _theme.Theme);
+        set { if (value is not null) SetTheme(value); }
+    }
+
+    [RelayCommand]
+    private void SetTheme(ThemeOption? option)
+    {
+        if (option is null || _theme.Theme == option.Value) return;
+        _theme.Apply(option.Value);
+        _settings.Update(_theme.Theme, Loc.Language);
+        OnPropertyChanged(nameof(SelectedThemeOption));
+        OnPropertyChanged(nameof(IsDarkTheme));
+        OnPropertyChanged(nameof(IsLightTheme));
+        OnPropertyChanged(nameof(HighContrastEnabled));
     }
 
     public bool IsKoreanLanguage

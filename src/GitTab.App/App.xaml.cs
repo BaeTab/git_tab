@@ -159,9 +159,15 @@ public partial class App : Application
     private void ApplyTheme(string[] args)
     {
         var settings = Services.GetRequiredService<ISettingsService>();
-        // --light / --dark force a theme (handy for screenshots); otherwise use the saved preference.
+        // --light / --dark / --theme <Name> force a theme (handy for screenshots); otherwise use the
+        // saved preference. --theme accepts any AppTheme name (Dark/Light/Nord/Dracula/…).
+        string? themeArg = null;
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == "--theme") themeArg = args[i + 1];
+
         var theme = args.Contains("--light") ? AppTheme.Light
             : args.Contains("--dark") ? AppTheme.Dark
+            : themeArg is not null && Enum.TryParse<AppTheme>(themeArg, ignoreCase: true, out var ta) ? ta
             : Enum.TryParse<AppTheme>(settings.Current.Theme, out var t) ? t : AppTheme.Dark;
         Services.GetRequiredService<IThemeService>().Apply(theme);
     }

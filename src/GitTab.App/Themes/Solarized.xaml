@@ -1,0 +1,40 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Solarized theme — Solarized Dark, low-contrast teal-based palette -->
+    <SolidColorBrush x:Key="Brush.Window"     Color="#002B36"/>
+    <SolidColorBrush x:Key="Brush.Surface"    Color="#073642"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#0B4553"/>
+    <SolidColorBrush x:Key="Brush.Border"     Color="#234A54"/>
+    <SolidColorBrush x:Key="Brush.Text"       Color="#93A1A1"/>
+    <SolidColorBrush x:Key="Brush.TextMuted"  Color="#657B83"/>
+    <SolidColorBrush x:Key="Brush.Accent"     Color="#268BD2"/>
+    <SolidColorBrush x:Key="Brush.OnAccent"   Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Selection"  Color="#0F4E63"/>
+    <SolidColorBrush x:Key="Brush.Hover"      Color="#0C3F4C"/>
+    <SolidColorBrush x:Key="Brush.Danger"     Color="#DC322F"/>
+    <SolidColorBrush x:Key="Brush.Success"    Color="#859900"/>
+
+    <SolidColorBrush x:Key="Diff.AddBg"   Color="#0C3327"/>
+    <SolidColorBrush x:Key="Diff.DelBg"   Color="#2A1B1D"/>
+    <!-- Moved code (git color-moved): blue for the new location, violet for the old, so it reads
+         differently from a genuine add (green) / remove (red). -->
+    <SolidColorBrush x:Key="Diff.MovedAddBg" Color="#0B3A52"/>
+    <SolidColorBrush x:Key="Diff.MovedDelBg" Color="#241F42"/>
+    <SolidColorBrush x:Key="Diff.AddWordBg" Color="#3E5419"/>
+    <SolidColorBrush x:Key="Diff.DelWordBg" Color="#7A2620"/>
+    <SolidColorBrush x:Key="Diff.HunkBg"  Color="#0A3B4A"/>
+    <SolidColorBrush x:Key="Diff.AddText" Color="#A5C93D"/>
+    <SolidColorBrush x:Key="Diff.DelText" Color="#F07178"/>
+    <SolidColorBrush x:Key="Diff.Gutter"  Color="#657B83"/>
+
+    <SolidColorBrush x:Key="Chip.Head.Bg"   Color="#268BD2"/>
+    <SolidColorBrush x:Key="Chip.Head.Text" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Chip.Local.Bg"   Color="#0C3A3A"/>
+    <SolidColorBrush x:Key="Chip.Local.Text" Color="#5CC9C0"/>
+    <SolidColorBrush x:Key="Chip.Remote.Bg"   Color="#211D3A"/>
+    <SolidColorBrush x:Key="Chip.Remote.Text" Color="#A5A8E8"/>
+    <SolidColorBrush x:Key="Chip.Tag.Bg"   Color="#33290B"/>
+    <SolidColorBrush x:Key="Chip.Tag.Text" Color="#D9B441"/>
+
+</ResourceDictionary>
