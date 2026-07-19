@@ -13,10 +13,19 @@ updates:
       # so we stay pinned on the last MIT-licensed line (6.x).
       - dependency-name: "FluentAssertions"
         update-types: ["version-update:semver-major"]
-      # The app targets net8.0 — keep the Microsoft.Extensions.* stack on the 8.x line
-      # instead of jumping to 9/10 packages.
+      # The app targets net8.0 — keep the Microsoft.Extensions / Serilog.Extensions.Logging stack on
+      # the 8.x line instead of pulling in .NET 9/10 assemblies. Explicit names + a hard version bound
+      # (>=9.0.0), because the wildcard + semver-major form let 10.x slip through a grouped update.
       - dependency-name: "Microsoft.Extensions.*"
-        update-types: ["version-update:semver-major"]
+        versions: [">=9.0.0"]
+      - dependency-name: "Microsoft.Extensions.DependencyInjection"
+        versions: [">=9.0.0"]
+      - dependency-name: "Microsoft.Extensions.Logging"
+        versions: [">=9.0.0"]
+      - dependency-name: "Microsoft.Extensions.Logging.Abstractions"
+        versions: [">=9.0.0"]
+      - dependency-name: "Serilog.Extensions.Logging"
+        versions: [">=9.0.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
