@@ -3,6 +3,25 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-07-19
+
+Everyday conveniences & repository management.
+
+### Added
+- **Force push (with lease)** — a safe force push (`--force-with-lease`) that refuses if the remote
+  moved under you; in the tools menu, with a confirmation.
+- **Sign-off** — a checkbox to add a `Signed-off-by` trailer (`git commit -s`) for DCO projects.
+- **Co-author helper** — add a `Co-authored-by:` trailer to the commit message.
+- **Edit author** — fix the name/email of the latest commit (right-click a commit).
+- **Restore file to a commit's version** — right-click a file in commit details.
+- **Repository statistics** — a dashboard with commit/branch/tag counts and a contributor list.
+- **Git config editor** — edit `user.name`/`user.email` (this repo or global) and set any config key.
+- **Add to .gitignore** — right-click a changed file.
+
+### Notes
+- Deferred to a later release (kept in the roadmap): diff "expand context" lines, CHANGELOG
+  generation from Conventional Commits, and commit bookmarks.
+
 ## [1.4.2] - 2026-07-19
 
 ### Fixed

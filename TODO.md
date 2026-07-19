@@ -45,6 +45,13 @@ sign-in** is implemented but **inert until a GitHub OAuth App client_id is regis
 otherwise. Still deferred from Tier 4: in-app PR **review comments** and merge tool beyond
 `git difftool`/the built-in resolver.
 
+## Shipped in 1.5.0 (convenience & management)
+
+Force push (with lease), sign-off (`-s`) & co-author trailers, edit-commit-author, restore-file-to-a-
+commit-version, a repository-statistics dashboard, a Git config editor, and "add to .gitignore".
+**Deferred (still worth doing):** diff "expand context" lines, CHANGELOG generation from Conventional
+Commits, and commit bookmarks.
+
 ## Roadmap — planned (Tier 5)
 
 The following are captured for later:
