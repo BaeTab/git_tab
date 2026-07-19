@@ -3,6 +3,16 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.2] - 2026-07-19
+
+### Fixed
+- **Auto-update download was broken.** After downloading the installer, the app tried to compute its
+  SHA-256 *while the file was still open for writing* (`File.Create` holds it with `FileShare.None`),
+  which threw and surfaced as "Couldn't check for updates". The download now closes the file before
+  verifying it. This affected every real update since checksum verification was introduced.
+  (Because the fix ships *in the new version*, updating **from an affected build requires a one-time
+  manual download** of the latest installer from the Releases page.)
+
 ## [1.4.1] - 2026-07-19
 
 ### Fixed

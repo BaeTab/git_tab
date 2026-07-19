@@ -96,33 +96,23 @@ public sealed class GitHubUpdateService : IUpdateService
             var total = resp.Content.Headers.ContentLength ?? -1L;
             var path = Path.Combine(Path.GetTempPath(), $"GitTab-Setup-{update.TagName}.exe");
 
-            await using var src = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            await using var dst = File.Create(path);
-            var buffer = new byte[81920];
-            long read = 0;
-            int n;
-            while ((n = await src.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
-            {
-                await dst.WriteAsync(buffer.AsMemory(0, n), ct).ConfigureAwait(false);
-                read += n;
-                if (total > 0) progress?.Report((double)read / total);
-            }
+            await using (var src = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false))
+                await WriteStreamToFileAsync(src, path, total, progress, ct).ConfigureAwait(false);
 
             // Integrity: verify the download against the release's published SHA-256 before we ever
             // launch it. If a checksum is published and doesn't match, refuse (possible tampering).
             if (!string.IsNullOrWhiteSpace(update.ChecksumUrl))
             {
                 var expected = await FetchExpectedHashAsync(http, update.ChecksumUrl!, ct).ConfigureAwait(false);
-                var actual = await ComputeSha256Async(path, ct).ConfigureAwait(false);
                 if (expected is null)
                 {
                     _logger.LogWarning("Could not read published checksum; refusing to launch unverified installer.");
                     TryDelete(path);
                     return null;
                 }
-                if (!HashesMatch(expected, actual))
+                if (!await VerifyChecksumAsync(path, expected, ct).ConfigureAwait(false))
                 {
-                    _logger.LogError("Installer checksum mismatch (expected {Expected}, got {Actual}); refusing to launch.", expected, actual);
+                    _logger.LogError("Installer checksum mismatch; refusing to launch.");
                     TryDelete(path);
                     return null;
                 }
@@ -158,6 +148,28 @@ public sealed class GitHubUpdateService : IUpdateService
         try { return await http.GetStringAsync(url, ct).ConfigureAwait(false); }
         catch { return null; }
     }
+
+    /// <summary>Streams <paramref name="source"/> into <paramref name="path"/> and CLOSES the file
+    /// before returning, so the caller can immediately hash it. (Hashing while the write stream is
+    /// still open throws, because <see cref="File.Create(string)"/> holds it with FileShare.None.)</summary>
+    public static async Task WriteStreamToFileAsync(Stream source, string path, long total,
+        IProgress<double>? progress, CancellationToken ct)
+    {
+        await using var dst = File.Create(path);
+        var buffer = new byte[81920];
+        long read = 0;
+        int n;
+        while ((n = await source.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
+        {
+            await dst.WriteAsync(buffer.AsMemory(0, n), ct).ConfigureAwait(false);
+            read += n;
+            if (total > 0) progress?.Report((double)read / total);
+        }
+    }
+
+    /// <summary>True if the file at <paramref name="path"/> matches the published checksum content.</summary>
+    public static async Task<bool> VerifyChecksumAsync(string path, string expectedChecksumContent, CancellationToken ct = default)
+        => HashesMatch(expectedChecksumContent, await ComputeSha256Async(path, ct).ConfigureAwait(false));
 
     private static async Task<string> ComputeSha256Async(string path, CancellationToken ct)
     {
