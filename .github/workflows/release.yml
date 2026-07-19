@@ -100,7 +100,7 @@ jobs:
       # .sha256. The installer filename (GitTab-Setup-<version>.exe) ends in .exe, which is what the
       # in-app auto-updater looks for.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.version.outputs.version) || github.ref_name }}
           files: |
