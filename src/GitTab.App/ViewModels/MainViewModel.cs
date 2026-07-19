@@ -391,6 +391,77 @@ public sealed partial class MainViewModel : ObservableObject
             ExternalTools.OpenInEditor(RepositoryPath);
     }
 
+    /// <summary>Force-push with lease (safe force — refuses if the remote moved under you).</summary>
+    [RelayCommand]
+    private Task ForcePush()
+    {
+        if (!IsRepositoryOpen) return Task.CompletedTask;
+        if (!_dialogs.Confirm(Loc.T("Push.ForceConfirm"), Loc.T("Push.Force"))) return Task.CompletedTask;
+        return RunNetworkAsync(ct => _repo.PushAsync(forceWithLease: true, ct: ct));
+    }
+
+    /// <summary>Fix the author (name/email) of the latest commit.</summary>
+    [RelayCommand]
+    private async Task AmendAuthor()
+    {
+        if (!IsRepositoryOpen) return;
+        var curName = await _repo.GetConfigAsync("user.name", global: false) ?? string.Empty;
+        var curEmail = await _repo.GetConfigAsync("user.email", global: false) ?? string.Empty;
+        var name = _dialogs.Prompt(Loc.T("Author.NamePrompt"), Loc.T("Author.Amend"), curName);
+        if (string.IsNullOrWhiteSpace(name)) return;
+        var email = _dialogs.Prompt(Loc.T("Author.EmailPrompt"), Loc.T("Author.Amend"), curEmail);
+        if (string.IsNullOrWhiteSpace(email)) return;
+        if (await GitUi.RunAsync(() => _repo.AmendAuthorAsync(name.Trim(), email.Trim()), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    /// <summary>Restore a file to its content at the selected commit.</summary>
+    [RelayCommand]
+    private async Task RestoreFile(FileChangeViewModel? file)
+    {
+        var path = file?.Path ?? Details.SelectedFile?.Path;
+        if (path is null || SelectedCommit is null || !IsRepositoryOpen) return;
+        if (!_dialogs.Confirm(Loc.T("Restore.Confirm", path, SelectedCommit.ShortSha), Loc.T("Restore.Title"))) return;
+        if (await GitUi.RunAsync(() => _repo.RestoreFileAsync(SelectedCommit.Sha, path), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private void ShowStatistics()
+    {
+        if (!IsRepositoryOpen) return;
+        _dialogs.ShowStats(new StatsViewModel(_repo, Loc, _logger));
+    }
+
+    [RelayCommand]
+    private async Task EditConfig()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new GitConfigViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowGitConfig(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    /// <summary>Append a working-tree file to .gitignore.</summary>
+    [RelayCommand]
+    private async Task AddToGitignore(FileChangeViewModel? file)
+    {
+        if (file is null || RepositoryPath is null) return;
+        try
+        {
+            var giPath = Path.Combine(RepositoryPath, ".gitignore");
+            var line = "/" + file.Path.Replace('\\', '/');
+            var existing = File.Exists(giPath) ? await File.ReadAllTextAsync(giPath) : string.Empty;
+            if (!existing.Split('\n').Any(l => l.Trim() == line))
+            {
+                var prefix = existing.Length > 0 && !existing.EndsWith("\n", StringComparison.Ordinal) ? "\n" : string.Empty;
+                await File.AppendAllTextAsync(giPath, prefix + line + "\n");
+            }
+            await ReloadAllAsync();
+        }
+        catch (Exception ex) { _dialogs.Error(ex.Message, Loc.T("Common.Error")); }
+    }
+
     [RelayCommand]
     private void OpenHosting()
     {
@@ -1103,6 +1174,9 @@ public sealed partial class MainViewModel : ObservableObject
                 P("Cred.Manage", ManageCredentialsCommand),
                 P("Menu.Hosting", OpenHostingCommand),
                 P("Menu.OpenInEditor", OpenInEditorCommand),
+                P("Menu.Statistics", ShowStatisticsCommand),
+                P("Menu.Config", EditConfigCommand),
+                P("Menu.ForcePush", ForcePushCommand),
                 P("Hosting.PR", CreatePullRequestCommand),
                 P("Hosting.Web", OpenRemoteWebCommand),
                 P("Gitignore.Title", GenerateGitignoreCommand),

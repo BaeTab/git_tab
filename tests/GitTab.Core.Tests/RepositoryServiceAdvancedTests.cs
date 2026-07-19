@@ -188,6 +188,81 @@ public sealed class RepositoryServiceAdvancedTests
     }
 
     [Fact]
+    public async Task Config_set_then_get_roundtrips()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.SetConfigAsync("user.name", "Custom Name", global: false)).Success.Should().BeTrue();
+        (await svc.GetConfigAsync("user.name", global: false)).Should().Be("Custom Name");
+        (await svc.GetConfigAsync("nonexistent.key", global: false)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Restore_file_reverts_working_copy_to_a_commit_version()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var sha = repo.Commit("v1", "f.txt", "ORIGINAL");
+        repo.WriteFile("f.txt", "CHANGED");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.RestoreFileAsync(sha, "f.txt")).Success.Should().BeTrue();
+        File.ReadAllText(Path.Combine(repo.Path, "f.txt")).Should().Be("ORIGINAL");
+    }
+
+    [Fact]
+    public async Task Amend_author_rewrites_the_latest_commit_author()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        repo.Commit("second", "b.txt", "2");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.AmendAuthorAsync("Alice Example", "alice@example.com")).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetCommits()[0].AuthorName.Should().Be("Alice Example");
+    }
+
+    [Fact]
+    public async Task Commit_with_signoff_adds_a_trailer()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("base", "a.txt", "1");
+        repo.WriteFile("a.txt", "12");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+        await svc.StageAsync("a.txt");
+
+        (await svc.CommitAsync("signed off change", signOff: true)).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetCommits()[0].MessageFull.Should().Contain("Signed-off-by:");
+    }
+
+    [Fact]
+    public async Task Repo_stats_report_commit_count_and_contributors()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("c1", "a.txt", "1");
+        repo.Commit("c2", "a.txt", "12");
+        repo.Commit("c3", "a.txt", "123");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var stats = await svc.GetRepoStatsAsync();
+        stats.CommitCount.Should().Be(3);
+        stats.Contributors.Should().NotBeEmpty();
+        stats.Contributors.Sum(c => c.Commits).Should().Be(3);
+    }
+
+    [Fact]
     public async Task Option_like_arguments_are_rejected_by_the_guard()
     {
         using var repo = TestRepository.CreateEmpty();

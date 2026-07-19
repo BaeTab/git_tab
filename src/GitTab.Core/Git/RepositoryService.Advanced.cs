@@ -328,6 +328,92 @@ public sealed partial class RepositoryService
             ? new FileDiff { Path = path }
             : UnifiedDiffParser.Parse(path, null, raw, isBinary: false);
 
+    // ---------------------------------------------------------------- author / file restore
+
+    /// <summary>Rewrite HEAD's author (name/email) without changing its message.</summary>
+    public Task<GitResult> AmendAuthorAsync(string name, string email, CancellationToken ct = default)
+    {
+        if (Guard(name, email) is { } bad) return Task.FromResult(bad);
+        return Run(new[] { "commit", "--amend", "--no-edit", $"--author={name} <{email}>" }, ct);
+    }
+
+    /// <summary>Restore <paramref name="path"/> in the working tree to its content at <paramref name="sha"/>.</summary>
+    public Task<GitResult> RestoreFileAsync(string sha, string path, CancellationToken ct = default)
+        => Guard(sha) is { } bad ? Task.FromResult(bad)
+           : Run(new[] { "checkout", sha, "--", path }, ct);
+
+    // ---------------------------------------------------------------- config
+
+    public async Task<string?> GetConfigAsync(string key, bool global, CancellationToken ct = default)
+    {
+        if (!GitArg.IsSafe(key)) return null;
+        var args = new List<string> { "config" };
+        if (global) args.Add("--global");
+        args.Add("--get");
+        args.Add(key);
+        var r = await Run(args, ct).ConfigureAwait(false);
+        var v = r.StandardOutput.Trim();
+        return r.Success && v.Length > 0 ? v : null;
+    }
+
+    public Task<GitResult> SetConfigAsync(string key, string value, bool global, CancellationToken ct = default)
+    {
+        if (Guard(key) is { } bad) return Task.FromResult(bad);
+        var args = new List<string> { "config" };
+        if (global) args.Add("--global");
+        args.Add(key);
+        args.Add(value);
+        return Run(args, ct);
+    }
+
+    // ---------------------------------------------------------------- statistics
+
+    public async Task<RepoStats> GetRepoStatsAsync(CancellationToken ct = default)
+    {
+        int commitCount = 0;
+        var cnt = await Run(new[] { "rev-list", "--count", "HEAD" }, ct).ConfigureAwait(false);
+        if (cnt.Success) int.TryParse(cnt.StandardOutput.Trim(), out commitCount);
+
+        var contributors = new List<ContributorInfo>();
+        var sl = await Run(new[] { "shortlog", "-sne", "HEAD" }, ct).ConfigureAwait(false);
+        if (sl.Success)
+        {
+            foreach (var line in sl.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                int tab = line.IndexOf('\t');
+                if (tab < 0 || !int.TryParse(line[..tab].Trim(), out var c)) continue;
+                var who = line[(tab + 1)..].Trim();
+                string name = who, email = string.Empty;
+                int lt = who.LastIndexOf('<');
+                if (lt >= 0 && who.EndsWith(">", StringComparison.Ordinal))
+                {
+                    name = who[..lt].Trim();
+                    email = who[(lt + 1)..^1].Trim();
+                }
+                contributors.Add(new ContributorInfo { Name = name, Email = email, Commits = c });
+            }
+        }
+
+        int branchCount, tagCount;
+        DateTimeOffset? last;
+        lock (_sync)
+        {
+            var repo = EnsureOpen();
+            branchCount = repo.Branches.Count(b => !b.IsRemote);
+            tagCount = repo.Tags.Count();
+            last = repo.Head.Tip?.Author.When;
+        }
+
+        return new RepoStats
+        {
+            CommitCount = commitCount,
+            BranchCount = branchCount,
+            TagCount = tagCount,
+            Contributors = contributors,
+            LastActivity = last
+        };
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private static string? ShortenRef(string reference)

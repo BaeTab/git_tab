@@ -156,6 +156,9 @@
                             <Separator/>
                             <MenuItem Header="{loc:Tr Menu.Hosting}" Command="{Binding OpenHostingCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.OpenInEditor}" Command="{Binding OpenInEditorCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Statistics}" Command="{Binding ShowStatisticsCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Config}" Command="{Binding EditConfigCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.ForcePush}" Command="{Binding ForcePushCommand}"/>
                             <MenuItem Header="{loc:Tr Submodule.Update}" Command="{Binding SubmoduleUpdateCommand}"
                                       Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
                         </MenuItem>
@@ -369,6 +372,10 @@
                                                         <MenuItem Header="{loc:Tr Ctx.ExternalDiff}"
                                                                   Command="{Binding PlacementTarget.Tag.ExternalDiffCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="{loc:Tr Ctx.AddToGitignore}"
+                                                                  Command="{Binding PlacementTarget.Tag.AddToGitignoreCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     </ContextMenu>
                                                 </Grid.ContextMenu>
                                                 <Grid.ColumnDefinitions>
@@ -446,6 +453,11 @@
                                           Foreground="{DynamicResource Brush.Text}" ToolTip="{loc:Tr WC.Amend.Tip}"/>
                                 <CheckBox Content="{loc:Tr Commit.Sign}" IsChecked="{Binding Sign}" Margin="0,4,0,0"
                                           Foreground="{DynamicResource Brush.Text}"/>
+                                <CheckBox Content="{loc:Tr WC.SignOff}" IsChecked="{Binding SignOff}" Margin="0,4,0,0"
+                                          Foreground="{DynamicResource Brush.Text}"/>
+                                <Button HorizontalAlignment="Left" Style="{StaticResource ToolButton}" Margin="0,4,0,0" Padding="0,2"
+                                        Content="{loc:Tr CoAuthor.Add}" Command="{Binding AddCoAuthorCommand}"
+                                        Foreground="{DynamicResource Brush.Accent}"/>
                                 <Button HorizontalAlignment="Stretch" Style="{StaticResource AccentButton}" Margin="0,8,0,0"
                                         Content="{loc:Tr WC.Commit}" Command="{Binding CommitCommand}"
                                         ToolTip="{loc:Tr WC.Commit.Tip}"/>
@@ -653,6 +665,7 @@
                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                     <MenuItem Header="{loc:Tr Ctx.CheckoutCommit}" Command="{Binding CheckoutCommitCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.Reword}" Command="{Binding RewordCommitCommand}"/>
+                                    <MenuItem Header="{loc:Tr Ctx.AmendAuthor}" Command="{Binding AmendAuthorCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.StartBisect}" Command="{Binding StartBisectCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CreateBranch}" Command="{Binding CreateBranchHereCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CreateTag}" Command="{Binding CreateTagHereCommand}"/>
@@ -778,6 +791,10 @@
                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                 <MenuItem Header="{loc:Tr Blame}"
                                                           Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                <Separator/>
+                                                <MenuItem Header="{loc:Tr Ctx.RestoreFile}"
+                                                          Command="{Binding PlacementTarget.Tag.RestoreFileCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                             </ContextMenu>
                                         </Grid.ContextMenu>

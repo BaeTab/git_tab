@@ -680,11 +680,12 @@ public sealed partial class RepositoryService : IRepositoryService
         return await Run(new[] { "clean", "-f", "--", path }, ct).ConfigureAwait(false);
     }
 
-    public Task<GitResult> CommitAsync(string message, bool amend = false, bool sign = false, CancellationToken ct = default)
+    public Task<GitResult> CommitAsync(string message, bool amend = false, bool sign = false, bool signOff = false, CancellationToken ct = default)
     {
         var args = new List<string> { "commit", "-m", message };
         if (amend) args.Add("--amend");
         if (sign) args.Add("-S");
+        if (signOff) args.Add("-s");   // add a Signed-off-by trailer (DCO)
         return Run(args, ct);
     }
 
@@ -742,9 +743,10 @@ public sealed partial class RepositoryService : IRepositoryService
     public Task<GitResult> PullAsync(CancellationToken ct = default)
         => Run(new[] { "pull" }, ct);
 
-    public Task<GitResult> PushAsync(bool setUpstream = false, string? remote = null, string? branch = null, CancellationToken ct = default)
+    public Task<GitResult> PushAsync(bool setUpstream = false, string? remote = null, string? branch = null, bool forceWithLease = false, CancellationToken ct = default)
     {
         var args = new List<string> { "push" };
+        if (forceWithLease) args.Add("--force-with-lease");   // safe force: refuses if the remote moved
         if (setUpstream)
         {
             args.Add("-u");

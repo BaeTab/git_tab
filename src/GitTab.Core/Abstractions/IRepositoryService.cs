@@ -81,7 +81,7 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> StageAllAsync(CancellationToken ct = default);
     Task<GitResult> UnstageAsync(string path, CancellationToken ct = default);
     Task<GitResult> DiscardAsync(string path, CancellationToken ct = default);
-    Task<GitResult> CommitAsync(string message, bool amend = false, bool sign = false, CancellationToken ct = default);
+    Task<GitResult> CommitAsync(string message, bool amend = false, bool sign = false, bool signOff = false, CancellationToken ct = default);
 
     Task<GitResult> CheckoutAsync(string branchFriendlyName, CancellationToken ct = default);
     Task<GitResult> CreateBranchAsync(string name, bool checkout, string? startPoint = null, CancellationToken ct = default);
@@ -92,7 +92,7 @@ public interface IRepositoryService : IDisposable
 
     Task<GitResult> FetchAsync(string? remote = null, bool prune = true, CancellationToken ct = default);
     Task<GitResult> PullAsync(CancellationToken ct = default);
-    Task<GitResult> PushAsync(bool setUpstream = false, string? remote = null, string? branch = null, CancellationToken ct = default);
+    Task<GitResult> PushAsync(bool setUpstream = false, string? remote = null, string? branch = null, bool forceWithLease = false, CancellationToken ct = default);
 
     /// <summary>Create a new repository at <paramref name="path"/> (git init, creating the folder if needed).</summary>
     Task<GitResult> InitAsync(string path, string? initialBranch = "main", CancellationToken ct = default);
@@ -181,4 +181,15 @@ public interface IRepositoryService : IDisposable
     Task<IReadOnlyList<string>> GetSparseCheckoutPatternsAsync(CancellationToken ct = default);
     Task<GitResult> SparseCheckoutSetAsync(IReadOnlyList<string> patterns, bool cone, CancellationToken ct = default);
     Task<GitResult> SparseCheckoutDisableAsync(CancellationToken ct = default);
+
+    // ---- author / file restore ----
+    Task<GitResult> AmendAuthorAsync(string name, string email, CancellationToken ct = default);
+    Task<GitResult> RestoreFileAsync(string sha, string path, CancellationToken ct = default);
+
+    // ---- config ----
+    Task<string?> GetConfigAsync(string key, bool global, CancellationToken ct = default);
+    Task<GitResult> SetConfigAsync(string key, string value, bool global, CancellationToken ct = default);
+
+    // ---- statistics ----
+    Task<RepoStats> GetRepoStatsAsync(CancellationToken ct = default);
 }

@@ -1,0 +1,34 @@
+<Window x:Class="GitTab.App.Views.GitConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GitTab.App.Localization"
+        Title="{loc:Tr Config.Title}"
+        Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
+        Width="520" SizeToContent="Height" MinWidth="460"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize"
+        Background="{DynamicResource Brush.Window}"
+        FontFamily="Segoe UI" FontSize="13">
+    <StackPanel Margin="22">
+        <TextBlock Text="{loc:Tr Config.Title}" FontSize="18" FontWeight="SemiBold"
+                   Foreground="{DynamicResource Brush.Text}" Margin="0,0,0,4"/>
+        <TextBlock Text="{loc:Tr Config.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+        <CheckBox Content="{loc:Tr Config.Global}" IsChecked="{Binding Global}"
+                  Foreground="{DynamicResource Brush.Text}" Margin="0,0,0,14"/>
+
+        <TextBlock Text="{loc:Tr Config.UserName}" Margin="0,0,0,4" Foreground="{DynamicResource Brush.Text}"/>
+        <TextBox Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Text="{loc:Tr Config.UserEmail}" Margin="0,12,0,4" Foreground="{DynamicResource Brush.Text}"/>
+        <TextBox Text="{Binding UserEmail, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Button Content="{loc:Tr Config.SetCustom}" HorizontalAlignment="Left" Margin="0,14,0,0"
+                Padding="8,3" Command="{Binding SetCustomCommand}"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="{loc:Tr Common.Save}" Style="{StaticResource AccentButton}" IsDefault="True"
+                    MinWidth="96" Margin="0,0,8,0" Command="{Binding SaveCommand}"/>
+            <Button Content="{loc:Tr Common.Close}" IsCancel="True" MinWidth="88"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

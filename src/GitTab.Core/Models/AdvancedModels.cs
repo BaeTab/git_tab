@@ -31,6 +31,24 @@ public sealed class LfsStatus
     public int TrackedFileCount { get; init; }
 }
 
+/// <summary>A contributor and how many commits they authored.</summary>
+public sealed class ContributorInfo
+{
+    public required string Name { get; init; }
+    public required string Email { get; init; }
+    public required int Commits { get; init; }
+}
+
+/// <summary>High-level repository statistics for the dashboard.</summary>
+public sealed class RepoStats
+{
+    public int CommitCount { get; init; }
+    public int BranchCount { get; init; }
+    public int TagCount { get; init; }
+    public IReadOnlyList<ContributorInfo> Contributors { get; init; } = Array.Empty<ContributorInfo>();
+    public DateTimeOffset? LastActivity { get; init; }
+}
+
 /// <summary>Result of verifying a commit's signature (maps git's `%G?` codes).</summary>
 public enum CommitSignature
 {

@@ -47,6 +47,10 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
     [ObservableProperty]
     private bool _sign;
 
+    /// <summary>Add a Signed-off-by trailer to the commit (git commit -s), for DCO projects.</summary>
+    [ObservableProperty]
+    private bool _signOff;
+
     /// <summary>Conventional-commit types offered as a helper dropdown above the message box.</summary>
     public IReadOnlyList<string> CommitTypes { get; } = new[]
     {
@@ -177,11 +181,26 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
         if (ok) Refresh();
     }
 
+    /// <summary>Append a "Co-authored-by: Name &lt;email&gt;" trailer to the commit message.</summary>
+    [RelayCommand]
+    private void AddCoAuthor()
+    {
+        var name = _dialogs.Prompt(_loc.T("CoAuthor.NamePrompt"), _loc.T("CoAuthor.Title"));
+        if (string.IsNullOrWhiteSpace(name)) return;
+        var email = _dialogs.Prompt(_loc.T("CoAuthor.EmailPrompt"), _loc.T("CoAuthor.Title"));
+        if (string.IsNullOrWhiteSpace(email)) return;
+
+        var trailer = $"Co-authored-by: {name.Trim()} <{email.Trim()}>";
+        CommitMessage = string.IsNullOrWhiteSpace(CommitMessage)
+            ? trailer
+            : CommitMessage.TrimEnd() + "\n\n" + trailer;
+    }
+
     [RelayCommand(CanExecute = nameof(CanCommit))]
     private async Task Commit()
     {
         var message = CommitMessage.Trim();
-        var success = await GitUi.RunAsync(() => _repo.CommitAsync(message, Amend, Sign), _dialogs, _loc, _logger);
+        var success = await GitUi.RunAsync(() => _repo.CommitAsync(message, Amend, Sign, SignOff), _dialogs, _loc, _logger);
         if (!success) return;
 
         CommitMessage = string.Empty;

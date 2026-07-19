@@ -64,6 +64,12 @@ public interface IDialogService
     /// <summary>Show the GitHub/GitLab pull-requests &amp; issues dialog.</summary>
     void ShowHosting(HostingViewModel vm);
 
+    /// <summary>Show the repository statistics dashboard.</summary>
+    void ShowStats(StatsViewModel vm);
+
+    /// <summary>Show the Git config editor.</summary>
+    void ShowGitConfig(GitConfigViewModel vm);
+
     /// <summary>Show a read-only text viewer (e.g. a stash diff).</summary>
     void ShowText(string title, string content);
 
@@ -278,6 +284,18 @@ public sealed class DialogService : IDialogService
     public void ShowHosting(HostingViewModel vm)
     {
         var win = new HostingDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowStats(StatsViewModel vm)
+    {
+        var win = new StatsDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowGitConfig(GitConfigViewModel vm)
+    {
+        var win = new GitConfigDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 
