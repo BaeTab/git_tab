@@ -13,6 +13,21 @@ public sealed class AppSettings
     public bool BackgroundFetch { get; set; } = true;  // periodically fetch open repos and update "behind"
     public string UpdateChannel { get; set; } = "Stable"; // "Stable" | "Beta" (beta includes prereleases)
     public int UiScalePercent { get; set; } = 100;     // UI/font zoom: 100 / 115 / 130 / 150
+
+    // ---- personalization ----
+    public string AccentColor { get; set; } = "";        // "" = theme's own accent, else "#RRGGBB"
+    public string UiFontFamily { get; set; } = "Segoe UI";
+    public string DiffFontFamily { get; set; } = "Consolas";
+    public double DiffFontSize { get; set; } = 12.5;
+    public int GraphRowHeight { get; set; } = 30;        // compact 24 / normal 30 / comfortable 38
+    public bool GraphGlow { get; set; } = true;          // luminous graph lanes/nodes
+    public bool DiffSplitDefault { get; set; }           // default diff view: false=unified, true=split
+    public int DiffContextDefault { get; set; } = 3;     // default surrounding context lines
+    public bool DiffIgnoreWhitespaceDefault { get; set; }
+    public bool DiffWordWrap { get; set; }               // wrap long lines in the diff
+    public int BackgroundFetchMinutes { get; set; } = 3; // 0 unused (toggle is BackgroundFetch); 1..30
+    public bool ReopenLastRepo { get; set; } = true;     // reopen the most-recent repo on startup
+    public bool AbsoluteDates { get; set; }              // false = relative ("2h ago"), true = absolute
 }
 
 public interface ISettingsService

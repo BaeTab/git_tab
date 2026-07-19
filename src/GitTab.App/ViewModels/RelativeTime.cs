@@ -5,8 +5,13 @@ namespace GitTab.App.ViewModels;
 /// <summary>Formats a timestamp as a localized "N units ago" string.</summary>
 public static class RelativeTime
 {
+    /// <summary>When true, <see cref="Format"/> returns an absolute timestamp instead of "N ago".</summary>
+    public static bool UseAbsolute { get; set; }
+
     public static string Format(DateTimeOffset when, ILocalizationService loc)
     {
+        if (UseAbsolute) return when.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+
         var delta = DateTimeOffset.UtcNow - when.ToUniversalTime();
         if (delta < TimeSpan.Zero) delta = TimeSpan.Zero;
 

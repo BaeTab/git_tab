@@ -24,6 +24,89 @@
                       DisplayMemberPath="Name" MinWidth="150"/>
         </StackPanel>
 
+        <!-- Personalization -->
+        <TextBlock Text="{loc:Tr Settings.Personalization}" Style="{StaticResource SectionHeader}" Margin="0,12,0,0"/>
+
+        <TextBlock Text="{loc:Tr Settings.AccentColor}" Margin="0,8,0,4" Foreground="{DynamicResource Brush.Text}"/>
+        <ItemsControl ItemsSource="{Binding AccentPresets}" Margin="0,0,0,2">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Width="26" Height="26" Margin="0,0,6,6" Padding="0" FontSize="9"
+                            BorderThickness="1" BorderBrush="{DynamicResource Brush.Border}"
+                            Command="{Binding DataContext.SetAccentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            ToolTip="{Binding}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="{Binding}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding}" Value="">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}"/>
+                                        <Setter Property="Content" Value="{loc:Tr Settings.AccentDefault}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+            <TextBlock Text="#RRGGBB" Width="96" VerticalAlignment="Center" Style="{StaticResource MutedText}"/>
+            <TextBox Text="{Binding AccentColor, UpdateSourceTrigger=PropertyChanged}" MinWidth="110"/>
+        </StackPanel>
+        <TextBlock Text="{loc:Tr Settings.AccentColor.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <TextBlock Text="{loc:Tr Settings.UiFont}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding UiFontOptions}" SelectedItem="{Binding UiFontFamily, Mode=TwoWay}" MinWidth="150"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <TextBlock Text="{loc:Tr Settings.DiffFont}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding DiffFontOptions}" SelectedItem="{Binding DiffFontFamily, Mode=TwoWay}" MinWidth="150" Margin="0,0,8,0"/>
+            <ComboBox ItemsSource="{Binding DiffFontSizeOptions}" SelectedItem="{Binding DiffFontSize, Mode=TwoWay}" MinWidth="70"
+                      ToolTip="{loc:Tr Settings.DiffFontSize}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <TextBlock Text="{loc:Tr Settings.GraphDensity}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding DensityOptions}" SelectedItem="{Binding SelectedDensity, Mode=TwoWay}"
+                      DisplayMemberPath="Name" MinWidth="150"/>
+        </StackPanel>
+        <CheckBox Content="{loc:Tr Settings.GraphGlow}" Margin="0,0,0,10"
+                  IsChecked="{Binding GraphGlowEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+
+        <CheckBox Content="{loc:Tr Settings.DiffSplitDefault}" Margin="0,0,0,6"
+                  IsChecked="{Binding DiffSplitDefault, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <TextBlock Text="{loc:Tr Settings.DiffContext}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding DiffContextOptions}" SelectedItem="{Binding DiffContextDefault, Mode=TwoWay}" MinWidth="90"/>
+        </StackPanel>
+        <CheckBox Content="{loc:Tr Diff.IgnoreWhitespace}" Margin="0,0,0,6"
+                  IsChecked="{Binding DiffIgnoreWhitespaceDefault, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+        <CheckBox Content="{loc:Tr Settings.DiffWordWrap}" Margin="0,0,0,10"
+                  IsChecked="{Binding DiffWordWrap, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <TextBlock Text="{loc:Tr Settings.FetchInterval}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding FetchIntervalOptions}" SelectedItem="{Binding BackgroundFetchMinutes, Mode=TwoWay}"
+                      MinWidth="90">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding StringFormat='{}{0} min'}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <CheckBox Content="{loc:Tr Settings.ReopenLast}" Margin="0,0,0,2"
+                  IsChecked="{Binding ReopenLastRepo, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+        <CheckBox Content="{loc:Tr Settings.AbsoluteDates}" Margin="0,8,0,2"
+                  IsChecked="{Binding AbsoluteDates, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+
         <!-- Explorer integration -->
         <TextBlock Text="{loc:Tr Settings.ShellSection}" Style="{StaticResource SectionHeader}" Margin="0,12,0,0"/>
         <CheckBox Content="{loc:Tr Settings.ShellEnable}" Margin="0,8,0,2"

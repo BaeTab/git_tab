@@ -35,7 +35,7 @@
         <Grid Grid.Row="1">
             <!-- unified -->
             <avalon:TextEditor x:Name="Editor"
-                               IsReadOnly="True" FontFamily="Consolas" FontSize="12.5"
+                               IsReadOnly="True" FontFamily="{DynamicResource Font.Diff}" FontSize="{DynamicResource Font.DiffSize}"
                                WordWrap="False" ShowLineNumbers="False"
                                Background="{DynamicResource Brush.Surface}" Foreground="{DynamicResource Brush.Text}"
                                HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
@@ -48,13 +48,13 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <avalon:TextEditor x:Name="LeftEditor" Grid.Column="0"
-                                   IsReadOnly="True" FontFamily="Consolas" FontSize="12.5"
+                                   IsReadOnly="True" FontFamily="{DynamicResource Font.Diff}" FontSize="{DynamicResource Font.DiffSize}"
                                    WordWrap="False" ShowLineNumbers="False"
                                    Background="{DynamicResource Brush.Surface}" Foreground="{DynamicResource Brush.Text}"
                                    HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
                 <Border Grid.Column="1" Background="{DynamicResource Brush.Border}"/>
                 <avalon:TextEditor x:Name="RightEditor" Grid.Column="2"
-                                   IsReadOnly="True" FontFamily="Consolas" FontSize="12.5"
+                                   IsReadOnly="True" FontFamily="{DynamicResource Font.Diff}" FontSize="{DynamicResource Font.DiffSize}"
                                    WordWrap="False" ShowLineNumbers="False"
                                    Background="{DynamicResource Brush.Surface}" Foreground="{DynamicResource Brush.Text}"
                                    HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>

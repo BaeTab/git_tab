@@ -35,6 +35,24 @@ public partial class DiffView : UserControl
         RightEditor.TextArea.TextView.ScrollOffsetChanged += (_, _) => Sync(RightEditor, LeftEditor);
 
         DataContextChanged += OnDataContextChanged;
+
+        Loaded += (_, _) =>
+        {
+            GitTab.App.Services.DiffDefaults.Changed -= OnWrapChanged;
+            GitTab.App.Services.DiffDefaults.Changed += OnWrapChanged;
+            ApplyWordWrap();
+        };
+        Unloaded += (_, _) => GitTab.App.Services.DiffDefaults.Changed -= OnWrapChanged;
+    }
+
+    private void OnWrapChanged(object? sender, EventArgs e) => ApplyWordWrap();
+
+    private void ApplyWordWrap()
+    {
+        bool wrap = GitTab.App.Services.DiffDefaults.WordWrap;
+        Editor.WordWrap = wrap;
+        LeftEditor.WordWrap = wrap;
+        RightEditor.WordWrap = wrap;
     }
 
     /// <summary>Hide the pop-out button (used when this view already lives inside a popped-out window).</summary>

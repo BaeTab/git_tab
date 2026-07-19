@@ -74,12 +74,11 @@ public sealed partial class MainViewModel : ObservableObject
 
         foreach (var r in _recent.GetAll()) RecentRepositories.Add(r);
 
+        ApplyPersonalization();
         if (BackgroundFetchEnabled) EnsureFetchTimer()?.Start();
     }
 
     // ---- background fetch (periodic, per open repository) ----
-
-    private const int FetchIntervalMinutes = 3;
 
     /// <summary>Periodically fetch every open repository and refresh its behind count. Persisted.</summary>
     public bool BackgroundFetchEnabled
@@ -100,7 +99,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (System.Windows.Application.Current is null) return null;
         _fetchTimer = new System.Windows.Threading.DispatcherTimer
         {
-            Interval = TimeSpan.FromMinutes(FetchIntervalMinutes)
+            Interval = TimeSpan.FromMinutes(Math.Clamp(_settings.Current?.BackgroundFetchMinutes ?? 3, 1, 60))
         };
         _fetchTimer.Tick += async (_, _) => await PollAllSessionsAsync();
         return _fetchTimer;
@@ -392,6 +391,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsKoreanLanguage));
         OnPropertyChanged(nameof(IsEnglishLanguage));
         OnPropertyChanged(nameof(SelectedLanguageOption));
+        OnPropertyChanged(nameof(DensityOptions));
         // Menu labels are baked into the registry — refresh them if the integration is installed.
         if (_shell.IsInstalled)
         {
@@ -518,6 +518,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedLanguageOption));
         OnPropertyChanged(nameof(IsKoreanLanguage));
         OnPropertyChanged(nameof(IsEnglishLanguage));
+        OnPropertyChanged(nameof(DensityOptions));
         // Menu labels are baked into the registry — refresh them if the integration is installed.
         if (_shell.IsInstalled)
         {
@@ -556,6 +557,214 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     public double UiScale => UiScalePercent / 100.0;
+
+    // ---------------------------------------------------------------- personalization (settings-dialog bindings)
+
+    /// <summary>Custom accent color ("" = theme's own accent, else "#RRGGBB").</summary>
+    public string AccentColor
+    {
+        get => _settings.Current?.AccentColor ?? "";
+        set
+        {
+            if (_settings.Current is { } s) { s.AccentColor = value; _settings.Save(); }
+            _theme.RefreshPersonalization();
+            OnPropertyChanged();
+        }
+    }
+
+    public string UiFontFamily
+    {
+        get => _settings.Current?.UiFontFamily ?? "Segoe UI";
+        set
+        {
+            if (_settings.Current is { } s) { s.UiFontFamily = value; _settings.Save(); }
+            _theme.RefreshPersonalization();
+            OnPropertyChanged();
+        }
+    }
+
+    public string DiffFontFamily
+    {
+        get => _settings.Current?.DiffFontFamily ?? "Consolas";
+        set
+        {
+            if (_settings.Current is { } s) { s.DiffFontFamily = value; _settings.Save(); }
+            _theme.RefreshPersonalization();
+            OnPropertyChanged();
+        }
+    }
+
+    public double DiffFontSize
+    {
+        get => _settings.Current?.DiffFontSize ?? 12.5;
+        set
+        {
+            if (_settings.Current is { } s) { s.DiffFontSize = value; _settings.Save(); }
+            _theme.RefreshPersonalization();
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Graph row height in pixels (compact 24 / normal 30 / comfortable 38).</summary>
+    public int GraphRowHeight
+    {
+        get => _settings.Current?.GraphRowHeight ?? 30;
+        set
+        {
+            if (_settings.Current is { } s) { s.GraphRowHeight = value; _settings.Save(); }
+            GraphAppearance.RowHeight = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SelectedDensity));
+        }
+    }
+
+    public bool GraphGlowEnabled
+    {
+        get => _settings.Current?.GraphGlow ?? true;
+        set
+        {
+            if (_settings.Current is { } s) { s.GraphGlow = value; _settings.Save(); }
+            GraphAppearance.Glow = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool DiffSplitDefault
+    {
+        get => _settings.Current?.DiffSplitDefault ?? false;
+        set
+        {
+            if (_settings.Current is { } s) { s.DiffSplitDefault = value; _settings.Save(); }
+            DiffDefaults.Split = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public int DiffContextDefault
+    {
+        get => _settings.Current?.DiffContextDefault ?? 3;
+        set
+        {
+            if (_settings.Current is { } s) { s.DiffContextDefault = value; _settings.Save(); }
+            DiffDefaults.Context = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool DiffIgnoreWhitespaceDefault
+    {
+        get => _settings.Current?.DiffIgnoreWhitespaceDefault ?? false;
+        set
+        {
+            if (_settings.Current is { } s) { s.DiffIgnoreWhitespaceDefault = value; _settings.Save(); }
+            DiffDefaults.IgnoreWhitespace = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool DiffWordWrap
+    {
+        get => _settings.Current?.DiffWordWrap ?? false;
+        set
+        {
+            if (_settings.Current is { } s) { s.DiffWordWrap = value; _settings.Save(); }
+            DiffDefaults.WordWrap = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Reopen the most-recently-open repository on the next startup.</summary>
+    public bool ReopenLastRepo
+    {
+        get => _settings.Current?.ReopenLastRepo ?? true;
+        set
+        {
+            if (_settings.Current is { } s) { s.ReopenLastRepo = value; _settings.Save(); }
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Show absolute timestamps instead of relative ("2h ago") ones throughout the app.</summary>
+    public bool AbsoluteDates
+    {
+        get => _settings.Current?.AbsoluteDates ?? false;
+        set
+        {
+            if (_settings.Current is { } s) { s.AbsoluteDates = value; _settings.Save(); }
+            RelativeTime.UseAbsolute = value;
+            _theme.RefreshPersonalization(); // forces a graph repaint so dates re-render
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Background-fetch interval in minutes; restarts the timer immediately when changed.</summary>
+    public int BackgroundFetchMinutes
+    {
+        get => _settings.Current?.BackgroundFetchMinutes ?? 3;
+        set
+        {
+            if (_settings.Current is { } s) { s.BackgroundFetchMinutes = value; _settings.Save(); }
+            _fetchTimer?.Stop();
+            if (_fetchTimer is { } t) t.Interval = TimeSpan.FromMinutes(Math.Clamp(value, 1, 60));
+            if (BackgroundFetchEnabled) EnsureFetchTimer()?.Start();
+            OnPropertyChanged();
+        }
+    }
+
+    public IReadOnlyList<string> UiFontOptions { get; } = new[]
+    {
+        "Segoe UI", "Segoe UI Variable Text", "Malgun Gothic", "Arial", "Calibri", "Verdana", "Tahoma"
+    };
+
+    public IReadOnlyList<string> DiffFontOptions { get; } = new[]
+    {
+        "Consolas", "Cascadia Mono", "Cascadia Code", "Courier New", "D2Coding", "JetBrains Mono", "Lucida Console"
+    };
+
+    public IReadOnlyList<double> DiffFontSizeOptions { get; } = new[] { 11, 11.5, 12, 12.5, 13, 14, 15, 16 };
+
+    public IReadOnlyList<int> DiffContextOptions { get; } = new[] { 1, 3, 5, 10 };
+
+    public IReadOnlyList<int> FetchIntervalOptions { get; } = new[] { 1, 3, 5, 10, 15, 30 };
+
+    /// <summary>A selectable graph-row density with its localized display name.</summary>
+    public sealed record DensityOption(int Value, string Name);
+
+    public IReadOnlyList<DensityOption> DensityOptions => new[]
+    {
+        new DensityOption(24, Loc.T("Settings.Density.Compact")),
+        new DensityOption(30, Loc.T("Settings.Density.Normal")),
+        new DensityOption(38, Loc.T("Settings.Density.Comfortable")),
+    };
+
+    public DensityOption? SelectedDensity
+    {
+        get => DensityOptions.FirstOrDefault(o => o.Value == GraphRowHeight);
+        set { if (value is not null) GraphRowHeight = value.Value; }
+    }
+
+    /// <summary>Quick-pick accent color swatches ("" = theme's own accent).</summary>
+    public IReadOnlyList<string> AccentPresets { get; } = new[]
+    {
+        "", "#6B78E8", "#88C0D0", "#BD93F9", "#268BD2", "#C4A7E7", "#4FBF8B", "#E56B7B", "#FFB43C", "#FF6EC7"
+    };
+
+    [RelayCommand]
+    private void SetAccent(string? hex) => AccentColor = hex ?? "";
+
+    /// <summary>Push every persisted personalization setting into the live holders the UI reads from.
+    /// Called once at startup so the graph/diff/date preferences are correct before the first paint.</summary>
+    private void ApplyPersonalization()
+    {
+        if (_settings.Current is not { } s) return;
+        GraphAppearance.RowHeight = s.GraphRowHeight;
+        GraphAppearance.Glow = s.GraphGlow;
+        DiffDefaults.Split = s.DiffSplitDefault;
+        DiffDefaults.Context = s.DiffContextDefault;
+        DiffDefaults.IgnoreWhitespace = s.DiffIgnoreWhitespaceDefault;
+        DiffDefaults.WordWrap = s.DiffWordWrap;
+        RelativeTime.UseAbsolute = s.AbsoluteDates;
+    }
 
     public string GitPath => GitTab.Core.Git.GitExecutableLocator.Resolve();
     public string AppVersion => AppInfo.Version;

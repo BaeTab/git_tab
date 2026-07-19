@@ -19,7 +19,7 @@ namespace GitTab.App.Controls;
 /// </summary>
 public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
 {
-    private const double RowHeight = 30;
+    private static double RowHeight => GraphAppearance.RowHeight;   // user-configurable density
     private const double LaneWidth = 18;
     private const double NodeRadius = 8;
     private const double LaneThickness = 2.4;
@@ -69,15 +69,26 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             LocalizationService.Current.LanguageChanged += OnExternalInvalidate;
             ThemeService.ThemeChanged -= OnExternalInvalidate;
             ThemeService.ThemeChanged += OnExternalInvalidate;
+            GraphAppearance.Changed -= OnAppearanceChanged;
+            GraphAppearance.Changed += OnAppearanceChanged;
         };
         Unloaded += (_, _) =>
         {
             LocalizationService.Current.LanguageChanged -= OnExternalInvalidate;
             ThemeService.ThemeChanged -= OnExternalInvalidate;
+            GraphAppearance.Changed -= OnAppearanceChanged;
         };
     }
 
     private void OnExternalInvalidate(object? sender, EventArgs e) => InvalidateVisual();
+
+    // Row-height changes affect layout, so re-measure as well as repaint.
+    private void OnAppearanceChanged(object? sender, EventArgs e)
+    {
+        InvalidateMeasure();
+        InvalidateVisual();
+        ScrollOwner?.InvalidateScrollInfo();
+    }
 
     // ------------------------------------------------------------ dependency properties
 
@@ -268,6 +279,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             Color.FromArgb(0x00, accentColor.R, accentColor.G, accentColor.B),
             new Point(0, 0), new Point(1, 0));
         selOverlay.Freeze();
+        bool glowOn = GraphAppearance.Glow;
 
         double vh = _viewport.Height > 0 ? _viewport.Height : RenderSize.Height;
         double vw = _viewport.Width > 0 ? _viewport.Width : RenderSize.Width;
@@ -307,7 +319,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             foreach (var seg in row.GraphRow.PassingLanes)
             {
                 int ci = Mod(seg.ColorIndex);
-                var glow = _laneGlowPens[ci];
+                var glow = glowOn ? _laneGlowPens[ci] : null;
                 var pen = _lanePens[ci];
                 switch (seg.Kind)
                 {
@@ -315,7 +327,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
                         {
                             var a = new Point(LaneX(seg.FromLane), top);
                             var b = new Point(LaneX(seg.ToLane), bottom);
-                            dc.DrawLine(glow, a, b);
+                            if (glow is not null) dc.DrawLine(glow, a, b);
                             dc.DrawLine(pen, a, b);
                             break;
                         }
@@ -336,9 +348,12 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             var avBrush = AuthorAvatar.BrushFor(string.IsNullOrEmpty(row.Commit.AuthorEmail) ? row.AuthorName : row.Commit.AuthorEmail);
             var avColor = (avBrush as SolidColorBrush)?.Color ?? laneColor;
 
-            if (row.IsHead)
-                dc.DrawEllipse(headGlowBrush, null, center, NodeRadius + 6, NodeRadius + 6);
-            dc.DrawEllipse(GlowBrush(laneColor), null, center, NodeRadius + 4, NodeRadius + 4);   // luminous halo
+            if (glowOn)
+            {
+                if (row.IsHead)
+                    dc.DrawEllipse(headGlowBrush, null, center, NodeRadius + 6, NodeRadius + 6);
+                dc.DrawEllipse(GlowBrush(laneColor), null, center, NodeRadius + 4, NodeRadius + 4);   // luminous halo
+            }
 
             dc.DrawEllipse(NodeFill(avColor), nodeStroke, center, NodeRadius, NodeRadius);          // orb gradient
             dc.DrawEllipse(null, row.IsHead ? headRingPen : lanePen, center, NodeRadius, NodeRadius); // ring
@@ -429,13 +444,13 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         if (delW > 0) dc.DrawRoundedRectangle(red, null, new Rect(barX + addW, barY, delW, barH), 3, 3);
     }
 
-    private static void DrawConnector(DrawingContext dc, Pen glowPen, Pen mainPen, double x1, double y1, double x2, double y2)
+    private static void DrawConnector(DrawingContext dc, Pen? glowPen, Pen mainPen, double x1, double y1, double x2, double y2)
     {
         if (Math.Abs(x1 - x2) < 0.1)
         {
             var a = new Point(x1, y1);
             var b = new Point(x2, y2);
-            dc.DrawLine(glowPen, a, b);
+            if (glowPen is not null) dc.DrawLine(glowPen, a, b);
             dc.DrawLine(mainPen, a, b);
             return;
         }
@@ -447,7 +462,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             ctx.BezierTo(new Point(x1, midY), new Point(x2, midY), new Point(x2, y2), true, false);
         }
         geo.Freeze();
-        dc.DrawGeometry(null, glowPen, geo);
+        if (glowPen is not null) dc.DrawGeometry(null, glowPen, geo);
         dc.DrawGeometry(null, mainPen, geo);
     }
 

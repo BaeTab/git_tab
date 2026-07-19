@@ -42,6 +42,14 @@ public sealed partial class DiffViewModel : ObservableObject
     /// <summary>Unified-diff context lines to show; the "expand context" control raises this.</summary>
     [ObservableProperty] private int _contextLines = DefaultContext;
 
+    public DiffViewModel()
+    {
+        // Start each diff from the user's saved defaults (assign fields directly so no refetch fires).
+        _isSplit = Services.DiffDefaults.Split;
+        _ignoreWhitespace = Services.DiffDefaults.IgnoreWhitespace;
+        _contextLines = System.Math.Max(DefaultContext, Services.DiffDefaults.Context);
+    }
+
     public bool CanShrinkContext => ContextLines > DefaultContext;
 
     /// <summary>Set by the caller: re-produce the current file's diff honoring the current

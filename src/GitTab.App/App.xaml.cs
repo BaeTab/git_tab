@@ -121,7 +121,7 @@ public partial class App : Application
             // A repository path + verb was passed on the command line (shell action / drag-open).
             _ = window.Dispatcher.InvokeAsync(() => _ = mainVm.ExecuteShellCommandAsync(cmd.Verb, cmd.Path));
         }
-        else
+        else if (settings.Current.ReopenLastRepo)
         {
             // Otherwise reopen the most recently used repository so the app resumes where you left off.
             var toOpen = mainVm.RecentRepositories.FirstOrDefault(r => Directory.Exists(r.Path))?.Path;
