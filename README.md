@@ -28,6 +28,7 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Reword & Bisect** — Rewrite any commit's message, and binary-search for a bad commit (Good / Bad / Skip) right from the graph.
 - **Signing** — GPG/SSH-sign commits and tags, with a verified-signature badge in commit details.
 - **Power tools** — Worktrees, Git LFS, richer submodules, patch import/export, **line-level staging**, sparse checkout + blobless clone, and a saved-credentials manager — all in one overflow menu.
+- **Multiple repository tabs** — open several repos and switch between them; folder-grouped file lists, image diffs, clickable `#123`/URLs in messages, an ignore-whitespace toggle, and merged-branch pruning.
 - **History & Undo** — Browse HEAD's reflog and restore to any point; one-click "undo last action".
 - **Partial Staging** — Stage individual hunks of a file (the GUI equivalent of `git add -p`).
 - **Visual 3-Way Merge** — Resolve conflicts with base / ours / theirs panes and an editable result.
@@ -186,6 +187,7 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **메시지 수정(reword) & 이분 탐색(bisect)** — 커밋 메시지를 다시 쓰고, Good/Bad/Skip 으로 버그 커밋을 이분 탐색 — 그래프에서 바로.
 - **서명(signing)** — 커밋·태그를 GPG/SSH로 서명하고, 커밋 상세에 서명 확인 뱃지 표시.
 - **파워 도구** — 워크트리, Git LFS, 서브모듈 심화, 패치 내보내기/적용, **라인 단위 스테이징**, 스파스 체크아웃 + blobless 복제, 저장된 자격증명 관리 — 모두 오버플로(≡) 메뉴에.
+- **다중 저장소 탭** — 여러 저장소를 탭으로 열고 전환. 폴더별 파일 그룹, 이미지 diff, 커밋 메시지의 `#123`·URL 클릭, 공백 무시 토글, 병합된 브랜치 정리.
 - **작업 기록 & 되돌리기** — HEAD reflog를 훑어보고 원하는 지점으로 복원, 원클릭 ‘마지막 작업 취소’.
 - **부분 스테이징** — 파일의 헝크(변경 블록) 단위로 스테이지 (GUI판 `git add -p`).
 - **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결.

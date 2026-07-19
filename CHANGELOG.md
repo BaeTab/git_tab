@@ -3,6 +3,38 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-07-19
+
+UX & productivity (Tier 3).
+
+### Added
+- **Multiple repository tabs** — open several repositories and switch between them from a tab
+  strip; open/clone lands in a new tab, Ctrl+Tab / Ctrl+Shift+Tab cycle, Ctrl+W closes.
+- **Folder-grouped changed files** — a commit's changed files are grouped by folder for easy
+  browsing.
+- **Image diff** — image files (png/jpg/gif/…) show a before/after comparison instead of a text diff.
+- **Clickable links in commit messages** — `#123` (resolved against the GitHub/GitLab remote) and
+  URLs open in the browser.
+- **Ignore-whitespace diff** — a toggle re-renders the diff with whitespace changes ignored
+  (`git diff -w`).
+- **Prune merged branches** — one click deletes local branches already merged into the current
+  branch (keeps main/master/develop).
+- **More keyboard shortcuts** — Ctrl+N (new repo), Ctrl+F (focus search), Ctrl+W (close tab),
+  Ctrl+Tab / Ctrl+Shift+Tab (switch tabs), F7 (fetch).
+
+### Fixed
+- **Responsive toolbar** — on a narrow window the toolbar now wraps its actions onto a second row
+  instead of clipping the buttons (and it never shows a horizontal scrollbar). The language/theme/
+  update/settings controls stay pinned on the right.
+- **Split diff scroll** — scrolling one pane no longer makes the other stutter: vertical sync now
+  defers its re-entrancy reset past the layout pass so a self-induced scroll can't bounce back, and
+  horizontal scrolling is left independent per pane (the two sides no longer fight over line length).
+- The commit-type combo box is now themed to match light/dark (it previously used the default WPF style).
+
+### Engineering
+- Regression suite grown to 125 tests. (Note: multi-repo tabs use per-tab reopen on the existing
+  view-model; the fuller app-shell/session view-model split remains roadmapped in TODO.md.)
+
 ## [1.2.0] - 2026-07-19
 
 A large power-user batch, plus toolbar and theming polish.

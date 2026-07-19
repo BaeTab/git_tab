@@ -26,19 +26,19 @@ Graph search/filter, diff syntax highlighting, commit/tag signing + verify badge
 management UI, worktrees, Git LFS, deeper submodules, patch import/export, line-level staging,
 richer stash (diff preview + stash-to-branch), sparse-checkout, and blobless partial clone.
 
-## Roadmap — planned (Tier 3/4/5)
+## Shipped in 1.3.0 (Tier 3)
+
+Multi-repository tabs, folder-grouped changed files, image diff, clickable `#123`/URL links in
+commit messages, ignore-whitespace diff toggle, merged-branch pruning (local/remote grouping and
+ahead/behind badges were already present), and more keyboard shortcuts. **Follow-up known work:** the
+tabs use a per-tab reopen on the existing view-model; the fuller app-shell / `RepositorySessionViewModel`
+split (P0.1) is still worth doing to give each tab fully independent live state. Also deferred from
+Tier 3: a true nested folder *tree* (current grouping is one level of folder headers), diff
+moved-code detection, and customizable keybindings.
+
+## Roadmap — planned (Tier 4/5)
 
 The following are captured for later:
-
-### Tier 3 — UX / productivity
-- Working-changes **folder tree view** (directory tree instead of a flat file list).
-- **Branch management panel** — local/remote/folder-style grouping, sorting, stale-branch cleanup,
-  per-branch ahead/behind badges.
-- **Image diff** (before/after side-by-side, slider).
-- **Commit-message link detection** — `#123` / URLs become clickable (open issue/PR in browser).
-- **Multi-repository tabs / workspace** — work on several repos at once.
-- **Diff options** — ignore-whitespace toggle, moved-code detection.
-- **Keyboard workflow** — customizable shortcuts, j/k graph navigation.
 
 ### Tier 4 — integration
 - **Deeper GitHub/GitLab API** — PR/issue list + status, CI badges, review comments in-app

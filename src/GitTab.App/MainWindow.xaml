@@ -74,13 +74,13 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Primary actions stay as buttons; everything secondary collapses into a single
-                     overflow menu so the toolbar never needs to scroll horizontally. -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <!-- Primary + network + search live in a WrapPanel so that on a narrow window they
+                     wrap to a second row instead of being clipped; secondary/management actions are
+                     already folded into the overflow (≡) menu. The right-hand controls stay pinned. -->
+                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
                     <Button Style="{StaticResource AccentButton}" Command="{Binding OpenRepositoryCommand}"
                             ToolTip="{loc:Tr Action.Open.Tip}">
                         <StackPanel Orientation="Horizontal">
@@ -159,8 +159,8 @@
                     </Menu>
                 </StackPanel>
 
-                <!-- remote actions (always visible) -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0"
+                <!-- remote actions -->
+                <StackPanel Orientation="Horizontal" Margin="4,0"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                     <Border Style="{StaticResource ToolbarSeparator}"/>
                     <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="7" Padding="9,3" Margin="4,0"
@@ -190,7 +190,7 @@
                 </StackPanel>
 
                 <!-- search -->
-                <Grid Grid.Column="2" Width="220" Margin="8,0" VerticalAlignment="Center"
+                <Grid Width="220" Margin="8,0" VerticalAlignment="Center"
                       Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                     <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
                              ToolTip="{loc:Tr Search.Tip}"/>
@@ -198,9 +198,10 @@
                                Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False"
                                Visibility="{Binding SearchText, Converter={StaticResource HasValue2Vis}, ConverterParameter=invert}"/>
                 </Grid>
+                </WrapPanel>
 
-                <!-- language / theme / update / settings (always visible) -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                <!-- language / theme / update / settings (always visible, pinned right) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Style="{StaticResource ToolbarSeparator}"/>
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleLanguageCommand}"
                             Content="한 / EN" ToolTip="{loc:Tr Language}"/>
