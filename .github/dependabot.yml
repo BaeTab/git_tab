@@ -8,6 +8,15 @@ updates:
     groups:
       dotnet:
         patterns: ["*"]
+    ignore:
+      # FluentAssertions 8+ is under a paid commercial license; this project is OSS-only,
+      # so we stay pinned on the last MIT-licensed line (6.x).
+      - dependency-name: "FluentAssertions"
+        update-types: ["version-update:semver-major"]
+      # The app targets net8.0 — keep the Microsoft.Extensions.* stack on the 8.x line
+      # instead of jumping to 9/10 packages.
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
