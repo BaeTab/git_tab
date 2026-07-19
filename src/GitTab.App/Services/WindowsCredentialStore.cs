@@ -13,6 +13,9 @@ public interface ICredentialStore
 
     /// <summary>Remove stored credentials for <paramref name="target"/> (no-op if absent).</summary>
     void Delete(string target);
+
+    /// <summary>List the target names of every credential Git Tab has stored (see <see cref="CredentialKey.Prefix"/>).</summary>
+    IReadOnlyList<string> List();
 }
 
 /// <summary>
@@ -76,6 +79,29 @@ public sealed class WindowsCredentialStore : ICredentialStore
 
     public void Delete(string target) => CredDelete(target, CRED_TYPE_GENERIC, 0);
 
+    public IReadOnlyList<string> List()
+    {
+        // CredEnumerate fails with ERROR_NOT_FOUND (1168) when nothing matches the filter — that's
+        // an empty vault, not an error, so any failure here just means "no stored credentials".
+        if (!CredEnumerate($"{CredentialKey.Prefix}*", 0, out var count, out var credentials))
+            return Array.Empty<string>();
+        try
+        {
+            var targets = new List<string>(count);
+            for (var i = 0; i < count; i++)
+            {
+                var credPtr = Marshal.ReadIntPtr(credentials, i * IntPtr.Size);
+                var cred = Marshal.PtrToStructure<CREDENTIAL>(credPtr);
+                if (cred.TargetName is not null) targets.Add(cred.TargetName);
+            }
+            return targets;
+        }
+        finally
+        {
+            CredFree(credentials);
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct CREDENTIAL
     {
@@ -101,6 +127,9 @@ public sealed class WindowsCredentialStore : ICredentialStore
 
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "CredDeleteW")]
     private static extern bool CredDelete(string target, int type, int flags);
+
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "CredEnumerateW")]
+    private static extern bool CredEnumerate(string filter, int flags, out int count, out IntPtr credentials);
 
     [DllImport("advapi32.dll")]
     private static extern void CredFree(IntPtr cred);

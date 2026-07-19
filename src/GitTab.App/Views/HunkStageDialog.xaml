@@ -40,14 +40,31 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding HunkHeader}" FontFamily="Consolas"
                                                    Foreground="{DynamicResource Brush.TextMuted}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="1" Content="{loc:Tr WC.StagePartial.StageHunk}" Style="{StaticResource AccentButton}" Padding="10,3"
-                                                Command="{Binding DataContext.StageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                CommandParameter="{Binding}"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <Button Content="{loc:Tr HunkStage.StageLines}" Padding="10,3" Margin="0,0,6,0"
+                                                    Command="{Binding DataContext.StageLinesCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                            <Button Content="{loc:Tr WC.StagePartial.StageHunk}" Style="{StaticResource AccentButton}" Padding="10,3"
+                                                    Command="{Binding DataContext.StageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </StackPanel>
                                     </Grid>
-                                    <TextBox Grid.Row="1" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" BorderThickness="0"
-                                             Background="Transparent" Foreground="{DynamicResource Brush.Text}"
-                                             FontFamily="Consolas" FontSize="12" TextWrapping="NoWrap"
-                                             HorizontalScrollBarVisibility="Auto"/>
+                                    <ItemsControl Grid.Row="1" ItemsSource="{Binding Lines}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="20"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center"
+                                                              Visibility="{Binding IsChange, Converter={StaticResource Bool2Vis}}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text}" FontFamily="Consolas" FontSize="12"
+                                                               Foreground="{DynamicResource Brush.Text}" TextWrapping="NoWrap"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </Grid>
                             </Border>
                         </DataTemplate>

@@ -70,11 +70,9 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Management actions scroll horizontally when the window is narrow, so the network
-                     actions and the right-hand controls stay visible. -->
-                <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <!-- open / recent / refresh -->
-                <StackPanel Orientation="Horizontal">
+                <!-- Primary actions stay as buttons; everything secondary collapses into a single
+                     overflow menu so the toolbar never needs to scroll horizontally. -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <Button Style="{StaticResource AccentButton}" Command="{Binding OpenRepositoryCommand}"
                             ToolTip="{loc:Tr Action.Open.Tip}">
                         <StackPanel Orientation="Horizontal">
@@ -124,29 +122,34 @@
                     <Button Style="{StaticResource ToolButton}" Command="{Binding RefreshCommand}"
                             Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"
                             AutomationProperties.Name="{loc:Tr Action.Refresh}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding OpenReflogCommand}"
-                            Content="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Reflog.Tip}"
-                            AutomationProperties.Name="{loc:Tr Reflog.Title}"
-                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding CompareCommand}"
-                            Content="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Compare.Tip}"
-                            AutomationProperties.Name="{loc:Tr Compare.Title}"
-                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding ContentSearchCommand}"
-                            Content="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Search.Content.Tip}"
-                            AutomationProperties.Name="{loc:Tr Search.Content}"
-                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding ManageRemotesCommand}"
-                            Content="{loc:Tr Remote.Button}" ToolTip="{loc:Tr Remote.Tip}"
-                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding GenerateGitignoreCommand}"
-                            Content="{loc:Tr Gitignore.Button}" ToolTip="{loc:Tr Gitignore.Tip}"
-                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"/>
-                    <Button Style="{StaticResource ToolButton}" Command="{Binding SubmoduleUpdateCommand}"
-                            Content="{loc:Tr Submodule.Update}" ToolTip="{loc:Tr Submodule.Update.Tip}"
-                            Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
+
+                    <!-- Overflow menu: every secondary/management action, so the toolbar never scrolls. -->
+                    <Menu Background="Transparent" VerticalAlignment="Center" Margin="2,0"
+                          Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
+                        <MenuItem Foreground="{DynamicResource Brush.Text}" ToolTip="{loc:Tr Menu.Tools.Tip}"
+                                  AutomationProperties.Name="{loc:Tr Menu.Tools}">
+                            <MenuItem.Header>
+                                <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                            </MenuItem.Header>
+                            <MenuItem Header="{loc:Tr Reflog.Title}" Command="{Binding OpenReflogCommand}"/>
+                            <MenuItem Header="{loc:Tr Compare.Title}" Command="{Binding CompareCommand}"/>
+                            <MenuItem Header="{loc:Tr Search.Content}" Command="{Binding ContentSearchCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="{loc:Tr Remote.Manage}" Command="{Binding ManageRemotesCommand}"/>
+                            <MenuItem Header="{loc:Tr Gitignore.Title}" Command="{Binding GenerateGitignoreCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="{loc:Tr Menu.Worktrees}" Command="{Binding ManageWorktreesCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Lfs}" Command="{Binding ManageLfsCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Submodules}" Command="{Binding ManageSubmodulesCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Sparse}" Command="{Binding ManageSparseCheckoutCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="{loc:Tr Patch.Apply}" Command="{Binding ApplyPatchCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Credentials}" Command="{Binding ManageCredentialsCommand}"/>
+                            <MenuItem Header="{loc:Tr Submodule.Update}" Command="{Binding SubmoduleUpdateCommand}"
+                                      Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
+                        </MenuItem>
+                    </Menu>
                 </StackPanel>
-                </ScrollViewer>
 
                 <!-- remote actions (always visible) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0"
@@ -375,6 +378,8 @@
                                          ToolTip="{loc:Tr WC.Commit.Tip}"/>
                                 <CheckBox Content="{loc:Tr WC.Amend}" IsChecked="{Binding Amend}" Margin="0,8,0,0"
                                           Foreground="{DynamicResource Brush.Text}" ToolTip="{loc:Tr WC.Amend.Tip}"/>
+                                <CheckBox Content="{loc:Tr Commit.Sign}" IsChecked="{Binding Sign}" Margin="0,4,0,0"
+                                          Foreground="{DynamicResource Brush.Text}"/>
                                 <Button HorizontalAlignment="Stretch" Style="{StaticResource AccentButton}" Margin="0,8,0,0"
                                         Content="{loc:Tr WC.Commit}" Command="{Binding CommitCommand}"
                                         ToolTip="{loc:Tr WC.Commit.Tip}"/>
@@ -521,6 +526,13 @@
                                                         <MenuItem Header="{loc:Tr Stash.Drop}"
                                                                   Command="{Binding PlacementTarget.Tag.StashDropCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="{loc:Tr Ctx.StashDiff}"
+                                                                  Command="{Binding PlacementTarget.Tag.StashDiffCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr Ctx.StashToBranch}"
+                                                                  Command="{Binding PlacementTarget.Tag.StashToBranchCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     </ContextMenu>
                                                 </Grid.ContextMenu>
                                                 <TextBlock Text="{Binding Message}" TextTrimming="CharacterEllipsis"/>
@@ -578,6 +590,7 @@
                                     <MenuItem Header="{loc:Tr Ctx.Revert}" Command="{Binding RevertCommitCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.CherryPick}" Command="{Binding CherryPickCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.InteractiveRebase}" Command="{Binding InteractiveRebaseCommand}"/>
+                                    <MenuItem Header="{loc:Tr Ctx.ExportPatch}" Command="{Binding ExportPatchCommand}"/>
                                     <Separator/>
                                     <MenuItem Header="{loc:Tr Ctx.ResetSoft}" Command="{Binding ResetSoftCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.ResetMixed}" Command="{Binding ResetMixedCommand}"/>
@@ -641,6 +654,16 @@
                                 <TextBlock Text="{Binding AuthorName}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <TextBlock Text="{Binding DateText}" Style="{StaticResource MutedText}" FontSize="11"/>
+                            <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                                    BorderThickness="1" CornerRadius="9" Padding="8,2" Margin="0,6,0,0" HorizontalAlignment="Left"
+                                    Visibility="{Binding HasSignature, Converter={StaticResource Bool2Vis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.Success}" Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding SignatureText}" FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.Text}"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <TextBlock Grid.Row="1" Text="{loc:Tr Details.ChangedFiles}" Style="{StaticResource SectionHeader}"/>

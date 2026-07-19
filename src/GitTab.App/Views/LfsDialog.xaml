@@ -1,0 +1,73 @@
+<Window x:Class="GitTab.App.Views.LfsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GitTab.App.Localization"
+        Title="{loc:Tr Lfs.Manage}"
+        Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
+        Width="560" Height="440" MinWidth="440" MinHeight="320"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window}"
+        FontFamily="Segoe UI" FontSize="13">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="{loc:Tr Lfs.Manage}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
+            <TextBlock Text="{loc:Tr Lfs.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <TextBlock Text="{loc:Tr Lfs.NotAvailable}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       Visibility="{Binding Available, Converter={StaticResource Bool2Vis}, ConverterParameter=invert}"/>
+
+            <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                    BorderThickness="1" CornerRadius="6"
+                    Visibility="{Binding Available, Converter={StaticResource Bool2Vis}}">
+                <ListBox ItemsSource="{Binding Patterns}" Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="4,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+                                <Button Grid.Column="1" Content="{loc:Tr Common.Delete}" Padding="8,3"
+                                        Command="{Binding DataContext.UntrackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0"
+                    Visibility="{Binding Available, Converter={StaticResource Bool2Vis}}">
+            <TextBlock Text="{loc:Tr Lfs.TrackedFiles}" Style="{StaticResource MutedText}"/>
+            <TextBlock Text="{Binding TrackedFileCount}" Style="{StaticResource MutedText}" Margin="4,0,0,0"/>
+        </StackPanel>
+
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Style="{StaticResource AccentButton}" MinWidth="110" Margin="0,0,8,0"
+                        Content="{loc:Tr Lfs.Track}" Command="{Binding TrackCommand}"/>
+                <Button MinWidth="110" Content="{loc:Tr Lfs.Pull}" Command="{Binding PullCommand}"/>
+            </StackPanel>
+            <Button Grid.Column="2" Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True" MinWidth="88"/>
+        </Grid>
+    </Grid>
+</Window>

@@ -29,6 +29,11 @@ public sealed partial class CloneViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(TargetPath))]
     private string _folderName = string.Empty;
 
+    /// <summary>Partial (blobless) clone — <c>--filter=blob:none</c>; fetches file contents on demand.
+    /// Much faster/smaller for large repositories.</summary>
+    [ObservableProperty]
+    private bool _blobless;
+
     /// <summary>The full destination path (parent folder + folder name), or empty if incomplete.</summary>
     public string TargetPath =>
         string.IsNullOrWhiteSpace(ParentFolder) || string.IsNullOrWhiteSpace(FolderName)

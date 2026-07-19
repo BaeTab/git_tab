@@ -15,6 +15,14 @@ public sealed record CredentialInput(string User, string Secret);
 public interface IDialogService
 {
     string? PickFolder(string? title = null);
+
+    /// <summary>Save-file picker; returns the chosen path or null. <paramref name="ext"/> is the
+    /// default extension without a dot (e.g. "patch").</summary>
+    string? SaveFile(string title, string suggestedName, string ext);
+
+    /// <summary>Open-file picker; returns the chosen path or null.</summary>
+    string? OpenFile(string title, string ext);
+
     void Info(string message, string? title = null);
     void Error(string message, string? title = null);
     bool Confirm(string message, string? title = null);
@@ -37,6 +45,24 @@ public interface IDialogService
 
     /// <summary>Show the remotes manager dialog.</summary>
     void ShowRemotes(RemotesViewModel vm);
+
+    /// <summary>Show the worktree manager dialog.</summary>
+    void ShowWorktree(WorktreeViewModel vm);
+
+    /// <summary>Show the Git LFS manager dialog.</summary>
+    void ShowLfs(LfsViewModel vm);
+
+    /// <summary>Show the submodule manager dialog.</summary>
+    void ShowSubmodule(SubmoduleViewModel vm);
+
+    /// <summary>Show the sparse-checkout manager dialog.</summary>
+    void ShowSparseCheckout(SparseCheckoutViewModel vm);
+
+    /// <summary>Show the saved-credentials manager dialog.</summary>
+    void ShowCredentials(CredentialsViewModel vm);
+
+    /// <summary>Show a read-only text viewer (e.g. a stash diff).</summary>
+    void ShowText(string title, string content);
 
     /// <summary>Show the reflog "history &amp; undo" dialog.</summary>
     void ShowReflog(ReflogViewModel vm);
@@ -119,6 +145,30 @@ public sealed class DialogService : IDialogService
         return dlg.ShowDialog() == true ? dlg.FolderName : null;
     }
 
+    public string? SaveFile(string title, string suggestedName, string ext)
+    {
+        var dlg = new SaveFileDialog
+        {
+            Title = title,
+            FileName = suggestedName,
+            DefaultExt = "." + ext,
+            Filter = $"{ext.ToUpperInvariant()} (*.{ext})|*.{ext}|All files (*.*)|*.*"
+        };
+        return dlg.ShowDialog() == true ? dlg.FileName : null;
+    }
+
+    public string? OpenFile(string title, string ext)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = title,
+            DefaultExt = "." + ext,
+            Filter = $"{ext.ToUpperInvariant()} (*.{ext})|*.{ext}|All files (*.*)|*.*",
+            Multiselect = false
+        };
+        return dlg.ShowDialog() == true ? dlg.FileName : null;
+    }
+
     public void Info(string message, string? title = null) =>
         MessageBox.Show(Owner(), message, title ?? _loc.T("Common.Success"),
             MessageBoxButton.OK, MessageBoxImage.Information);
@@ -189,6 +239,64 @@ public sealed class DialogService : IDialogService
     public void ShowRemotes(RemotesViewModel vm)
     {
         var win = new RemotesDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowWorktree(WorktreeViewModel vm)
+    {
+        var win = new WorktreeDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowLfs(LfsViewModel vm)
+    {
+        var win = new LfsDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowSubmodule(SubmoduleViewModel vm)
+    {
+        var win = new SubmoduleDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowSparseCheckout(SparseCheckoutViewModel vm)
+    {
+        var win = new SparseCheckoutDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowCredentials(CredentialsViewModel vm)
+    {
+        var win = new CredentialsDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowText(string title, string content)
+    {
+        var box = new TextBox
+        {
+            Text = content,
+            IsReadOnly = true,
+            IsReadOnlyCaretVisible = true,
+            FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+            FontSize = 12.5,
+            TextWrapping = TextWrapping.NoWrap,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            BorderThickness = new Thickness(0)
+        };
+        var win = new Window
+        {
+            Title = title,
+            Width = 760,
+            Height = 520,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Owner(),
+            ShowInTaskbar = false,
+            Background = (System.Windows.Media.Brush)Application.Current.Resources["Brush.Window"],
+            Content = box
+        };
         win.ShowDialog();
     }
 

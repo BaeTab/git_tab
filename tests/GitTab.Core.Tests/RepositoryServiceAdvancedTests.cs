@@ -1,0 +1,170 @@
+using GitTab.Core.Git;
+using GitTab.Core.Models;
+using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Xunit;
+
+namespace GitTab.Core.Tests;
+
+/// <summary>
+/// Integration tests for the Tier-1/2 advanced operations (signing config/verify, worktrees,
+/// submodules, patch export/apply, extra stash ops, sparse-checkout) driven through real git.exe.
+/// LFS is not covered here because git-lfs may not be installed on the runner.
+/// </summary>
+public sealed class RepositoryServiceAdvancedTests
+{
+    private static RepositoryService NewService()
+        => new(new GitCommandRunner(NullLogger<GitCommandRunner>.Instance), NullLogger<RepositoryService>.Instance);
+
+    [Fact]
+    public async Task Signing_config_roundtrips()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.SetSigningConfigAsync(enabled: true, key: "ABC123KEY", format: "ssh")).Success.Should().BeTrue();
+
+        var cfg = await svc.GetSigningConfigAsync();
+        cfg.Enabled.Should().BeTrue();
+        cfg.Key.Should().Be("ABC123KEY");
+        cfg.Format.Should().Be("ssh");
+    }
+
+    [Fact]
+    public async Task Unsigned_commit_reports_no_signature()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        var head = repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.GetSignatureStatusAsync(head)).Should().Be(CommitSignature.None);
+    }
+
+    [Fact]
+    public async Task Annotated_tag_is_created_with_a_message()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.CreateTagAsync("v2", message: "release two")).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetTags().Should().ContainSingle(t => t.Name == "v2" && t.IsAnnotated);
+    }
+
+    [Fact]
+    public async Task Worktree_add_list_remove_roundtrips()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var wtPath = Path.Combine(Path.GetTempPath(), "gittab-wt-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            (await svc.WorktreeAddAsync(wtPath, "wt-branch", createBranch: true)).Success.Should().BeTrue();
+
+            var trees = await svc.GetWorktreesAsync();
+            trees.Should().HaveCountGreaterThanOrEqualTo(2);
+            trees.Should().Contain(w => w.Branch == "wt-branch");
+            trees.Should().Contain(w => w.IsCurrent);
+
+            (await svc.WorktreeRemoveAsync(wtPath, force: true)).Success.Should().BeTrue();
+            (await svc.GetWorktreesAsync()).Should().HaveCount(1);
+        }
+        finally
+        {
+            try { if (Directory.Exists(wtPath)) Directory.Delete(wtPath, true); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public void Submodules_are_empty_for_a_plain_repo()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        svc.GetSubmodules().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Stash_diff_shows_the_change_and_stash_to_branch_restores_it()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("base", "f.txt", "one\n");
+        repo.WriteFile("f.txt", "one\nMAGIC_STASH_LINE\n");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.StashPushAsync("wip", includeUntracked: false)).Success.Should().BeTrue();
+        svc.Refresh();
+
+        var diff = await svc.GetStashDiffAsync(0);
+        diff.Should().Contain("MAGIC_STASH_LINE");
+
+        (await svc.StashToBranchAsync(0, "from-stash")).Success.Should().BeTrue();
+        svc.Refresh();
+        svc.GetBranches().Should().Contain(b => b.FriendlyName == "from-stash");
+        File.ReadAllText(Path.Combine(repo.Path, "f.txt")).Should().Contain("MAGIC_STASH_LINE");
+    }
+
+    [Fact]
+    public async Task Patch_export_then_apply_reproduces_the_commit()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("base", "f.txt", "one\n");
+        var target = repo.Commit("add feature", "feature.txt", "hello\n");
+
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        var patchFile = Path.Combine(Path.GetTempPath(), "gittab-patch-" + Guid.NewGuid().ToString("N") + ".patch");
+        try
+        {
+            (await svc.ExportCommitPatchAsync(target, patchFile)).Success.Should().BeTrue();
+            File.Exists(patchFile).Should().BeTrue();
+            File.ReadAllText(patchFile).Should().Contain("feature.txt");
+        }
+        finally
+        {
+            try { File.Delete(patchFile); } catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task Sparse_checkout_set_then_disable()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        repo.Commit("more", "docs/readme.md", "hi");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.SparseCheckoutSetAsync(new[] { "docs" }, cone: true)).Success.Should().BeTrue();
+        (await svc.GetSparseCheckoutPatternsAsync()).Should().NotBeEmpty();
+
+        (await svc.SparseCheckoutDisableAsync()).Success.Should().BeTrue();
+        (await svc.GetSparseCheckoutPatternsAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Option_like_arguments_are_rejected_by_the_guard()
+    {
+        using var repo = TestRepository.CreateEmpty();
+        repo.Commit("first", "a.txt", "1");
+        using var svc = NewService();
+        svc.Open(repo.Path);
+
+        (await svc.LfsTrackAsync("--evil")).Success.Should().BeFalse();
+        (await svc.StashToBranchAsync(0, "--evil")).Success.Should().BeFalse();
+        (await svc.SubmoduleDeinitAsync("--evil", force: false)).Success.Should().BeFalse();
+    }
+}

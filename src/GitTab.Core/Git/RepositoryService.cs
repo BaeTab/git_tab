@@ -12,7 +12,7 @@ namespace GitTab.Core.Git;
 /// <see cref="IGitCommandRunner"/>. Repository access is serialized by <see cref="_sync"/>
 /// because LibGit2Sharp's <see cref="Repository"/> is not thread-safe.
 /// </summary>
-public sealed class RepositoryService : IRepositoryService
+public sealed partial class RepositoryService : IRepositoryService
 {
     private readonly IGitCommandRunner _git;
     private readonly ILogger<RepositoryService> _logger;
@@ -680,10 +680,11 @@ public sealed class RepositoryService : IRepositoryService
         return await Run(new[] { "clean", "-f", "--", path }, ct).ConfigureAwait(false);
     }
 
-    public Task<GitResult> CommitAsync(string message, bool amend = false, CancellationToken ct = default)
+    public Task<GitResult> CommitAsync(string message, bool amend = false, bool sign = false, CancellationToken ct = default)
     {
         var args = new List<string> { "commit", "-m", message };
         if (amend) args.Add("--amend");
+        if (sign) args.Add("-S");
         return Run(args, ct);
     }
 
@@ -828,23 +829,31 @@ public sealed class RepositoryService : IRepositoryService
         return await _git.RunAsync(path, args, cancellationToken: ct).ConfigureAwait(false);
     }
 
-    public async Task<GitResult> CloneAsync(string url, string targetPath, CancellationToken ct = default)
+    public async Task<GitResult> CloneAsync(string url, string targetPath, bool blobless = false, CancellationToken ct = default)
     {
         if (Guard(url) is { } bad) return bad;
         var parent = Path.GetDirectoryName(targetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
+        var args = new List<string> { "clone", "--progress" };
+        if (blobless) args.Add("--filter=blob:none");   // partial clone — fetch blobs on demand
+        args.Add(url);
+        args.Add(targetPath);
         // No repo is open yet; run in the parent dir and clone into the (absolute) target path.
-        return await _git.RunAsync(parent ?? Environment.CurrentDirectory,
-            new[] { "clone", "--progress", url, targetPath }, cancellationToken: ct).ConfigureAwait(false);
+        return await _git.RunAsync(parent ?? Environment.CurrentDirectory, args, cancellationToken: ct).ConfigureAwait(false);
     }
 
     // ---- stash ----
 
-    public Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default)
+    public Task<GitResult> StashPushAsync(string? message, bool includeUntracked, IReadOnlyList<string>? paths = null, CancellationToken ct = default)
     {
         var args = new List<string> { "stash", "push" };
         if (includeUntracked) args.Add("-u");
         if (!string.IsNullOrWhiteSpace(message)) { args.Add("-m"); args.Add(message); }
+        if (paths is { Count: > 0 })
+        {
+            args.Add("--");
+            foreach (var p in paths) args.Add(p);
+        }
         return Run(args, ct);
     }
 
@@ -903,11 +912,16 @@ public sealed class RepositoryService : IRepositoryService
         => Guard(remote, branch) is { } bad ? Task.FromResult(bad)
            : Run(new[] { "push", remote, "--delete", branch }, ct);
 
-    public Task<GitResult> CreateTagAsync(string name, string? target = null, CancellationToken ct = default)
+    public Task<GitResult> CreateTagAsync(string name, string? target = null, string? message = null, bool sign = false, CancellationToken ct = default)
     {
         if (Guard(name) is { } bad) return Task.FromResult(bad);
         if (!string.IsNullOrWhiteSpace(target) && Guard(target) is { } badTarget) return Task.FromResult(badTarget);
-        var args = new List<string> { "tag", name };
+        var args = new List<string> { "tag" };
+        bool annotated = sign || !string.IsNullOrWhiteSpace(message);
+        if (sign) args.Add("-s");
+        else if (annotated) args.Add("-a");
+        args.Add(name);
+        if (annotated) { args.Add("-m"); args.Add(string.IsNullOrWhiteSpace(message) ? name : message!); }
         if (!string.IsNullOrWhiteSpace(target)) args.Add(target);
         return Run(args, ct);
     }

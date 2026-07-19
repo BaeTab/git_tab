@@ -192,6 +192,7 @@ public sealed partial class MainViewModel : ObservableObject
         var url = vm.Url.Trim();
         var target = vm.TargetPath;
         if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(target)) return;
+        _cloneBlobless = vm.Blobless;
 
         using var cts = new CancellationTokenSource();
         _networkCts = cts;
@@ -223,7 +224,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            var result = await _repo.CloneAsync(url, target, ct);
+            var result = await _repo.CloneAsync(url, target, _cloneBlobless, ct);
             if (result.Success || !GitAuth.IsAuthFailure(result)) return result;
 
             var input = _dialogs.PromptCredentials(CredentialKey.HostLabel(url));
@@ -234,7 +235,7 @@ public sealed partial class MainViewModel : ObservableObject
                 try { _credentials.Save(key, input.User, input.Secret); }
                 catch (Exception ex) { _logger.LogWarning(ex, "Saving credentials failed"); }
             }
-            return await _repo.CloneAsync(url, target, ct);
+            return await _repo.CloneAsync(url, target, _cloneBlobless, ct);
         }
         catch (OperationCanceledException) { return null; }
         catch (Exception ex)
@@ -252,6 +253,70 @@ public sealed partial class MainViewModel : ObservableObject
         var vm = new RemotesViewModel(_repo, _dialogs, Loc, _logger);
         _dialogs.ShowRemotes(vm);
         if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task ManageWorktrees()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new WorktreeViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowWorktree(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task ManageLfs()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new LfsViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowLfs(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task ManageSubmodules()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new SubmoduleViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowSubmodule(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private async Task ManageSparseCheckout()
+    {
+        if (!IsRepositoryOpen) return;
+        var vm = new SparseCheckoutViewModel(_repo, _dialogs, Loc, _logger);
+        _dialogs.ShowSparseCheckout(vm);
+        if (vm.Changed) await ReloadAllAsync();
+    }
+
+    [RelayCommand]
+    private void ManageCredentials()
+    {
+        var vm = new CredentialsViewModel(_credentials, _dialogs, Loc, _logger);
+        _dialogs.ShowCredentials(vm);
+    }
+
+    [RelayCommand]
+    private async Task ExportPatch()
+    {
+        if (!IsRepositoryOpen || SelectedCommit is null) return;
+        var path = _dialogs.SaveFile(Loc.T("Patch.ExportTitle"), $"{SelectedCommit.ShortSha}.patch", "patch");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if (await GitUi.RunAsync(() => _repo.ExportCommitPatchAsync(SelectedCommit.Sha, path!), _dialogs, Loc, _logger))
+            _dialogs.Info(path!, Loc.T("Patch.ExportTitle"));
+    }
+
+    [RelayCommand]
+    private async Task ApplyPatch()
+    {
+        if (!IsRepositoryOpen) return;
+        var path = _dialogs.OpenFile(Loc.T("Patch.ApplyTitle"), "patch");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        var asCommits = _dialogs.Confirm(Loc.T("Patch.AsCommits"), Loc.T("Patch.ApplyTitle"));
+        if (await GitUi.RunAsync(() => _repo.ApplyPatchAsync(path!, asCommits), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
     }
 
     [RelayCommand]
@@ -508,6 +573,7 @@ public sealed partial class MainViewModel : ObservableObject
     });
 
     private CancellationTokenSource? _networkCts;
+    private bool _cloneBlobless;
 
     [ObservableProperty] private bool _canCancelNetwork;
 
@@ -706,6 +772,28 @@ public sealed partial class MainViewModel : ObservableObject
             await ReloadAllAsync();
     }
 
+    [RelayCommand]
+    private async Task StashDiff(StashInfo? stash)
+    {
+        if (stash is null) return;
+        try
+        {
+            var diff = await _repo.GetStashDiffAsync(stash.Index);
+            _dialogs.ShowText(Loc.T("Stash.DiffTitle"), string.IsNullOrWhiteSpace(diff) ? "(empty)" : diff);
+        }
+        catch (Exception ex) { _dialogs.Error(ex.Message, Loc.T("Common.Error")); }
+    }
+
+    [RelayCommand]
+    private async Task StashToBranch(StashInfo? stash)
+    {
+        if (stash is null) return;
+        var branch = _dialogs.Prompt(Loc.T("Stash.ToBranchPrompt"), Loc.T("Ctx.StashToBranch"));
+        if (string.IsNullOrWhiteSpace(branch)) return;
+        if (await GitUi.RunAsync(() => _repo.StashToBranchAsync(stash.Index, branch.Trim()), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
     [RelayCommand] private Task SubmoduleUpdate() => RunNetworkAsync(ct => _repo.SubmoduleUpdateAsync(ct));
 
     [RelayCommand]
@@ -881,10 +969,16 @@ public sealed partial class MainViewModel : ObservableObject
                 P("Action.Push", PushCommand),
                 P("Reflog.Title", OpenReflogCommand),
                 P("Remote.Manage", ManageRemotesCommand),
+                P("Worktree.Manage", ManageWorktreesCommand),
+                P("Lfs.Manage", ManageLfsCommand),
+                P("Submodule.Manage", ManageSubmodulesCommand),
+                P("Sparse.Manage", ManageSparseCheckoutCommand),
+                P("Cred.Manage", ManageCredentialsCommand),
                 P("Hosting.PR", CreatePullRequestCommand),
                 P("Hosting.Web", OpenRemoteWebCommand),
                 P("Gitignore.Title", GenerateGitignoreCommand),
                 P("Stash.Push", StashPushCommand),
+                P("Patch.Apply", ApplyPatchCommand),
                 P("Compare.Title", CompareCommand),
                 P("Search.Content", ContentSearchCommand),
             });

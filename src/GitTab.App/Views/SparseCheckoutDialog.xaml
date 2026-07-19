@@ -1,0 +1,62 @@
+<Window x:Class="GitTab.App.Views.SparseCheckoutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GitTab.App.Localization"
+        Title="{loc:Tr Sparse.Manage}"
+        Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
+        Width="560" Height="440" MinWidth="460" MinHeight="320"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Brush.Window}"
+        FontFamily="Segoe UI" FontSize="13">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="{loc:Tr Sparse.Manage}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
+            <TextBlock Text="{loc:Tr Sparse.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <CheckBox Grid.Row="1" Content="{loc:Tr Sparse.Cone}" IsChecked="{Binding ConeMode, Mode=TwoWay}"
+                   Foreground="{DynamicResource Brush.Text}" Margin="0,0,0,10"/>
+
+        <Border Grid.Row="2" Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="1" CornerRadius="6">
+            <ListBox ItemsSource="{Binding Patterns}" Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="4,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+                            <Button Grid.Column="1" Content="{loc:Tr Common.Delete}" Padding="8,3"
+                                    Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" HorizontalAlignment="Left" Style="{StaticResource AccentButton}" MinWidth="130"
+                    Content="{loc:Tr Sparse.Add}" Command="{Binding AddCommand}"/>
+            <Button Grid.Column="1" Content="{loc:Tr Sparse.Disable}" MinWidth="100" Margin="0,0,8,0"
+                    Command="{Binding DisableCommand}"/>
+            <Button Grid.Column="2" Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True" MinWidth="88"/>
+        </Grid>
+    </Grid>
+</Window>

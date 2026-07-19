@@ -4,6 +4,7 @@ using System.Text;
 using GitTab.App.Localization;
 using GitTab.App.Services;
 using GitTab.Core.Abstractions;
+using GitTab.Core.Diff;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -67,13 +68,23 @@ public sealed partial class HunkStageViewModel : ObservableObject
         {
             if (current is { Count: > 0 })
             {
+                var header = current[0];
+                var body = current.Skip(1).ToList();
                 var block = string.Join("\n", current).TrimEnd('\n');
-                Hunks.Add(new HunkItem
+                var item = new HunkItem
                 {
-                    HunkHeader = current[0],
+                    HunkHeader = header,
                     Text = block,
-                    Patch = _header + "\n" + block + "\n"
-                });
+                    Patch = _header + "\n" + block + "\n",
+                    BodyLines = body
+                };
+                for (int bi = 0; bi < body.Count; bi++)
+                {
+                    var t = body[bi];
+                    bool isChange = t.Length > 0 && (t[0] == '+' || t[0] == '-');
+                    item.Lines.Add(new HunkLineVm { BodyIndex = bi, Text = t, IsChange = isChange });
+                }
+                Hunks.Add(item);
             }
         }
         for (int i = firstHunk; i < lines.Length; i++)
@@ -85,13 +96,33 @@ public sealed partial class HunkStageViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task Stage(HunkItem? hunk)
+    private Task Stage(HunkItem? hunk)
+        => hunk is null ? Task.CompletedTask : ApplyPatchTextAsync(hunk.Patch);
+
+    /// <summary>Stage only the checked +/- lines of a hunk (git add -p line-level).</summary>
+    [RelayCommand]
+    private Task StageLines(HunkItem? hunk)
     {
-        if (hunk is null) return;
+        if (hunk is null) return Task.CompletedTask;
+        var selected = new HashSet<int>();
+        foreach (var l in hunk.Lines)
+            if (l.IsChange && l.IsSelected) selected.Add(l.BodyIndex);
+
+        var patch = PatchBuilder.BuildPartialStagePatch(_header, hunk.HunkHeader, hunk.BodyLines, selected);
+        if (patch is null)
+        {
+            _dialogs.Info(Loc.T("HunkStage.LineHint"), Loc.T("WC.StagePartial"));
+            return Task.CompletedTask;
+        }
+        return ApplyPatchTextAsync(patch);
+    }
+
+    private async Task ApplyPatchTextAsync(string patch)
+    {
         var tmp = Path.Combine(Path.GetTempPath(), "gittab-hunk-" + Guid.NewGuid().ToString("N") + ".patch");
         try
         {
-            File.WriteAllText(tmp, hunk.Patch, new UTF8Encoding(false));
+            File.WriteAllText(tmp, patch, new UTF8Encoding(false));
             var r = await _repo.RunRawAsync(new[] { "apply", "--cached", "--recount", tmp });
             if (r.Success)
             {
@@ -115,4 +146,22 @@ public sealed class HunkItem
     public required string HunkHeader { get; init; }
     public required string Text { get; init; }
     public required string Patch { get; init; }
+
+    /// <summary>The hunk's body lines (after the @@ header), each starting with ' ', '+', or '-'.</summary>
+    public required IReadOnlyList<string> BodyLines { get; init; }
+
+    /// <summary>Per-line view models for line-level staging.</summary>
+    public ObservableCollection<HunkLineVm> Lines { get; } = new();
+}
+
+/// <summary>A single diff line inside a hunk, selectable when it is an addition/removal.</summary>
+public sealed partial class HunkLineVm : ObservableObject
+{
+    public required int BodyIndex { get; init; }
+    public required string Text { get; init; }
+    public required bool IsChange { get; init; }
+
+    /// <summary>Whether this changed line is included when staging selected lines (default on).</summary>
+    [ObservableProperty]
+    private bool _isSelected = true;
 }

@@ -81,7 +81,7 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> StageAllAsync(CancellationToken ct = default);
     Task<GitResult> UnstageAsync(string path, CancellationToken ct = default);
     Task<GitResult> DiscardAsync(string path, CancellationToken ct = default);
-    Task<GitResult> CommitAsync(string message, bool amend = false, CancellationToken ct = default);
+    Task<GitResult> CommitAsync(string message, bool amend = false, bool sign = false, CancellationToken ct = default);
 
     Task<GitResult> CheckoutAsync(string branchFriendlyName, CancellationToken ct = default);
     Task<GitResult> CreateBranchAsync(string name, bool checkout, string? startPoint = null, CancellationToken ct = default);
@@ -97,10 +97,13 @@ public interface IRepositoryService : IDisposable
     /// <summary>Create a new repository at <paramref name="path"/> (git init, creating the folder if needed).</summary>
     Task<GitResult> InitAsync(string path, string? initialBranch = "main", CancellationToken ct = default);
 
-    /// <summary>Clone <paramref name="url"/> into <paramref name="targetPath"/>.</summary>
-    Task<GitResult> CloneAsync(string url, string targetPath, CancellationToken ct = default);
+    /// <summary>Clone <paramref name="url"/> into <paramref name="targetPath"/>.
+    /// <paramref name="blobless"/> makes it a partial clone (--filter=blob:none).</summary>
+    Task<GitResult> CloneAsync(string url, string targetPath, bool blobless = false, CancellationToken ct = default);
 
-    Task<GitResult> CreateTagAsync(string name, string? target = null, CancellationToken ct = default);
+    /// <summary>Create a tag. A non-null <paramref name="message"/> makes it annotated;
+    /// <paramref name="sign"/> makes it a GPG/SSH-signed annotated tag.</summary>
+    Task<GitResult> CreateTagAsync(string name, string? target = null, string? message = null, bool sign = false, CancellationToken ct = default);
 
     /// <summary>Change a commit's message (amend if it's HEAD, otherwise an interactive-rebase reword).</summary>
     Task<GitResult> RewordAsync(string sha, string newMessage, CancellationToken ct = default);
@@ -109,9 +112,15 @@ public interface IRepositoryService : IDisposable
     Task<GitResult> RemoveRemoteAsync(string name, CancellationToken ct = default);
 
     // ---- stash ----
-    Task<GitResult> StashPushAsync(string? message, bool includeUntracked, CancellationToken ct = default);
+    Task<GitResult> StashPushAsync(string? message, bool includeUntracked, IReadOnlyList<string>? paths = null, CancellationToken ct = default);
     Task<GitResult> StashApplyAsync(int index, bool pop, CancellationToken ct = default);
     Task<GitResult> StashDropAsync(int index, CancellationToken ct = default);
+
+    /// <summary>Raw diff of a stash entry, for preview.</summary>
+    Task<string> GetStashDiffAsync(int index, CancellationToken ct = default);
+
+    /// <summary>Create a branch from a stash and drop it (git stash branch).</summary>
+    Task<GitResult> StashToBranchAsync(int index, string branch, CancellationToken ct = default);
 
     // ---- conflicts / in-progress operations ----
     bool IsBisecting();
@@ -132,4 +141,36 @@ public interface IRepositoryService : IDisposable
 
     /// <summary>Raw git passthrough for advanced actions (used by higher layers sparingly).</summary>
     Task<GitResult> RunRawAsync(IReadOnlyList<string> args, CancellationToken ct = default);
+
+    // ---- signing ----
+    Task<CommitSignature> GetSignatureStatusAsync(string sha, CancellationToken ct = default);
+    Task<(bool Enabled, string? Key, string? Format)> GetSigningConfigAsync(CancellationToken ct = default);
+    Task<GitResult> SetSigningConfigAsync(bool enabled, string? key, string? format, CancellationToken ct = default);
+
+    // ---- worktrees ----
+    Task<IReadOnlyList<WorktreeInfo>> GetWorktreesAsync(CancellationToken ct = default);
+    Task<GitResult> WorktreeAddAsync(string path, string? branch, bool createBranch, CancellationToken ct = default);
+    Task<GitResult> WorktreeRemoveAsync(string path, bool force, CancellationToken ct = default);
+    Task<GitResult> WorktreePruneAsync(CancellationToken ct = default);
+
+    // ---- Git LFS ----
+    Task<LfsStatus> GetLfsStatusAsync(CancellationToken ct = default);
+    Task<GitResult> LfsTrackAsync(string pattern, CancellationToken ct = default);
+    Task<GitResult> LfsUntrackAsync(string pattern, CancellationToken ct = default);
+    Task<GitResult> LfsPullAsync(CancellationToken ct = default);
+
+    // ---- submodules (rich) ----
+    IReadOnlyList<SubmoduleInfo> GetSubmodules();
+    Task<GitResult> SubmoduleAddAsync(string url, string path, CancellationToken ct = default);
+    Task<GitResult> SubmoduleSyncAsync(CancellationToken ct = default);
+    Task<GitResult> SubmoduleDeinitAsync(string path, bool force, CancellationToken ct = default);
+
+    // ---- patch import/export ----
+    Task<GitResult> ExportCommitPatchAsync(string sha, string filePath, CancellationToken ct = default);
+    Task<GitResult> ApplyPatchAsync(string patchFile, bool asCommits, CancellationToken ct = default);
+
+    // ---- sparse-checkout ----
+    Task<IReadOnlyList<string>> GetSparseCheckoutPatternsAsync(CancellationToken ct = default);
+    Task<GitResult> SparseCheckoutSetAsync(IReadOnlyList<string> patterns, bool cone, CancellationToken ct = default);
+    Task<GitResult> SparseCheckoutDisableAsync(CancellationToken ct = default);
 }

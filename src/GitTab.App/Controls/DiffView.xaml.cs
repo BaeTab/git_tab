@@ -7,6 +7,7 @@ using GitTab.App.ViewModels;
 using GitTab.Core.Diff;
 using GitTab.Core.Models;
 using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Rendering;
 
 namespace GitTab.App.Controls;
@@ -72,8 +73,30 @@ public partial class DiffView : UserControl
 
     private void RebuildAll()
     {
+        ApplyHighlighting();
         BuildUnified();
         BuildSplit();
+    }
+
+    /// <summary>Picks a language definition from the diffed file's extension and applies it to all
+    /// three editors so tokens are colored under the existing diff line backgrounds.</summary>
+    private void ApplyHighlighting()
+    {
+        IHighlightingDefinition? definition = null;
+        var diff = _vm?.Diff;
+        if (diff is { IsBinary: false, IsTooLarge: false } && diff.Hunks.Count > 0)
+        {
+            var ext = System.IO.Path.GetExtension(diff.Path);
+            if (!string.IsNullOrEmpty(ext))
+            {
+                try { definition = HighlightingManager.Instance.GetDefinitionByExtension(ext); }
+                catch { definition = null; }
+            }
+        }
+
+        Editor.SyntaxHighlighting = definition;
+        LeftEditor.SyntaxHighlighting = definition;
+        RightEditor.SyntaxHighlighting = definition;
     }
 
     private void BuildUnified()

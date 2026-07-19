@@ -58,7 +58,7 @@ public sealed partial class OperationWindowViewModel : ObservableObject
         {
             "pull" => ct => _repo.PullAsync(ct),
             "push" => PushAsync,
-            "stash" => ct => _repo.StashPushAsync(null, includeUntracked: true, ct),
+            "stash" => ct => _repo.StashPushAsync(null, includeUntracked: true, ct: ct),
             _ => ct => _repo.FetchAsync(ct: ct)
         };
 

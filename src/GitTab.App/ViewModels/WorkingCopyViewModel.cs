@@ -43,6 +43,10 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(CommitCommand))]
     private bool _amend;
 
+    /// <summary>Sign the commit with the configured GPG/SSH key (git commit -S).</summary>
+    [ObservableProperty]
+    private bool _sign;
+
     /// <summary>Conventional-commit types offered as a helper dropdown above the message box.</summary>
     public IReadOnlyList<string> CommitTypes { get; } = new[]
     {
@@ -161,7 +165,7 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
     private async Task Commit()
     {
         var message = CommitMessage.Trim();
-        var success = await GitUi.RunAsync(() => _repo.CommitAsync(message, Amend), _dialogs, _loc, _logger);
+        var success = await GitUi.RunAsync(() => _repo.CommitAsync(message, Amend, Sign), _dialogs, _loc, _logger);
         if (!success) return;
 
         CommitMessage = string.Empty;
