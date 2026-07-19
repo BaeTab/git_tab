@@ -38,7 +38,11 @@
                                FontSize="11" Margin="6,4" />
                     <TextBox Text="{Binding BaseText, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
                              Background="Transparent" BorderThickness="0" TextWrapping="NoWrap"
-                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                             Visibility="{Binding HasBase, Converter={StaticResource Bool2Vis}}"/>
+                    <TextBlock Text="{loc:Tr Conflict.NoBase}" Style="{StaticResource MutedText}" FontStyle="Italic"
+                               FontSize="11.5" TextWrapping="Wrap" Margin="8" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Visibility="{Binding HasBase, Converter={StaticResource Bool2Vis}, ConverterParameter=invert}"/>
                 </DockPanel>
             </Border>
 
