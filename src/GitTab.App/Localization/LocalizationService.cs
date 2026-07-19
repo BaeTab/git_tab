@@ -306,6 +306,10 @@ public sealed class LocalizationService : ILocalizationService
         ["Diff.SelectFile"] = "파일을 선택하면 바뀐 줄이 색으로 표시돼요.",
         ["Diff.Split"] = "좌우 비교",
         ["Diff.SplitTip"] = "삭제된 줄과 추가된 줄을 왼쪽·오른쪽으로 나란히 비교해요.",
+        ["Diff.PopOut"] = "새 창으로 열기",
+        ["Diff.PopOut.Tip"] = "이 변경 내용을 별도 창으로 열어요. 창을 최대화하거나 F11로 전체화면을 쓸 수 있어요.",
+        ["Diff.FullScreen"] = "⛶ 전체화면 (F11)",
+        ["Diff.FullScreen.Tip"] = "전체화면으로 전환해요. F11 또는 Esc로 해제.",
 
         // Remote / status
         ["Remote.Ahead"] = "▲{0}",
@@ -776,6 +780,10 @@ public sealed class LocalizationService : ILocalizationService
         ["Diff.SelectFile"] = "Select a file to see changed lines highlighted.",
         ["Diff.Split"] = "Split",
         ["Diff.SplitTip"] = "Compare removed and added lines side by side.",
+        ["Diff.PopOut"] = "Open in new window",
+        ["Diff.PopOut.Tip"] = "Open this diff in its own window — maximize it, or press F11 for fullscreen.",
+        ["Diff.FullScreen"] = "⛶ Fullscreen (F11)",
+        ["Diff.FullScreen.Tip"] = "Toggle fullscreen. Press F11 or Esc to exit.",
 
         ["Remote.Ahead"] = "▲{0}",
         ["Remote.Behind"] = "▼{0}",

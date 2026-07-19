@@ -25,6 +25,10 @@
                 <ToggleButton Content="{loc:Tr Diff.Split}" IsChecked="{Binding IsSplit}"
                               ToolTip="{loc:Tr Diff.SplitTip}"
                               Foreground="{DynamicResource Brush.Text}" Padding="8,2" Cursor="Hand"/>
+                <Button x:Name="PopOutButton" Content="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                        Click="OnPopOut" Margin="10,0,0,0" Padding="7,2" Cursor="Hand"
+                        Foreground="{DynamicResource Brush.Text}"
+                        ToolTip="{loc:Tr Diff.PopOut.Tip}" AutomationProperties.Name="{loc:Tr Diff.PopOut}"/>
             </StackPanel>
         </Border>
 

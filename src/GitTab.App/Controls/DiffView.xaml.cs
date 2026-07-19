@@ -37,6 +37,22 @@ public partial class DiffView : UserControl
         DataContextChanged += OnDataContextChanged;
     }
 
+    /// <summary>Hide the pop-out button (used when this view already lives inside a popped-out window).</summary>
+    public void HidePopOut() => PopOutButton.Visibility = Visibility.Collapsed;
+
+    // Open the current diff in its own resizable / fullscreen-capable window, sharing the same
+    // view-model so it stays live as the diff changes.
+    private void OnPopOut(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DiffViewModel vm) return;
+        var window = new GitTab.App.Views.DiffWindow
+        {
+            DataContext = vm,
+            Owner = Window.GetWindow(this)
+        };
+        window.Show();
+    }
+
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (_vm is not null) _vm.PropertyChanged -= OnVmPropertyChanged;
