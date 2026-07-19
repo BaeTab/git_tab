@@ -124,6 +124,11 @@
                     <Button Style="{StaticResource ToolButton}" Command="{Binding ActiveSession.RefreshCommand}"
                             Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" ToolTip="{loc:Tr Action.Refresh.Tip}"
                             AutomationProperties.Name="{loc:Tr Action.Refresh}"/>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding ActiveSession.UndoLastCommand}"
+                            Content="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                            Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}"
+                            IsEnabled="{Binding ActiveSession.CanUndo}"
+                            ToolTip="{loc:Tr Undo.Tip}" AutomationProperties.Name="{loc:Tr Undo.Title}"/>
 
                     <!-- Overflow menu: every secondary/management action, so the toolbar never scrolls. -->
                     <Menu Background="Transparent" VerticalAlignment="Center" Margin="2,0"

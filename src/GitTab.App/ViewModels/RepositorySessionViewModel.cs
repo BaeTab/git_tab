@@ -150,6 +150,15 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
     /// by the background fetch so the toolbar can nudge the user without them fetching manually.</summary>
     [ObservableProperty] private bool _hasIncoming;
 
+    /// <summary>Reflog message of the last undoable Git action (or null if there's nothing to undo);
+    /// drives the toolbar "undo" button's tooltip and enabled state.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanUndo))]
+    [NotifyCanExecuteChangedFor(nameof(UndoLastCommand))]
+    private string? _undoDescription;
+
+    public bool CanUndo => !string.IsNullOrEmpty(UndoDescription);
+
     [ObservableProperty] private int _selectedCommitIndex = -1;
     [ObservableProperty] private string _searchText = string.Empty;
 
@@ -215,6 +224,7 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
             HasIncoming = Behind > 0;
 
             ApplyFilter();
+            UndoDescription = TryBuildUndo()?.Description;
             StatusText = RepoState.IsInProgress
                 ? Loc.T("State." + RepoState.Operation)
                 : Loc.T("Status.Ready");
@@ -301,6 +311,36 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         SelectedCommitIndex = restore >= 0 ? restore : (rows.Count > 0 ? 0 : -1);
         // Force detail refresh if index unchanged but content replaced.
         OnSelectedCommitIndexChanged(SelectedCommitIndex);
+    }
+
+    // ---------------------------------------------------------------- undo last action (safety net)
+
+    /// <summary>
+    /// One-click undo of the last HEAD-moving Git action, using the reflog to restore the previous
+    /// position. The reset mode is chosen by what the action was: a commit/amend is undone with a
+    /// <c>--soft</c> reset (the changes come back staged), a branch switch is reversed with
+    /// <c>checkout -</c>, and everything else (reset/merge/pull/rebase/cherry-pick/revert) uses
+    /// <c>--keep</c> so uncommitted local changes are preserved (it aborts rather than clobber them).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanUndo))]
+    private async Task UndoLast()
+    {
+        if (TryBuildUndo() is not { } undo) return;
+        if (!_dialogs.Confirm(Loc.T("Undo.Confirm", undo.Description), Loc.T("Undo.Title"))) return;
+        if (await GitUi.RunAsync(() => _repo.RunRawAsync(undo.Args), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
+    private (string Description, string[] Args)? TryBuildUndo()
+    {
+        IReadOnlyList<ReflogEntry> log;
+        try { log = _repo.GetReflog(2); }
+        catch { return null; }
+        if (log.Count < 2) return null;
+
+        var message = log[0].Message ?? string.Empty;
+        var previous = log[1].Sha;
+        return UndoPlan.Args(message, previous) is { } args ? (message, args) : null;
     }
 
     // ---------------------------------------------------------------- remote / network
