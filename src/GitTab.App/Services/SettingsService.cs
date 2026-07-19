@@ -11,6 +11,7 @@ public sealed class AppSettings
     public string Language { get; set; } = "Korean";  // "Korean" | "English"
     public bool CrashReports { get; set; } = true;     // write a local crash report on unhandled errors
     public bool BackgroundFetch { get; set; } = true;  // periodically fetch open repos and update "behind"
+    public string UpdateChannel { get; set; } = "Stable"; // "Stable" | "Beta" (beta includes prereleases)
 }
 
 public interface ISettingsService

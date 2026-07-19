@@ -50,6 +50,9 @@
         <CheckBox Content="{loc:Tr Settings.BackgroundFetch}" Margin="0,8,0,2"
                   IsChecked="{Binding BackgroundFetchEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
         <TextBlock Text="{loc:Tr Settings.BackgroundFetch.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+        <CheckBox Content="{loc:Tr Settings.BetaChannel}" Margin="0,8,0,2"
+                  IsChecked="{Binding UpdateBetaChannelEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+        <TextBlock Text="{loc:Tr Settings.BetaChannel.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
         <CheckBox Content="{loc:Tr Settings.CrashReports}" Margin="0,8,0,2"
                   IsChecked="{Binding CrashReportsEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
         <TextBlock Text="{loc:Tr Settings.CrashReports.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>

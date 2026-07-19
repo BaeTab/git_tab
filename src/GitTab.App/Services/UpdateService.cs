@@ -27,25 +27,28 @@ public sealed class GitHubUpdateService : IUpdateService
     private static readonly Uri LatestReleaseApi =
         new($"https://api.github.com/repos/{AppInfo.RepoOwner}/{AppInfo.RepoName}/releases/latest");
 
-    private readonly ILogger<GitHubUpdateService> _logger;
+    private static readonly Uri ReleasesApi =
+        new($"https://api.github.com/repos/{AppInfo.RepoOwner}/{AppInfo.RepoName}/releases?per_page=30");
 
-    public GitHubUpdateService(ILogger<GitHubUpdateService> logger) => _logger = logger;
+    private readonly ILogger<GitHubUpdateService> _logger;
+    private readonly ISettingsService _settings;
+
+    public GitHubUpdateService(ILogger<GitHubUpdateService> logger, ISettingsService settings)
+    {
+        _logger = logger;
+        _settings = settings;
+    }
+
+    private bool BetaChannel =>
+        string.Equals(_settings.Current?.UpdateChannel, "Beta", StringComparison.OrdinalIgnoreCase);
 
     public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken ct = default)
     {
         try
         {
             using var http = CreateClient();
-            using var resp = await http.GetAsync(LatestReleaseApi, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("Update check: GitHub returned {Status}", resp.StatusCode);
-                return null;
-            }
-
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
-            var root = doc.RootElement;
+            var release = await FetchCandidateReleaseAsync(http, ct).ConfigureAwait(false);
+            if (release is not { } root) return null;
 
             var tag = root.TryGetProperty("tag_name", out var t) ? t.GetString() : null;
             if (string.IsNullOrWhiteSpace(tag)) return null;
@@ -53,34 +56,77 @@ public sealed class GitHubUpdateService : IUpdateService
             var latest = ParseVersion(tag);
             if (latest is null || latest <= AppInfo.SemVer)
             {
-                _logger.LogDebug("Update check: current {Current} is up to date (latest {Latest}).", AppInfo.SemVer, latest);
+                _logger.LogDebug("Update check: current {Current} is up to date (candidate {Latest}).", AppInfo.SemVer, latest);
                 return null;
             }
-
-            string? installerUrl = null, checksumUrl = null;
-            if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var asset in assets.EnumerateArray())
-                {
-                    var name = asset.TryGetProperty("name", out var n) ? n.GetString() : null;
-                    var dl = asset.TryGetProperty("browser_download_url", out var u) ? u.GetString() : null;
-                    if (name is null || dl is null) continue;
-                    if (name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)) checksumUrl = dl;
-                    else if (installerUrl is null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) installerUrl = dl;
-                }
-            }
-
-            var releaseUrl = root.TryGetProperty("html_url", out var h) ? h.GetString() ?? "" : "";
-            var notes = root.TryGetProperty("body", out var b) ? b.GetString() : null;
-
-            _logger.LogInformation("Update available: {Tag} (checksum {HasSum})", tag, checksumUrl is not null ? "yes" : "no");
-            return new UpdateInfo(latest, tag!, releaseUrl, installerUrl, notes, checksumUrl);
+            return BuildUpdateInfo(root, latest, tag!);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Update check failed");
             return null;
         }
+    }
+
+    /// <summary>On the stable channel, GitHub's "latest" (non-prerelease) release; on the beta channel,
+    /// the highest-versioned release including prereleases (drafts excluded).</summary>
+    private async Task<JsonElement?> FetchCandidateReleaseAsync(HttpClient http, CancellationToken ct)
+    {
+        if (!BetaChannel)
+        {
+            using var resp = await http.GetAsync(LatestReleaseApi, ct).ConfigureAwait(false);
+            if (!resp.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Update check: GitHub returned {Status}", resp.StatusCode);
+                return null;
+            }
+            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.Clone();
+        }
+
+        using var listResp = await http.GetAsync(ReleasesApi, ct).ConfigureAwait(false);
+        if (!listResp.IsSuccessStatusCode)
+        {
+            _logger.LogInformation("Update check (beta): GitHub returned {Status}", listResp.StatusCode);
+            return null;
+        }
+        var listJson = await listResp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        using var listDoc = JsonDocument.Parse(listJson);
+        if (listDoc.RootElement.ValueKind != JsonValueKind.Array) return null;
+
+        JsonElement? best = null;
+        Version? bestVersion = null;
+        foreach (var rel in listDoc.RootElement.EnumerateArray())
+        {
+            if (rel.TryGetProperty("draft", out var d) && d.ValueKind == JsonValueKind.True) continue;
+            var v = ParseVersion(rel.TryGetProperty("tag_name", out var tg) ? tg.GetString() ?? "" : "");
+            if (v is null) continue;
+            if (bestVersion is null || v > bestVersion) { bestVersion = v; best = rel.Clone(); }
+        }
+        return best;
+    }
+
+    private UpdateInfo BuildUpdateInfo(JsonElement root, Version latest, string tag)
+    {
+        string? installerUrl = null, checksumUrl = null;
+        if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var asset in assets.EnumerateArray())
+            {
+                var name = asset.TryGetProperty("name", out var n) ? n.GetString() : null;
+                var dl = asset.TryGetProperty("browser_download_url", out var u) ? u.GetString() : null;
+                if (name is null || dl is null) continue;
+                if (name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)) checksumUrl = dl;
+                else if (installerUrl is null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) installerUrl = dl;
+            }
+        }
+
+        var releaseUrl = root.TryGetProperty("html_url", out var h) ? h.GetString() ?? "" : "";
+        var notes = root.TryGetProperty("body", out var b) ? b.GetString() : null;
+
+        _logger.LogInformation("Update available: {Tag} (checksum {HasSum})", tag, checksumUrl is not null ? "yes" : "no");
+        return new UpdateInfo(latest, tag, releaseUrl, installerUrl, notes, checksumUrl);
     }
 
     public async Task<string?> DownloadInstallerAsync(UpdateInfo update, IProgress<double>? progress = null, CancellationToken ct = default)
@@ -212,6 +258,9 @@ public sealed class GitHubUpdateService : IUpdateService
     private static Version? ParseVersion(string tag)
     {
         var s = tag.TrimStart('v', 'V').Trim();
+        // Compare on the numeric core only (System.Version can't parse "-beta.1"/"+meta" suffixes).
+        int cut = s.IndexOfAny(new[] { '-', '+' });
+        if (cut >= 0) s = s[..cut];
         return Version.TryParse(s, out var v) ? v : null;
     }
 }

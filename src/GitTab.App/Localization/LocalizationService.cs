@@ -361,6 +361,8 @@ public sealed class LocalizationService : ILocalizationService
         ["Settings.CrashReports.Tip"] = "예기치 못한 오류가 나면 자세한 리포트를 내 PC(%AppData%\\GitTab\\crashes)에 저장해요. 외부로 전송되지 않아요.",
         ["Settings.BackgroundFetch"] = "백그라운드에서 원격 자동 확인",
         ["Settings.BackgroundFetch.Tip"] = "몇 분마다 열려 있는 저장소를 조용히 fetch해서 '받아올 커밋 N개'를 최신으로 유지해요. 그래프는 그대로 두고 표시만 갱신해요.",
+        ["Settings.BetaChannel"] = "베타 채널(미리보기 버전) 받기",
+        ["Settings.BetaChannel.Tip"] = "업데이트 확인 시 정식 출시 전의 프리릴리스(베타)까지 포함해요. 새 기능을 먼저 써볼 수 있지만 불안정할 수 있어요.",
         ["Settings.OpenLogs"] = "로그 폴더 열기",
         ["Settings.About"] = "정보",
 
@@ -822,6 +824,8 @@ public sealed class LocalizationService : ILocalizationService
         ["Settings.CrashReports.Tip"] = "Writes a detailed report to your PC (%AppData%\\GitTab\\crashes) when something goes wrong. Nothing is uploaded.",
         ["Settings.BackgroundFetch"] = "Check remotes automatically in the background",
         ["Settings.BackgroundFetch.Tip"] = "Quietly fetches open repositories every few minutes to keep the \"N to pull\" count current. The graph stays put — only the indicator updates.",
+        ["Settings.BetaChannel"] = "Get beta (preview) releases",
+        ["Settings.BetaChannel.Tip"] = "When checking for updates, include pre-release (beta) builds published before the stable release. You get new features earlier, but they may be less stable.",
         ["Settings.OpenLogs"] = "Open logs folder",
         ["Settings.About"] = "About",
 

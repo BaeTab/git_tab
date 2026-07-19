@@ -429,6 +429,17 @@ public sealed partial class MainViewModel : ObservableObject
         set { _settings.Current.CrashReports = value; _settings.Save(); OnPropertyChanged(); }
     }
 
+    /// <summary>Beta update channel — include prereleases when checking for updates.</summary>
+    public bool UpdateBetaChannelEnabled
+    {
+        get => string.Equals(_settings.Current?.UpdateChannel, "Beta", StringComparison.OrdinalIgnoreCase);
+        set
+        {
+            if (_settings.Current is { } s) { s.UpdateChannel = value ? "Beta" : "Stable"; _settings.Save(); }
+            OnPropertyChanged();
+        }
+    }
+
     [RelayCommand]
     private void OpenLogsFolder()
     {
