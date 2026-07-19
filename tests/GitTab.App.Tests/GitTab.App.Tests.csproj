@@ -14,6 +14,9 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.0.1" />
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <!-- Builds throwaway git repositories for the multi-repository session integration tests
+         (same version the Core adapter uses). -->
+    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     <PackageReference Include="NSubstitute" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
