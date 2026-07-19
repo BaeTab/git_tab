@@ -27,7 +27,12 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     private const double ChipHeight = 17;
 
     private readonly Pen[] _lanePens;
+    private readonly Pen[] _laneGlowPens;   // wider, translucent underlay → luminous "glow" lanes
     private static readonly Brush _bookmarkBrush = CreateFrozen(Color.FromRgb(0xF5, 0xB3, 0x00)); // gold
+    private static readonly Brush _glossBrush = CreateFrozen(Color.FromArgb(0x59, 0xFF, 0xFF, 0xFF)); // node sheen
+    private readonly Dictionary<Color, Brush> _nodeFillCache = new();   // per-color orb gradients
+    private readonly Dictionary<Color, Brush> _glowCache = new();       // per-color node halos
+    private int _hoverIndex = -1;
     private readonly Typeface _uiFont = new("Segoe UI");
     private readonly Typeface _uiBold = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
     private readonly Typeface _monoFont = new("Consolas");
@@ -43,6 +48,15 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         _lanePens = GraphPalette.Colors.Select(c =>
         {
             var p = new Pen(new SolidColorBrush(c), LaneThickness) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
+            p.Freeze();
+            return p;
+        }).ToArray();
+
+        // A wider, translucent pen of the same hue drawn underneath each lane gives it a soft glow.
+        _laneGlowPens = GraphPalette.Colors.Select(c =>
+        {
+            var p = new Pen(CreateFrozen(Color.FromArgb(0x3C, c.R, c.G, c.B)), LaneThickness + 4)
+            { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
             p.Freeze();
             return p;
         }).ToArray();
@@ -242,7 +256,18 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         var trackBrush = Res("Brush.SurfaceAlt", Brushes.LightGray);
         var greenBrush = Res("Brush.Success", Brushes.Green);
         var redBrush = Res("Brush.Danger", Brushes.Red);
+        var hoverBrush = Res("Brush.Hover", Brushes.Transparent);
         var nodeStroke = new Pen(surfaceBrush, 1.5);
+
+        // Accent-derived accents for the selected row + HEAD, built once per paint.
+        var accentColor = (accentBrush as SolidColorBrush)?.Color ?? Colors.DodgerBlue;
+        var headGlowBrush = CreateFrozen(Color.FromArgb(0x6E, accentColor.R, accentColor.G, accentColor.B));
+        var headRingPen = new Pen(accentBrush, 2.4);
+        var selOverlay = new LinearGradientBrush(
+            Color.FromArgb(0x40, accentColor.R, accentColor.G, accentColor.B),
+            Color.FromArgb(0x00, accentColor.R, accentColor.G, accentColor.B),
+            new Point(0, 0), new Point(1, 0));
+        selOverlay.Freeze();
 
         double vh = _viewport.Height > 0 ? _viewport.Height : RenderSize.Height;
         double vw = _viewport.Width > 0 ? _viewport.Width : RenderSize.Width;
@@ -263,38 +288,63 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             double bottom = top + RowHeight;
 
             if (i == SelectedIndex)
-                dc.DrawRectangle(selBrush, null, new Rect(_offset.X, top, vw, RowHeight));
+            {
+                var selRect = new Rect(_offset.X, top, vw, RowHeight);
+                dc.DrawRectangle(selBrush, null, selRect);
+                dc.DrawRectangle(selOverlay, null, selRect);            // accent fade from the left
+                dc.DrawRectangle(accentBrush, null, new Rect(_offset.X, top, 3, RowHeight)); // accent edge bar
+            }
+            else if (i == _hoverIndex)
+            {
+                dc.DrawRectangle(hoverBrush, null, new Rect(_offset.X, top, vw, RowHeight));
+            }
 
             // ----- bookmark marker (gold dot at the left edge) -----
             if (row.IsBookmarked)
                 dc.DrawEllipse(_bookmarkBrush, null, new Point(_offset.X + 4, centerY), 3.2, 3.2);
 
-            // ----- edges -----
+            // ----- edges (translucent glow underlay + crisp line on top) -----
             foreach (var seg in row.GraphRow.PassingLanes)
             {
-                var pen = _lanePens[Mod(seg.ColorIndex)];
+                int ci = Mod(seg.ColorIndex);
+                var glow = _laneGlowPens[ci];
+                var pen = _lanePens[ci];
                 switch (seg.Kind)
                 {
                     case LaneKind.Straight:
-                        dc.DrawLine(pen, new Point(LaneX(seg.FromLane), top), new Point(LaneX(seg.ToLane), bottom));
-                        break;
+                        {
+                            var a = new Point(LaneX(seg.FromLane), top);
+                            var b = new Point(LaneX(seg.ToLane), bottom);
+                            dc.DrawLine(glow, a, b);
+                            dc.DrawLine(pen, a, b);
+                            break;
+                        }
                     case LaneKind.Merge:
-                        DrawConnector(dc, pen, LaneX(seg.FromLane), top, LaneX(row.GraphRow.NodeLane), centerY);
+                        DrawConnector(dc, glow, pen, LaneX(seg.FromLane), top, LaneX(row.GraphRow.NodeLane), centerY);
                         break;
                     case LaneKind.Branch:
-                        DrawConnector(dc, pen, LaneX(row.GraphRow.NodeLane), centerY, LaneX(seg.ToLane), bottom);
+                        DrawConnector(dc, glow, pen, LaneX(row.GraphRow.NodeLane), centerY, LaneX(seg.ToLane), bottom);
                         break;
                 }
             }
 
-            // ----- avatar node -----
+            // ----- commit node: soft halo → glossy avatar "orb" → lane ring → initial -----
             double nodeX = LaneX(row.GraphRow.NodeLane);
+            var center = new Point(nodeX, centerY);
+            var laneColor = GraphPalette.Colors[Mod(row.GraphRow.ColorIndex)];
             var lanePen = _lanePens[Mod(row.GraphRow.ColorIndex)];
             var avBrush = AuthorAvatar.BrushFor(string.IsNullOrEmpty(row.Commit.AuthorEmail) ? row.AuthorName : row.Commit.AuthorEmail);
+            var avColor = (avBrush as SolidColorBrush)?.Color ?? laneColor;
+
             if (row.IsHead)
-                dc.DrawEllipse(null, new Pen(accentBrush, 2.2), new Point(nodeX, centerY), NodeRadius + 3, NodeRadius + 3);
-            dc.DrawEllipse(avBrush, nodeStroke, new Point(nodeX, centerY), NodeRadius, NodeRadius);
-            dc.DrawEllipse(null, lanePen, new Point(nodeX, centerY), NodeRadius, NodeRadius); // lane-colored ring
+                dc.DrawEllipse(headGlowBrush, null, center, NodeRadius + 6, NodeRadius + 6);
+            dc.DrawEllipse(GlowBrush(laneColor), null, center, NodeRadius + 4, NodeRadius + 4);   // luminous halo
+
+            dc.DrawEllipse(NodeFill(avColor), nodeStroke, center, NodeRadius, NodeRadius);          // orb gradient
+            dc.DrawEllipse(null, row.IsHead ? headRingPen : lanePen, center, NodeRadius, NodeRadius); // ring
+            dc.DrawEllipse(_glossBrush, null,
+                new Point(nodeX - NodeRadius * 0.26, centerY - NodeRadius * 0.32), NodeRadius * 0.44, NodeRadius * 0.34); // sheen
+
             var initial = Ft(AuthorAvatar.Initial(row.AuthorName), Brushes.White, 9.5, _uiBold, ppd);
             dc.DrawText(initial, new Point(nodeX - initial.Width / 2, centerY - initial.Height / 2));
 
@@ -379,11 +429,14 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         if (delW > 0) dc.DrawRoundedRectangle(red, null, new Rect(barX + addW, barY, delW, barH), 3, 3);
     }
 
-    private static void DrawConnector(DrawingContext dc, Pen pen, double x1, double y1, double x2, double y2)
+    private static void DrawConnector(DrawingContext dc, Pen glowPen, Pen mainPen, double x1, double y1, double x2, double y2)
     {
         if (Math.Abs(x1 - x2) < 0.1)
         {
-            dc.DrawLine(pen, new Point(x1, y1), new Point(x2, y2));
+            var a = new Point(x1, y1);
+            var b = new Point(x2, y2);
+            dc.DrawLine(glowPen, a, b);
+            dc.DrawLine(mainPen, a, b);
             return;
         }
         var geo = new StreamGeometry();
@@ -394,8 +447,43 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             ctx.BezierTo(new Point(x1, midY), new Point(x2, midY), new Point(x2, y2), true, false);
         }
         geo.Freeze();
-        dc.DrawGeometry(null, pen, geo);
+        dc.DrawGeometry(null, glowPen, geo);
+        dc.DrawGeometry(null, mainPen, geo);
     }
+
+    // ---- node "orb" brushes (cached per color; small, fixed palette) ----
+
+    private Brush NodeFill(Color c)
+    {
+        if (_nodeFillCache.TryGetValue(c, out var cached)) return cached;
+        var brush = new RadialGradientBrush
+        {
+            GradientOrigin = new Point(0.35, 0.32),
+            Center = new Point(0.5, 0.5),
+            RadiusX = 0.78,
+            RadiusY = 0.78
+        };
+        brush.GradientStops.Add(new GradientStop(Lighten(c, 0.42), 0.0));
+        brush.GradientStops.Add(new GradientStop(c, 0.55));
+        brush.GradientStops.Add(new GradientStop(Darken(c, 0.18), 1.0));
+        brush.Freeze();
+        _nodeFillCache[c] = brush;
+        return brush;
+    }
+
+    private Brush GlowBrush(Color c)
+    {
+        if (_glowCache.TryGetValue(c, out var cached)) return cached;
+        var brush = CreateFrozen(Color.FromArgb(0x44, c.R, c.G, c.B));
+        _glowCache[c] = brush;
+        return brush;
+    }
+
+    private static Color Lighten(Color c, double a) => Color.FromRgb(
+        (byte)(c.R + (255 - c.R) * a), (byte)(c.G + (255 - c.G) * a), (byte)(c.B + (255 - c.B) * a));
+
+    private static Color Darken(Color c, double a) => Color.FromRgb(
+        (byte)(c.R * (1 - a)), (byte)(c.G * (1 - a)), (byte)(c.B * (1 - a)));
 
     private FormattedText Ft(string text, Brush brush, double size, Typeface face, double ppd, double? maxWidth = null)
     {
@@ -441,6 +529,20 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
         int index = (int)((p.Y + _offset.Y) / RowHeight);
         if (Rows is { } rows && index >= 0 && index < rows.Count)
             SelectedIndex = index;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        int idx = (int)((e.GetPosition(this).Y + _offset.Y) / RowHeight);
+        if (Rows is not { } rows || idx < 0 || idx >= rows.Count) idx = -1;
+        if (idx != _hoverIndex) { _hoverIndex = idx; InvalidateVisual(); }
+    }
+
+    protected override void OnMouseLeave(MouseEventArgs e)
+    {
+        base.OnMouseLeave(e);
+        if (_hoverIndex != -1) { _hoverIndex = -1; InvalidateVisual(); }
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
