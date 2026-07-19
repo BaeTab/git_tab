@@ -3,6 +3,13 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] - 2026-07-19
+
+### Fixed
+- The **Open** button in the pull-requests/issues dialog showed the raw key `Hosting.Open` instead
+  of a translated label. Added a regression test that fails if any `{loc:Tr Key}` used in XAML is
+  missing from the localization tables.
+
 ## [1.4.0] - 2026-07-19
 
 Hosting & tooling integration (Tier 4).
