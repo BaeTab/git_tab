@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
@@ -86,6 +87,45 @@ public sealed class HostingClient : IHostingClient
         }
     }
 
+    public async Task<IReadOnlyList<CommentInfo>> GetCommentsAsync(string remoteUrl, int number, bool isPullRequest, CancellationToken ct = default)
+    {
+        if (RemoteWeb.Parse(remoteUrl) is not { } r) return Array.Empty<CommentInfo>();
+        var pat = GetToken(remoteUrl);
+        if (pat is null) return Array.Empty<CommentInfo>();
+
+        try
+        {
+            if (IsGitHub(r.Host)) return await GitHubCommentsAsync(r, number, pat, ct).ConfigureAwait(false);
+            if (IsGitLab(r.Host)) return await GitLabCommentsAsync(r, number, isPullRequest, pat, ct).ConfigureAwait(false);
+            return Array.Empty<CommentInfo>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch comments for {RemoteUrl} #{Number}", remoteUrl, number);
+            return Array.Empty<CommentInfo>();
+        }
+    }
+
+    public async Task<HostingResult> PostCommentAsync(string remoteUrl, int number, bool isPullRequest, string body, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return HostingResult.Fail("Comment body is empty.");
+        if (RemoteWeb.Parse(remoteUrl) is not { } r) return HostingResult.Fail("Unrecognized or unsupported remote URL.");
+        var pat = GetToken(remoteUrl);
+        if (pat is null) return HostingResult.Fail("No access token stored for this remote's host.");
+
+        try
+        {
+            if (IsGitHub(r.Host)) return await GitHubPostCommentAsync(r, number, body, pat, ct).ConfigureAwait(false);
+            if (IsGitLab(r.Host)) return await GitLabPostCommentAsync(r, number, isPullRequest, body, pat, ct).ConfigureAwait(false);
+            return HostingResult.Fail("Unsupported remote host.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to post comment for {RemoteUrl} #{Number}", remoteUrl, number);
+            return HostingResult.Fail(ex.Message);
+        }
+    }
+
     // ---- GitHub -------------------------------------------------------
 
     private static string GitHubApiBase(string host) =>
@@ -153,9 +193,47 @@ public sealed class HostingClient : IHostingClient
         };
     }
 
-    private static HttpRequestMessage GitHubRequest(string url, string pat)
+    private async Task<IReadOnlyList<CommentInfo>> GitHubCommentsAsync(
+        (string Host, string Owner, string Repo) r, int number, string pat, CancellationToken ct)
     {
-        var req = new HttpRequestMessage(HttpMethod.Get, url);
+        // PR conversation comments live at the issues/comments endpoint too (a PR is an issue on GitHub).
+        var url = $"{GitHubApiBase(r.Host)}/repos/{r.Owner}/{r.Repo}/issues/{number}/comments?per_page=100";
+        using var req = GitHubRequest(url, pat);
+        using var doc = await GetJsonAsync(req, ct).ConfigureAwait(false);
+        if (doc is null) return Array.Empty<CommentInfo>();
+
+        var list = new List<CommentInfo>();
+        foreach (var item in doc.RootElement.EnumerateArray())
+        {
+            var user = item.TryGetProperty("user", out var u) ? u : (JsonElement?)null;
+            list.Add(new CommentInfo(
+                user?.TryGetProperty("login", out var login) == true ? login.GetString() ?? "" : "",
+                item.GetProperty("body").GetString() ?? "",
+                item.TryGetProperty("created_at", out var created) ? created.GetString() ?? "" : "",
+                user?.TryGetProperty("avatar_url", out var avatar) == true ? avatar.GetString() : null));
+        }
+        return list;
+    }
+
+    private async Task<HostingResult> GitHubPostCommentAsync(
+        (string Host, string Owner, string Repo) r, int number, string body, string pat, CancellationToken ct)
+    {
+        var url = $"{GitHubApiBase(r.Host)}/repos/{r.Owner}/{r.Repo}/issues/{number}/comments";
+        using var req = GitHubRequest(HttpMethod.Post, url, pat);
+        req.Content = JsonBody(body);
+        using var resp = await Http.SendAsync(req, ct).ConfigureAwait(false);
+        if (resp.IsSuccessStatusCode) return HostingResult.Ok();
+
+        var reason = await DescribeFailureAsync(resp, ct).ConfigureAwait(false);
+        _logger.LogInformation("GitHub comment POST {Url} returned {Status}", url, resp.StatusCode);
+        return HostingResult.Fail(reason);
+    }
+
+    private static HttpRequestMessage GitHubRequest(string url, string pat) => GitHubRequest(HttpMethod.Get, url, pat);
+
+    private static HttpRequestMessage GitHubRequest(HttpMethod method, string url, string pat)
+    {
+        var req = new HttpRequestMessage(method, url);
         req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", pat);
         return req;
@@ -231,9 +309,53 @@ public sealed class HostingClient : IHostingClient
         };
     }
 
-    private static HttpRequestMessage GitLabRequest(string url, string pat)
+    /// <summary>GitLab uses separate "notes" endpoints for merge requests and issues, unlike GitHub's
+    /// single issues/comments endpoint — <paramref name="isPullRequest"/> picks the right one.</summary>
+    private async Task<IReadOnlyList<CommentInfo>> GitLabCommentsAsync(
+        (string Host, string Owner, string Repo) r, int number, bool isPullRequest, string pat, CancellationToken ct)
     {
-        var req = new HttpRequestMessage(HttpMethod.Get, url);
+        var kind = isPullRequest ? "merge_requests" : "issues";
+        var url = $"https://{r.Host}/api/v4/projects/{GitLabProjectId(r)}/{kind}/{number}/notes?per_page=100&order_by=created_at&sort=asc";
+        using var req = GitLabRequest(url, pat);
+        using var doc = await GetJsonAsync(req, ct).ConfigureAwait(false);
+        if (doc is null) return Array.Empty<CommentInfo>();
+
+        var list = new List<CommentInfo>();
+        foreach (var item in doc.RootElement.EnumerateArray())
+        {
+            // Skip system notes (e.g. "changed the description") — they aren't user comments.
+            if (item.TryGetProperty("system", out var sys) && sys.ValueKind == JsonValueKind.True) continue;
+
+            var author = item.TryGetProperty("author", out var a) ? a : (JsonElement?)null;
+            list.Add(new CommentInfo(
+                author?.TryGetProperty("username", out var username) == true ? username.GetString() ?? "" : "",
+                item.GetProperty("body").GetString() ?? "",
+                item.TryGetProperty("created_at", out var created) ? created.GetString() ?? "" : "",
+                author?.TryGetProperty("avatar_url", out var avatar) == true && avatar.ValueKind == JsonValueKind.String ? avatar.GetString() : null));
+        }
+        return list;
+    }
+
+    private async Task<HostingResult> GitLabPostCommentAsync(
+        (string Host, string Owner, string Repo) r, int number, bool isPullRequest, string body, string pat, CancellationToken ct)
+    {
+        var kind = isPullRequest ? "merge_requests" : "issues";
+        var url = $"https://{r.Host}/api/v4/projects/{GitLabProjectId(r)}/{kind}/{number}/notes";
+        using var req = GitLabRequest(HttpMethod.Post, url, pat);
+        req.Content = JsonBody(body);
+        using var resp = await Http.SendAsync(req, ct).ConfigureAwait(false);
+        if (resp.IsSuccessStatusCode) return HostingResult.Ok();
+
+        var reason = await DescribeFailureAsync(resp, ct).ConfigureAwait(false);
+        _logger.LogInformation("GitLab comment POST {Url} returned {Status}", url, resp.StatusCode);
+        return HostingResult.Fail(reason);
+    }
+
+    private static HttpRequestMessage GitLabRequest(string url, string pat) => GitLabRequest(HttpMethod.Get, url, pat);
+
+    private static HttpRequestMessage GitLabRequest(HttpMethod method, string url, string pat)
+    {
+        var req = new HttpRequestMessage(method, url);
         req.Headers.Add("PRIVATE-TOKEN", pat);
         return req;
     }
@@ -260,6 +382,27 @@ public sealed class HostingClient : IHostingClient
         }
         var bytes = await resp.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
         return JsonDocument.Parse(bytes);
+    }
+
+    /// <summary>Builds the {"body": "..."} JSON payload both GitHub's issue-comment and GitLab's note
+    /// endpoints expect for creating a comment.</summary>
+    private static StringContent JsonBody(string body) =>
+        new(JsonSerializer.Serialize(new { body }), Encoding.UTF8, "application/json");
+
+    /// <summary>Turns a failed response into a short, non-throwing diagnostic string. 401/403 is called
+    /// out specifically since the most common cause of a failed comment post is a PAT that lacks write
+    /// scope (read-only tokens can list PRs/issues but can't post).</summary>
+    private static async Task<string> DescribeFailureAsync(HttpResponseMessage resp, CancellationToken ct)
+    {
+        var status = (int)resp.StatusCode;
+        if (resp.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+            return $"HTTP {status} {resp.StatusCode}: the stored token likely lacks write/comment permission.";
+
+        string text;
+        try { text = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false); }
+        catch { text = ""; }
+        if (text.Length > 200) text = text[..200] + "…";
+        return string.IsNullOrWhiteSpace(text) ? $"HTTP {status} {resp.StatusCode}" : $"HTTP {status} {resp.StatusCode}: {text}";
     }
 
     private static HttpClient CreateClient()

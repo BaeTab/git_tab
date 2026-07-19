@@ -4,7 +4,7 @@
         xmlns:loc="clr-namespace:GitTab.App.Localization"
         Title="{loc:Tr Hosting.Title}"
         Icon="pack://application:,,,/GitTab;component/Assets/gittab.ico"
-        Width="640" Height="520" MinWidth="480" MinHeight="360"
+        Width="920" Height="600" MinWidth="720" MinHeight="460"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="{DynamicResource Brush.Window}"
         FontFamily="Segoe UI" FontSize="13">
@@ -28,70 +28,153 @@
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        Visibility="{Binding IsEmpty, Converter={StaticResource Bool2Vis}}"/>
 
-            <TabControl Visibility="{Binding HasResults, Converter={StaticResource Bool2Vis}}">
-                <TabItem Header="{loc:Tr Hosting.PullRequests}">
-                    <Border Style="{StaticResource Card}" Margin="0,10,0,0">
-                        <ListBox ItemsSource="{Binding PullRequests}" Background="Transparent" BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="4,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Number, StringFormat=#{0}}" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource Brush.Text}" Margin="0,0,6,0"/>
-                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+            <Grid Visibility="{Binding HasResults, Converter={StaticResource Bool2Vis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.1*" MinWidth="260"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="1.3*" MinWidth="300"/>
+                </Grid.ColumnDefinitions>
+
+                <TabControl Grid.Column="0">
+                    <TabItem Header="{loc:Tr Hosting.PullRequests}">
+                        <Border Style="{StaticResource Card}" Margin="0,10,0,0">
+                            <ListBox ItemsSource="{Binding PullRequests}" SelectedItem="{Binding SelectedPullRequest, Mode=TwoWay}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="4,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Number, StringFormat=#{0}}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource Brush.Text}" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <TextBlock Style="{StaticResource MutedText}" FontSize="11">
+                                                    <Run Text="{Binding Author, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding State, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding SourceBranch, Mode=OneWay}"/>
+                                                </TextBlock>
                                             </StackPanel>
-                                            <TextBlock Style="{StaticResource MutedText}" FontSize="11">
-                                                <Run Text="{Binding Author, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding State, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding SourceBranch, Mode=OneWay}"/>
-                                            </TextBlock>
-                                        </StackPanel>
-                                        <Button Grid.Column="1" Content="{loc:Tr Hosting.Open}" Padding="8,3" VerticalAlignment="Center"
-                                                Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding Url}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Border>
-                </TabItem>
-                <TabItem Header="{loc:Tr Hosting.Issues}">
-                    <Border Style="{StaticResource Card}" Margin="0,10,0,0">
-                        <ListBox ItemsSource="{Binding Issues}" Background="Transparent" BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="4,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Number, StringFormat=#{0}}" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource Brush.Text}" Margin="0,0,6,0"/>
-                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="1" Content="{loc:Tr Hosting.Open}" Padding="8,3" VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding Url}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </TabItem>
+                    <TabItem Header="{loc:Tr Hosting.Issues}">
+                        <Border Style="{StaticResource Card}" Margin="0,10,0,0">
+                            <ListBox ItemsSource="{Binding Issues}" SelectedItem="{Binding SelectedIssue, Mode=TwoWay}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="4,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Number, StringFormat=#{0}}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource Brush.Text}" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource Brush.Text}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <TextBlock Style="{StaticResource MutedText}" FontSize="11">
+                                                    <Run Text="{Binding Author, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding State, Mode=OneWay}"/>
+                                                </TextBlock>
                                             </StackPanel>
-                                            <TextBlock Style="{StaticResource MutedText}" FontSize="11">
-                                                <Run Text="{Binding Author, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding State, Mode=OneWay}"/>
-                                            </TextBlock>
+                                            <Button Grid.Column="1" Content="{loc:Tr Hosting.Open}" Padding="8,3" VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding Url}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </TabItem>
+                </TabControl>
+
+                <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" Margin="0,10,0,0"
+                              Background="Transparent" ShowsPreview="True"/>
+
+                <!-- Comments for whichever PR/issue is selected on the left. -->
+                <Border Grid.Column="2" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="{loc:Tr Hosting.Comments}" Style="{StaticResource SectionHeader}" Margin="0,0,0,6"/>
+
+                        <Grid Grid.Row="1">
+                            <TextBlock Text="{loc:Tr Hosting.CommentsSelectPrompt}" Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                                       MaxWidth="220" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding HasSelectedItem, Converter={StaticResource Bool2Vis}, ConverterParameter=invert}"/>
+
+                            <TextBlock Text="{loc:Tr Hosting.CommentsLoading}" Style="{StaticResource MutedText}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding IsLoadingComments, Converter={StaticResource Bool2Vis}}"/>
+
+                            <TextBlock Text="{loc:Tr Hosting.CommentsEmpty}" Style="{StaticResource MutedText}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding CommentsEmpty, Converter={StaticResource Bool2Vis}}"/>
+
+                            <ListBox ItemsSource="{Binding Comments}" Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Visibility="{Binding HasComments, Converter={StaticResource Bool2Vis}}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2,6">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Author}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
+                                                <TextBlock Text=" · " Style="{StaticResource MutedText}" FontSize="11"/>
+                                                <TextBlock Text="{Binding CreatedAt}" Style="{StaticResource MutedText}" FontSize="11"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Body}" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource Brush.Text}"/>
                                         </StackPanel>
-                                        <Button Grid.Column="1" Content="{loc:Tr Hosting.Open}" Padding="8,3" VerticalAlignment="Center"
-                                                Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding Url}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Border>
-                </TabItem>
-            </TabControl>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+
+                        <StackPanel Grid.Row="2" Margin="0,10,0,0"
+                                    Visibility="{Binding HasSelectedItem, Converter={StaticResource Bool2Vis}}">
+                            <TextBlock Text="{loc:Tr Hosting.NewComment}" Style="{StaticResource SectionHeader}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding NewCommentBody, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" MaxHeight="120"
+                                     VerticalScrollBarVisibility="Auto"/>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{loc:Tr Hosting.Posting}" Style="{StaticResource MutedText}"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding IsPostingComment, Converter={StaticResource Bool2Vis}}"/>
+                                <Button Grid.Column="1" Content="{loc:Tr Hosting.PostComment}" Style="{StaticResource AccentButton}"
+                                        Command="{Binding PostCommentCommand}" MinWidth="110"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="3" Text="{Binding CommentStatusMessage}" Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding CommentStatusMessage, Converter={StaticResource HasValue2Vis}}"/>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
 
         <Button Grid.Row="2" Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True" MinWidth="88"
