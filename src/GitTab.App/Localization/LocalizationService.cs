@@ -8,7 +8,7 @@ namespace GitTab.App.Localization;
 /// In-memory ko/en string tables with a live language toggle. Beginner-oriented ".Tip" strings
 /// explain each Git action in plain language for first-time users.
 /// </summary>
-public sealed class LocalizationService : ILocalizationService
+public sealed partial class LocalizationService : ILocalizationService
 {
     public static LocalizationService Current { get; private set; } = new();
 
@@ -37,12 +37,19 @@ public sealed class LocalizationService : ILocalizationService
 
     public string T(string key)
     {
-        var table = _language == AppLanguage.Korean ? Ko : En;
-        if (table.TryGetValue(key, out var value)) return value;
-        // Fall back to the other language, then the key itself.
-        var other = _language == AppLanguage.Korean ? En : Ko;
-        return other.TryGetValue(key, out var alt) ? alt : key;
+        if (Table(_language).TryGetValue(key, out var value)) return value;
+        // Fall back to English (the reference table), then the key itself.
+        return En.TryGetValue(key, out var alt) ? alt : key;
     }
+
+    private static Dictionary<string, string> Table(AppLanguage lang) => lang switch
+    {
+        AppLanguage.Korean => Ko,
+        AppLanguage.Japanese => Ja,
+        AppLanguage.Chinese => Zh,
+        AppLanguage.Spanish => Es,
+        _ => En
+    };
 
     public string T(string key, params object[] args)
     {
@@ -50,7 +57,14 @@ public sealed class LocalizationService : ILocalizationService
         catch (FormatException) { return T(key); }
     }
 
-    public void Toggle() => Language = _language == AppLanguage.Korean ? AppLanguage.English : AppLanguage.Korean;
+    public void Toggle() => Language = _language switch
+    {
+        AppLanguage.Korean => AppLanguage.English,
+        AppLanguage.English => AppLanguage.Japanese,
+        AppLanguage.Japanese => AppLanguage.Chinese,
+        AppLanguage.Chinese => AppLanguage.Spanish,
+        _ => AppLanguage.Korean
+    };
 
     // ---------------------------------------------------------------- string tables
 

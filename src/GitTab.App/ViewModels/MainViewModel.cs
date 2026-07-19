@@ -390,6 +390,7 @@ public sealed partial class MainViewModel : ObservableObject
         _settings.Update(_theme.Theme, Loc.Language);
         OnPropertyChanged(nameof(IsKoreanLanguage));
         OnPropertyChanged(nameof(IsEnglishLanguage));
+        OnPropertyChanged(nameof(SelectedLanguageOption));
         // Menu labels are baked into the registry — refresh them if the integration is installed.
         if (_shell.IsInstalled)
         {
@@ -454,6 +455,40 @@ public sealed partial class MainViewModel : ObservableObject
     {
         get => Loc.Language == AppLanguage.English;
         set { if (value && Loc.Language != AppLanguage.English) ToggleLanguage(); }
+    }
+
+    /// <summary>A selectable UI language with its own endonym (shown untranslated in the picker).</summary>
+    public sealed record LanguageOption(AppLanguage Value, string Name);
+
+    public IReadOnlyList<LanguageOption> LanguageOptions { get; } = new[]
+    {
+        new LanguageOption(AppLanguage.Korean, "한국어"),
+        new LanguageOption(AppLanguage.English, "English"),
+        new LanguageOption(AppLanguage.Japanese, "日本語"),
+        new LanguageOption(AppLanguage.Chinese, "中文"),
+        new LanguageOption(AppLanguage.Spanish, "Español"),
+    };
+
+    public LanguageOption? SelectedLanguageOption
+    {
+        get => LanguageOptions.FirstOrDefault(o => o.Value == Loc.Language);
+        set { if (value is not null) SetLanguage(value); }
+    }
+
+    [RelayCommand]
+    private void SetLanguage(LanguageOption? option)
+    {
+        if (option is null || Loc.Language == option.Value) return;
+        Loc.Language = option.Value;
+        _settings.Update(_theme.Theme, Loc.Language);
+        OnPropertyChanged(nameof(SelectedLanguageOption));
+        OnPropertyChanged(nameof(IsKoreanLanguage));
+        OnPropertyChanged(nameof(IsEnglishLanguage));
+        // Menu labels are baked into the registry — refresh them if the integration is installed.
+        if (_shell.IsInstalled)
+        {
+            try { _shell.Install(); } catch (Exception ex) { _logger.LogDebug(ex, "Shell relabel skipped"); }
+        }
     }
 
     /// <summary>High-contrast accessibility theme (overrides light/dark for low-vision use).</summary>

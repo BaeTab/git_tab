@@ -22,10 +22,8 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
             <TextBlock Text="{loc:Tr Language}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <RadioButton GroupName="lang" Content="{loc:Tr Language.Korean}" Margin="0,0,18,0"
-                         IsChecked="{Binding IsKoreanLanguage, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-            <RadioButton GroupName="lang" Content="{loc:Tr Language.English}"
-                         IsChecked="{Binding IsEnglishLanguage, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+            <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                      DisplayMemberPath="Name" MinWidth="150"/>
         </StackPanel>
 
         <!-- Explorer integration -->

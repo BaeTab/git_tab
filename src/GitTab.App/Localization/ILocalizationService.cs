@@ -5,7 +5,10 @@ namespace GitTab.App.Localization;
 public enum AppLanguage
 {
     Korean,
-    English
+    English,
+    Japanese,
+    Chinese,
+    Spanish
 }
 
 /// <summary>
