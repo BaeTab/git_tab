@@ -3,6 +3,24 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-07-19
+
+Previously-deferred conveniences.
+
+### Added
+- **Expand/collapse diff context** — `+context` / `−context` buttons show more or fewer surrounding
+  lines around each change.
+- **Generate CHANGELOG** — produce a Markdown changelog grouped by Conventional-Commit type, from a
+  chosen tag (or all history) to HEAD; copy or save it.
+- **Commit bookmarks** — star commits (right-click) to mark them; a gold dot appears in the graph and
+  a Bookmarks menu jumps back to them. Bookmarks are saved per repository.
+- **Nested folder tree** — a commit's changed files are shown as a real folder tree (single-child
+  folder chains are collapsed), replacing the earlier one-level grouping.
+
+### Notes
+- Still deferred (roadmap): customizable keybindings, in-app PR review comments, and a full 3-way
+  conflict editor.
+
 ## [1.5.0] - 2026-07-19
 
 Everyday conveniences & repository management.

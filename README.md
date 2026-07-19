@@ -42,6 +42,7 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Multiple repository tabs** — open several repos and switch between them; folder-grouped file lists, image diffs, clickable `#123`/URLs in messages, an ignore-whitespace toggle, and merged-branch pruning.
 - **Hosting integration** — browse open pull requests/issues in-app, see a commit's CI status, and open the repo or a file in **VS Code** / an external diff tool.
 - **Convenience & management** — force-push (with lease), sign-off & co-author trailers, edit commit author, restore a file to an old version, a repository-statistics dashboard, a Git config editor, and "add to .gitignore".
+- **More productivity** — expand/collapse diff context, generate a CHANGELOG from Conventional Commits, bookmark commits, and browse changed files as a folder tree.
 - **History & Undo** — Browse HEAD's reflog and restore to any point; one-click "undo last action".
 - **Partial Staging** — Stage individual hunks of a file (the GUI equivalent of `git add -p`).
 - **Visual 3-Way Merge** — Resolve conflicts with base / ours / theirs panes and an editable result.
@@ -203,6 +204,7 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **다중 저장소 탭** — 여러 저장소를 탭으로 열고 전환. 폴더별 파일 그룹, 이미지 diff, 커밋 메시지의 `#123`·URL 클릭, 공백 무시 토글, 병합된 브랜치 정리.
 - **호스팅 연동** — 앱 안에서 PR·이슈 목록 조회, 커밋 CI 상태 표시, 저장소/파일을 **VS Code**·외부 diff 도구로 열기.
 - **편의·관리 기능** — 안전 강제 푸시(force-with-lease), Sign-off·공동작성자 트레일러, 작성자 수정, 파일을 옛 버전으로 되돌리기, 저장소 통계 대시보드, Git 설정 편집기, ".gitignore에 추가".
+- **생산성 도구** — diff 컨텍스트 확장/축소, Conventional Commits로 CHANGELOG 생성, 커밋 북마크, 변경 파일 폴더 트리.
 - **작업 기록 & 되돌리기** — HEAD reflog를 훑어보고 원하는 지점으로 복원, 원클릭 ‘마지막 작업 취소’.
 - **부분 스테이징** — 파일의 헝크(변경 블록) 단위로 스테이지 (GUI판 `git add -p`).
 - **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결.

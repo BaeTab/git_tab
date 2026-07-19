@@ -1,15 +1,16 @@
 # TODO / Known Limitations
 
-Honest record of what's done, what's left, and what's intentionally limited. Current release: **v1.5.0**.
+Honest record of what's done, what's left, and what's intentionally limited. Current release: **v1.6.0**.
 
 ## ✅ Implemented (through v1.5.0)
 
 - **Repository** — open (folder / drag-drop / recent / reopen-last), `git init`, **clone** (+ blobless
   partial clone), **multiple repository tabs**.
 - **Commit graph** — custom-rendered, virtualized, color-coded lanes, avatars, change bars,
-  incremental loading; text search/filter; per-commit signature & CI-status badges.
+  incremental loading; text search/filter; per-commit signature & CI-status badges; **bookmarks**.
 - **Diff** — unified & side-by-side, word-level highlighting, **syntax highlighting**, ignore-whitespace
-  toggle, **image diff** (before/after); folder-grouped changed-file lists; clickable `#123`/URL links.
+  toggle, **expand/collapse context**, **image diff** (before/after); changed files as a **folder tree**;
+  clickable `#123`/URL links.
 - **Staging & commit** — stage/unstage/discard, **hunk & line-level** staging, commit/amend,
   **GPG/SSH signing**, **sign-off (-s)**, **co-author** trailer, **edit author**, Conventional-Commit
   type helper.
@@ -23,8 +24,8 @@ Honest record of what's done, what's left, and what's intentionally limited. Cur
   richer stash (diff preview + stash-to-branch), blame, file history, compare, content search (pickaxe).
 - **Hosting** — in-app GitHub/GitLab **PR & issue lists**, CI status, "open in editor" (VS Code) +
   external diff tool.
-- **Management** — **repository statistics dashboard**, **Git config editor**, "add to .gitignore",
-  `.gitignore` generator, 3-way conflict resolver + abort/continue banner.
+- **Management** — **repository statistics dashboard**, **Git config editor**, **CHANGELOG generator**,
+  "add to .gitignore", `.gitignore` generator, 3-way conflict resolver + abort/continue banner.
 - **App** — light/dark theme, ko/en (persisted), command palette (Ctrl+P), keyboard shortcuts,
   Explorer right-click integration + standalone dialogs, single-instance, crash-report opt-in,
   accessibility first pass, GitHub release-based auto-update (SHA-256 verified).
@@ -45,10 +46,7 @@ Honest record of what's done, what's left, and what's intentionally limited. Cur
 - **UI-automation / integration test** expansion.
 
 ### Deferred features (worth doing, not tied to a tier)
-- Diff **"expand context"** lines, and **moved-code detection**.
-- **CHANGELOG generation** from Conventional Commits.
-- **Commit bookmarks** (star + quick-jump, persisted per repo).
-- True **nested folder tree** for changed files (current = one level of folder headers).
+- Diff **moved-code detection** (`--color-moved`). *(Expand/collapse context shipped in 1.6.0.)*
 - **Customizable keybindings**.
 - In-app **PR review comments** (currently PR/issue *lists* only).
 - Full **3-way conflict editor** (common-ancestor pane / free-form hunk editing) — today's resolver is
