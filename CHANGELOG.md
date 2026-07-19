@@ -3,6 +3,21 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-07-19
+
+Architecture: fully independent repository tabs.
+
+### Changed
+- **Independent repository tabs** — each open repository tab now keeps its own live state (commit
+  graph, selected commit, search filter, staged changes, in-flight fetch/pull) instead of sharing a
+  single one. Switching tabs is instant and preserves what you were looking at, rather than reopening
+  and reloading the repository.
+
+### Internal
+- Split the monolithic `MainViewModel` into an app-shell view-model plus a per-repository
+  `RepositorySessionViewModel` — each with its own git service and Working-copy / Branches / Details
+  view-models, built by a `RepositorySessionFactory`. Individual command behavior is unchanged.
+
 ## [1.6.0] - 2026-07-19
 
 Previously-deferred conveniences.

@@ -1,11 +1,11 @@
 # TODO / Known Limitations
 
-Honest record of what's done, what's left, and what's intentionally limited. Current release: **v1.6.0**.
+Honest record of what's done, what's left, and what's intentionally limited. Current release: **v1.7.0**.
 
 ## ✅ Implemented (through v1.5.0)
 
 - **Repository** — open (folder / drag-drop / recent / reopen-last), `git init`, **clone** (+ blobless
-  partial clone), **multiple repository tabs**.
+  partial clone), **multiple repository tabs** (each fully independent — its own live state & git service).
 - **Commit graph** — custom-rendered, virtualized, color-coded lanes, avatars, change bars,
   incremental loading; text search/filter; per-commit signature & CI-status badges; **bookmarks**.
 - **Diff** — unified & side-by-side, word-level highlighting, **syntax highlighting**, ignore-whitespace
@@ -31,11 +31,6 @@ Honest record of what's done, what's left, and what's intentionally limited. Cur
   accessibility first pass, GitHub release-based auto-update (SHA-256 verified).
 
 ## 🔭 Remaining
-
-### Refactoring (do before large new UI work)
-- **P0.1** — split `MainViewModel` into an app-shell VM + a per-repo `RepositorySessionViewModel`.
-  Multi-repo tabs currently reopen the single VM per tab; this split gives each tab fully independent
-  live state and is the cleanest base for further growth.
 
 ### Tier 5 — distribution / accessibility / quality
 - **winget / Microsoft Store** distribution + portable (no-install) zip.
