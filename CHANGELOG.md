@@ -3,6 +3,14 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-07-19
+
+### Added
+- **Undo last action** — a one-click undo button in the toolbar reverses the last Git action using the
+  reflog: undoing a commit/amend brings the changes back staged (`reset --soft`), a branch switch is
+  reversed (`checkout -`), and anything else (reset/merge/pull/rebase/cherry-pick/revert) restores the
+  previous state with `reset --keep`, which preserves uncommitted local edits instead of discarding them.
+
 ## [2.0.0] - 2026-07-19
 
 Major release: a big batch of power features, accessibility, and more languages.
