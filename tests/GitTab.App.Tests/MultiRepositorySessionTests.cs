@@ -167,6 +167,24 @@ public sealed class MultiRepositorySessionTests
     }
 
     [Fact]
+    public async Task Background_poll_is_silent_and_safe_on_a_repo_with_no_remote()
+    {
+        using var repo = TempRepo.CreateEmpty();
+        repo.Commit("a", "f.txt", "1");
+
+        var vm = BuildShell();
+        await vm.OpenPathCommand.ExecuteAsync(repo.Path);
+        var s = vm.ActiveSession!;
+
+        // No 'origin' remote → the fetch cannot succeed; the poll must swallow it, surface no error,
+        // leave the "incoming" indicator false, and never disturb the loaded graph.
+        await s.PollRemoteAsync(System.Threading.CancellationToken.None);
+
+        s.HasIncoming.Should().BeFalse();
+        s.Rows.Should().HaveCount(1);
+    }
+
+    [Fact]
     public async Task Opening_selects_the_newest_commit_and_wires_its_details()
     {
         using var repo = TempRepo.CreateEmpty();

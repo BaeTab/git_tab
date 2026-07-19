@@ -179,8 +179,21 @@
                 <StackPanel Orientation="Horizontal" Margin="4,0"
                             Visibility="{Binding IsRepositoryOpen, Converter={StaticResource Bool2Vis}}">
                     <Border Style="{StaticResource ToolbarSeparator}"/>
-                    <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="7" Padding="9,3" Margin="4,0"
+                    <Border CornerRadius="7" Padding="9,3" Margin="4,0" BorderThickness="1"
                             VerticalAlignment="Center" ToolTip="{loc:Tr Remote.AheadBehind.Tip}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <!-- Background fetch found commits to pull → nudge with an accent outline. -->
+                                    <DataTrigger Binding="{Binding ActiveSession.HasIncoming}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.Selection}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
                                        Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,6,0"/>

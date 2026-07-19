@@ -101,9 +101,27 @@ public partial class DiffView : UserControl
             }
         }
 
+        // AvalonEdit's built-in highlighting definitions are tuned for a white editor — their keyword
+        // blue etc. is a harsh, saturated color that's glaring/low-contrast on our dark surface. Tone
+        // every syntax color down (cap saturation, normalize lightness for the current theme) so tokens
+        // stay distinguishable but easy on the eyes. Idempotent, so re-applying per diff/theme is fine.
+        if (definition is not null)
+            SyntaxColorTuner.Soften(definition, IsDarkTheme());
+
         Editor.SyntaxHighlighting = definition;
         LeftEditor.SyntaxHighlighting = definition;
         RightEditor.SyntaxHighlighting = definition;
+    }
+
+    private bool IsDarkTheme()
+    {
+        if (TryFindResource("Brush.Window") is System.Windows.Media.SolidColorBrush b)
+        {
+            var c = b.Color;
+            var luminance = (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255.0;
+            return luminance < 0.5;
+        }
+        return true;
     }
 
     private void BuildUnified()
@@ -328,4 +346,78 @@ internal sealed class DiffBackgroundRenderer : IBackgroundRenderer
             }
         }
     }
+}
+
+/// <summary>
+/// Tones down AvalonEdit's built-in syntax colors so they read comfortably on the app's dark (or
+/// light) surface instead of the white background they were designed for. Caps saturation to kill the
+/// glaring pure-blue keyword color and normalizes lightness into a readable band for the theme. Hue is
+/// preserved, so keywords stay blue-ish, strings orange-ish, etc. — just softer. The transform is a
+/// clamp, so applying it repeatedly (per diff / on theme switch) converges and never over-shoots.
+/// </summary>
+internal static class SyntaxColorTuner
+{
+    public static void Soften(ICSharpCode.AvalonEdit.Highlighting.IHighlightingDefinition definition, bool isDark)
+    {
+        foreach (var color in definition.NamedHighlightingColors)
+        {
+            if (color.Foreground is not { } fg) continue;
+            System.Windows.Media.Color? rgb;
+            try { rgb = fg.GetColor(null); } catch { continue; }
+            if (rgb is not { } c) continue;
+            color.Foreground = new ICSharpCode.AvalonEdit.Highlighting.SimpleHighlightingBrush(Soften(c, isDark));
+        }
+    }
+
+    private static System.Windows.Media.Color Soften(System.Windows.Media.Color c, bool isDark)
+    {
+        RgbToHsl(c, out var h, out var s, out var l);
+        s = Math.Min(s, 0.55);                       // cap saturation → no more "쨍한" glare
+        l = isDark ? Clamp(l, 0.60, 0.80)            // readable-but-not-blinding on dark
+                   : Clamp(l, 0.28, 0.48);           // dark-enough on light
+        return HslToRgb(h, s, l);
+    }
+
+    private static double Clamp(double v, double lo, double hi) => v < lo ? lo : (v > hi ? hi : v);
+
+    private static void RgbToHsl(System.Windows.Media.Color c, out double h, out double s, out double l)
+    {
+        double r = c.R / 255.0, g = c.G / 255.0, b = c.B / 255.0;
+        double max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
+        l = (max + min) / 2.0;
+        if (Math.Abs(max - min) < 1e-9) { h = 0; s = 0; return; }
+        double d = max - min;
+        s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
+        if (max == r) h = (g - b) / d + (g < b ? 6 : 0);
+        else if (max == g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h /= 6.0;
+    }
+
+    private static System.Windows.Media.Color HslToRgb(double h, double s, double l)
+    {
+        double r, g, b;
+        if (s <= 0) { r = g = b = l; }
+        else
+        {
+            double q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            double p = 2 * l - q;
+            r = HueToRgb(p, q, h + 1.0 / 3.0);
+            g = HueToRgb(p, q, h);
+            b = HueToRgb(p, q, h - 1.0 / 3.0);
+        }
+        return System.Windows.Media.Color.FromRgb(To255(r), To255(g), To255(b));
+    }
+
+    private static double HueToRgb(double p, double q, double t)
+    {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1.0 / 6.0) return p + (q - p) * 6 * t;
+        if (t < 1.0 / 2.0) return q;
+        if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6;
+        return p;
+    }
+
+    private static byte To255(double v) => (byte)Math.Round(Clamp(v, 0, 1) * 255);
 }

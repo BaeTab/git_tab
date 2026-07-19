@@ -146,6 +146,10 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
     [ObservableProperty] private int _ahead;
     [ObservableProperty] private int _behind;
 
+    /// <summary>The current branch is behind its upstream (there are commits to pull). Kept current
+    /// by the background fetch so the toolbar can nudge the user without them fetching manually.</summary>
+    [ObservableProperty] private bool _hasIncoming;
+
     [ObservableProperty] private int _selectedCommitIndex = -1;
     [ObservableProperty] private string _searchText = string.Empty;
 
@@ -208,6 +212,7 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
             CurrentBranchName = current?.FriendlyName ?? (data.head.IsDetached ? "(detached)" : data.head.BranchFriendlyName);
             Ahead = current?.Ahead ?? 0;
             Behind = current?.Behind ?? 0;
+            HasIncoming = Behind > 0;
 
             ApplyFilter();
             StatusText = RepoState.IsInProgress
@@ -366,6 +371,41 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         var body = string.IsNullOrWhiteSpace(result.CombinedOutput) ? result.CommandLine : result.CombinedOutput;
         _dialogs.Error(body, Loc.T("Error.GitFailed"));
         return false;
+    }
+
+    private bool _polling;
+
+    /// <summary>
+    /// Quietly fetch this repository in the background and refresh the current branch's ahead/behind
+    /// counters — no auth prompt, no busy spinner, no graph rebuild, and errors (offline, no
+    /// credentials) are swallowed. Only the <see cref="Ahead"/>/<see cref="Behind"/>/<see cref="HasIncoming"/>
+    /// indicators move, so the graph keeps showing exactly what the user was looking at.
+    /// </summary>
+    public async Task PollRemoteAsync(CancellationToken ct)
+    {
+        // Don't collide with a user-initiated fetch/pull/push, and don't overlap our own polls.
+        if (_polling || CanCancelNetwork) return;
+        _polling = true;
+        try
+        {
+            GitResult result;
+            try { result = await _repo.FetchAsync(ct: ct); }
+            catch { return; }
+            if (!result.Success) return;
+
+            var counts = await Task.Run(() =>
+            {
+                _repo.Refresh();
+                var cur = _repo.GetBranches().FirstOrDefault(b => b.IsCurrent);
+                return (ahead: cur?.Ahead ?? Ahead, behind: cur?.Behind ?? Behind);
+            }, ct);
+
+            Ahead = counts.ahead;
+            Behind = counts.behind;
+            HasIncoming = counts.behind > 0;
+        }
+        catch { /* stay silent — background work must never surface errors */ }
+        finally { _polling = false; }
     }
 
     [RelayCommand] private Task AbortOperation() => RunNetworkAsync(ct => _repo.AbortOperationAsync(ct));

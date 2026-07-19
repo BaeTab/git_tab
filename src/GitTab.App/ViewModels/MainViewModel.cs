@@ -33,6 +33,11 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly RepositorySessionFactory _factory;
     private readonly ILogger<MainViewModel> _logger;
 
+    // Periodically fetches every open repository and refreshes its "behind" count. Only created when a
+    // WPF Application is running (never in headless tests), and it ticks on the UI thread.
+    private System.Windows.Threading.DispatcherTimer? _fetchTimer;
+    private bool _polling;
+
     /// <summary>Raised when a shell "commit" action asks the window to focus the staging panel.</summary>
     public event Action? CommitFocusRequested;
 
@@ -65,6 +70,53 @@ public sealed partial class MainViewModel : ObservableObject
         _logger = logger;
 
         foreach (var r in _recent.GetAll()) RecentRepositories.Add(r);
+
+        if (BackgroundFetchEnabled) EnsureFetchTimer()?.Start();
+    }
+
+    // ---- background fetch (periodic, per open repository) ----
+
+    private const int FetchIntervalMinutes = 3;
+
+    /// <summary>Periodically fetch every open repository and refresh its behind count. Persisted.</summary>
+    public bool BackgroundFetchEnabled
+    {
+        get => _settings.Current?.BackgroundFetch ?? true;
+        set
+        {
+            if (_settings.Current is { } s) { s.BackgroundFetch = value; _settings.Save(); }
+            if (value) EnsureFetchTimer()?.Start(); else _fetchTimer?.Stop();
+            OnPropertyChanged();
+        }
+    }
+
+    private System.Windows.Threading.DispatcherTimer? EnsureFetchTimer()
+    {
+        if (_fetchTimer is not null) return _fetchTimer;
+        // No WPF Application (unit tests / headless) → no timer; polling is UI-thread work.
+        if (System.Windows.Application.Current is null) return null;
+        _fetchTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(FetchIntervalMinutes)
+        };
+        _fetchTimer.Tick += async (_, _) => await PollAllSessionsAsync();
+        return _fetchTimer;
+    }
+
+    private async Task PollAllSessionsAsync()
+    {
+        if (_polling || Sessions.Count == 0) return;
+        _polling = true;
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            foreach (var session in Sessions.ToArray())
+            {
+                try { await session.PollRemoteAsync(cts.Token); }
+                catch (Exception ex) { _logger.LogDebug(ex, "Background fetch failed for a session"); }
+            }
+        }
+        finally { _polling = false; }
     }
 
     public ILocalizationService Loc { get; }
