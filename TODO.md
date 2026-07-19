@@ -36,16 +36,18 @@ split (P0.1) is still worth doing to give each tab fully independent live state.
 Tier 3: a true nested folder *tree* (current grouping is one level of folder headers), diff
 moved-code detection, and customizable keybindings.
 
-## Roadmap — planned (Tier 4/5)
+## Shipped in 1.4.0 (Tier 4)
+
+In-app GitHub/GitLab pull-request & issue lists, per-commit CI status badge, "open in editor"
+(VS Code, repo- and file-level) and an external-diff-tool action (`git difftool`). **OAuth device
+sign-in** is implemented but **inert until a GitHub OAuth App client_id is registered** (set
+`GITTAB_GITHUB_CLIENT_ID` or the `ClientId` constant in `GitHubDeviceFlow.cs`); PAT auth is used
+otherwise. Still deferred from Tier 4: in-app PR **review comments** and merge tool beyond
+`git difftool`/the built-in resolver.
+
+## Roadmap — planned (Tier 5)
 
 The following are captured for later:
-
-### Tier 4 — integration
-- **Deeper GitHub/GitLab API** — PR/issue list + status, CI badges, review comments in-app
-  (currently open-in-browser only).
-- **OAuth sign-in** — GitHub device flow (currently manual PAT entry only).
-- **External diff/merge tool** integration (e.g. Beyond Compare).
-- **"Open in VS Code"** / editor integration.
 
 ### Tier 5 — distribution / accessibility / quality
 - **winget / Microsoft Store** distribution + portable (no-install) zip.

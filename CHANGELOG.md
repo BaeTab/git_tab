@@ -3,6 +3,26 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-07-19
+
+Hosting & tooling integration (Tier 4).
+
+### Added
+- **In-app pull requests & issues** — a dialog lists open PRs/MRs and issues for the repo's
+  GitHub/GitLab remote (using the PAT you already store); click to open in the browser.
+- **CI status badge** — the commit details panel shows the selected commit's CI state
+  (passed / running / failed) for supported remotes.
+- **Open in editor** — open the repository (toolbar → tools menu) or a specific file (right-click)
+  in VS Code, falling back to the OS default handler.
+- **External diff tool** — right-click a changed file → open it in git's configured diff tool
+  (`git difftool`).
+
+### Notes
+- **OAuth device sign-in** is implemented but inert until a GitHub OAuth App **client_id** is
+  registered (set `GITTAB_GITHUB_CLIENT_ID` or the `ClientId` constant). Until then, authentication
+  continues to use a Personal Access Token. This is an intentional, documented limitation — the
+  project ships no client secret.
+
 ## [1.3.0] - 2026-07-19
 
 UX & productivity (Tier 3).

@@ -61,6 +61,9 @@ public interface IDialogService
     /// <summary>Show the saved-credentials manager dialog.</summary>
     void ShowCredentials(CredentialsViewModel vm);
 
+    /// <summary>Show the GitHub/GitLab pull-requests &amp; issues dialog.</summary>
+    void ShowHosting(HostingViewModel vm);
+
     /// <summary>Show a read-only text viewer (e.g. a stash diff).</summary>
     void ShowText(string title, string content);
 
@@ -269,6 +272,12 @@ public sealed class DialogService : IDialogService
     public void ShowCredentials(CredentialsViewModel vm)
     {
         var win = new CredentialsDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowHosting(HostingViewModel vm)
+    {
+        var win = new HostingDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 

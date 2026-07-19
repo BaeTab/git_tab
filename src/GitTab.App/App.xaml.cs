@@ -253,6 +253,8 @@ public partial class App : Application
         services.AddSingleton<IUpdateService, GitHubUpdateService>();
         services.AddSingleton<IShellIntegrationService, ShellIntegrationService>();
         services.AddSingleton<ICredentialStore, WindowsCredentialStore>();
+        services.AddSingleton<GitTab.App.Services.Hosting.IHostingClient, GitTab.App.Services.Hosting.HostingClient>();
+        services.AddSingleton<GitTab.App.Services.Hosting.GitHubDeviceFlow>();
 
         // ViewModels
         services.AddSingleton<WorkingCopyViewModel>();

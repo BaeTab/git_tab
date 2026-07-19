@@ -22,6 +22,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IUpdateService _updates;
     private readonly IShellIntegrationService _shell;
     private readonly ICredentialStore _credentials;
+    private readonly Services.Hosting.IHostingClient _hosting;
     private readonly ILogger<MainViewModel> _logger;
     private readonly GraphLayoutEngine _engine = new();
 
@@ -54,6 +55,7 @@ public sealed partial class MainViewModel : ObservableObject
         IUpdateService updates,
         IShellIntegrationService shell,
         ICredentialStore credentials,
+        Services.Hosting.IHostingClient hosting,
         ISettingsService settings,
         ICommitStatsSource stats,
         WorkingCopyViewModel workingCopy,
@@ -70,6 +72,7 @@ public sealed partial class MainViewModel : ObservableObject
         _updates = updates;
         _shell = shell;
         _credentials = credentials;
+        _hosting = hosting;
         _settings = settings;
         WorkingCopy = workingCopy;
         Branches = branches;
@@ -379,6 +382,27 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var vm = new CredentialsViewModel(_credentials, _dialogs, Loc, _logger);
         _dialogs.ShowCredentials(vm);
+    }
+
+    [RelayCommand]
+    private void OpenInEditor()
+    {
+        if (IsRepositoryOpen && RepositoryPath is not null)
+            ExternalTools.OpenInEditor(RepositoryPath);
+    }
+
+    [RelayCommand]
+    private void OpenHosting()
+    {
+        if (!IsRepositoryOpen) return;
+        var remote = _repo.GetRemoteUrl();
+        if (remote is null || !_hosting.IsSupported(remote))
+        {
+            _dialogs.Info(Loc.T("Hosting.Empty"), Loc.T("Hosting.Title"));
+            return;
+        }
+        var vm = new HostingViewModel(_hosting, remote, Loc, _logger);
+        _dialogs.ShowHosting(vm);
     }
 
     [RelayCommand]
@@ -900,6 +924,25 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenFileInEditor(FileChangeViewModel? file)
+    {
+        var path = file?.Path ?? Details.SelectedFile?.Path;
+        if (path is null || RepositoryPath is null) return;
+        ExternalTools.OpenInEditor(Path.Combine(RepositoryPath, path));
+    }
+
+    /// <summary>Open a file in git's configured external diff tool (git difftool).</summary>
+    [RelayCommand]
+    private async Task ExternalDiff(FileChangeViewModel? file)
+    {
+        var path = file?.Path ?? Details.SelectedFile?.Path;
+        if (path is null || !IsRepositoryOpen) return;
+        var r = await _repo.RunRawAsync(new[] { "difftool", "-y", "--", path });
+        if (!r.Success && !string.IsNullOrWhiteSpace(r.CombinedOutput))
+            _dialogs.Error(r.CombinedOutput, Loc.T("Error.GitFailed"));
+    }
+
+    [RelayCommand]
     private void Blame(FileChangeViewModel? file)
     {
         var path = file?.Path ?? Details.SelectedFile?.Path;
@@ -1058,6 +1101,8 @@ public sealed partial class MainViewModel : ObservableObject
                 P("Submodule.Manage", ManageSubmodulesCommand),
                 P("Sparse.Manage", ManageSparseCheckoutCommand),
                 P("Cred.Manage", ManageCredentialsCommand),
+                P("Menu.Hosting", OpenHostingCommand),
+                P("Menu.OpenInEditor", OpenInEditorCommand),
                 P("Hosting.PR", CreatePullRequestCommand),
                 P("Hosting.Web", OpenRemoteWebCommand),
                 P("Gitignore.Title", GenerateGitignoreCommand),

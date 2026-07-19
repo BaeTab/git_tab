@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using GitTab.App.Localization;
+using GitTab.App.Services.Hosting;
 using GitTab.Core.Abstractions;
 using GitTab.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,11 +11,13 @@ namespace GitTab.App.ViewModels;
 public sealed partial class CommitDetailsViewModel : ObservableObject
 {
     private readonly IRepositoryService _repo;
+    private readonly IHostingClient _hosting;
     private readonly ILogger<CommitDetailsViewModel> _logger;
 
-    public CommitDetailsViewModel(IRepositoryService repo, ILogger<CommitDetailsViewModel> logger)
+    public CommitDetailsViewModel(IRepositoryService repo, IHostingClient hosting, ILogger<CommitDetailsViewModel> logger)
     {
         _repo = repo;
+        _hosting = hosting;
         _logger = logger;
 
         // Group the changed-files list by folder so large commits are easy to browse.
@@ -46,6 +49,11 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
     /// <summary>The repo's remote URL, used to turn <c>#123</c> in messages into issue links.</summary>
     [ObservableProperty] private string? _remoteUrl;
 
+    /// <summary>CI status of the selected commit, and whether to show its badge.</summary>
+    [ObservableProperty] private bool _hasCiStatus;
+    [ObservableProperty] private string _ciStatusText = string.Empty;
+    [ObservableProperty] private string _ciStatusColorKey = "Brush.TextMuted";
+
     public bool HasCommit => Commit is not null;
     public string Sha => Commit?.Sha ?? string.Empty;
     public string ShortSha => Commit?.ShortSha ?? string.Empty;
@@ -63,9 +71,12 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
         SelectedFile = null;
         HasSignature = false;
         SignatureText = string.Empty;
+        HasCiStatus = false;
+        CiStatusText = string.Empty;
         if (commit is null) return;
 
         try { RemoteUrl = _repo.GetRemoteUrl(); } catch { RemoteUrl = null; }
+        _ = LoadCiStatusAsync(commit.Sha, RemoteUrl);
 
         try
         {
@@ -79,6 +90,28 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
         }
 
         _ = LoadSignatureAsync(commit.Sha);
+    }
+
+    private async Task LoadCiStatusAsync(string sha, string? remoteUrl)
+    {
+        if (remoteUrl is null || !_hosting.IsSupported(remoteUrl)) return;
+        try
+        {
+            var status = await _hosting.GetCommitStatusAsync(remoteUrl, sha);
+            if (Commit?.Sha != sha) return;   // selection moved on
+            (var key, var color) = status switch
+            {
+                CiStatus.Success => ("CI.Success", "Brush.Success"),
+                CiStatus.Pending => ("CI.Pending", "Brush.Accent"),
+                CiStatus.Failure => ("CI.Failure", "Brush.Danger"),
+                _ => ((string?)null, "Brush.TextMuted")
+            };
+            if (key is null) { HasCiStatus = false; return; }
+            CiStatusText = LocalizationService.Current.T(key);
+            CiStatusColorKey = color;
+            HasCiStatus = true;
+        }
+        catch { HasCiStatus = false; }
     }
 
     private async Task LoadSignatureAsync(string sha)

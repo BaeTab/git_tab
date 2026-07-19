@@ -153,6 +153,9 @@
                             <Separator/>
                             <MenuItem Header="{loc:Tr Patch.Apply}" Command="{Binding ApplyPatchCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.Credentials}" Command="{Binding ManageCredentialsCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="{loc:Tr Menu.Hosting}" Command="{Binding OpenHostingCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.OpenInEditor}" Command="{Binding OpenInEditorCommand}"/>
                             <MenuItem Header="{loc:Tr Submodule.Update}" Command="{Binding SubmoduleUpdateCommand}"
                                       Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
                         </MenuItem>
@@ -358,6 +361,13 @@
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                         <MenuItem Header="{loc:Tr Blame}"
                                                                   Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="{loc:Tr Ctx.OpenInEditor}"
+                                                                  Command="{Binding PlacementTarget.Tag.OpenFileInEditorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:Tr Ctx.ExternalDiff}"
+                                                                  Command="{Binding PlacementTarget.Tag.ExternalDiffCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     </ContextMenu>
                                                 </Grid.ContextMenu>
@@ -715,16 +725,28 @@
                                 <TextBlock Text="{Binding AuthorName}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <TextBlock Text="{Binding DateText}" Style="{StaticResource MutedText}" FontSize="11"/>
-                            <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
-                                    BorderThickness="1" CornerRadius="9" Padding="8,2" Margin="0,6,0,0" HorizontalAlignment="Left"
-                                    Visibility="{Binding HasSignature, Converter={StaticResource Bool2Vis}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource Brush.Success}" Margin="0,0,5,0"/>
-                                    <TextBlock Text="{Binding SignatureText}" FontSize="11" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource Brush.Text}"/>
-                                </StackPanel>
-                            </Border>
+                            <WrapPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                                        BorderThickness="1" CornerRadius="9" Padding="8,2" Margin="0,0,6,0"
+                                        Visibility="{Binding HasSignature, Converter={StaticResource Bool2Vis}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Success}" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding SignatureText}" FontSize="11" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Text}"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                                        BorderThickness="1" CornerRadius="9" Padding="8,2"
+                                        Visibility="{Binding HasCiStatus, Converter={StaticResource Bool2Vis}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE9F5;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
+                                                   Foreground="{Binding CiStatusColorKey, Converter={StaticResource Key2Brush}}" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding CiStatusText}" FontSize="11" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Text}"/>
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
                         </StackPanel>
 
                         <TextBlock Grid.Row="1" Text="{loc:Tr Details.ChangedFiles}" Style="{StaticResource SectionHeader}"/>
