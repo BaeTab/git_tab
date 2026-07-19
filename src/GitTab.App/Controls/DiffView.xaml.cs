@@ -157,6 +157,7 @@ public partial class DiffView : UserControl
         }
         Editor.Text = sb.ToString().TrimEnd('\n');
         _unifiedBg.Kinds = kinds;
+        _unifiedBg.MovedLines = MovedLineDetector.Detect(kinds, texts);
 
         // Word-level highlight: pair each removed line with the added line replacing it and mark
         // only the ranges that changed. Prefix +1 accounts for the "+"/"-" column.
@@ -234,6 +235,19 @@ public partial class DiffView : UserControl
         _leftBg.Kinds = lk;
         _rightBg.Kinds = rk;
 
+        // Moved-block detection runs on the flat hunk-order sequence, then maps each moved line to the
+        // left (removed) or right (added) editor row it occupies.
+        var movedSeq = MovedLineDetector.Detect(seqKinds, texts);
+        var leftMoved = new HashSet<int>();
+        var rightMoved = new HashSet<int>();
+        foreach (var s in movedSeq)
+        {
+            if (seqKinds[s] == DiffLineKind.Removed && leftIndex[s] >= 0) leftMoved.Add(leftIndex[s]);
+            else if (seqKinds[s] == DiffLineKind.Added && rightIndex[s] >= 0) rightMoved.Add(rightIndex[s]);
+        }
+        _leftBg.MovedLines = leftMoved;
+        _rightBg.MovedLines = rightMoved;
+
         var leftWords = new Dictionary<int, IReadOnlyList<WordDiff.Segment>>();
         var rightWords = new Dictionary<int, IReadOnlyList<WordDiff.Segment>>();
         foreach (var (rSeq, aSeq) in PairModified(seqKinds))
@@ -298,6 +312,10 @@ internal sealed class DiffBackgroundRenderer : IBackgroundRenderer
 
     public IReadOnlyList<DiffLineKind> Kinds { get; set; } = Array.Empty<DiffLineKind>();
 
+    /// <summary>Line indices (0-based) whose add/remove is really a *move* (matched elsewhere in the
+    /// diff), tinted differently from genuine additions/removals.</summary>
+    public HashSet<int> MovedLines { get; set; } = new();
+
     /// <summary>Per-line (0-based) changed-word ranges, offset to document columns, painted with a
     /// stronger brush on top of the row background.</summary>
     public IReadOnlyDictionary<int, IReadOnlyList<WordDiff.Segment>> WordSegments { get; set; }
@@ -316,10 +334,11 @@ internal sealed class DiffBackgroundRenderer : IBackgroundRenderer
             if (idx < 0 || idx >= Kinds.Count) continue;
 
             var kind = Kinds[idx];
+            bool moved = MovedLines.Contains(idx);
             var key = kind switch
             {
-                DiffLineKind.Added => "Diff.AddBg",
-                DiffLineKind.Removed => "Diff.DelBg",
+                DiffLineKind.Added => moved ? "Diff.MovedAddBg" : "Diff.AddBg",
+                DiffLineKind.Removed => moved ? "Diff.MovedDelBg" : "Diff.DelBg",
                 DiffLineKind.HunkHeader => "Diff.HunkBg",
                 _ => null
             };

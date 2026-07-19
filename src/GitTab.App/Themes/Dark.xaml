@@ -17,6 +17,10 @@
 
     <SolidColorBrush x:Key="Diff.AddBg"   Color="#14271D"/>
     <SolidColorBrush x:Key="Diff.DelBg"   Color="#2A181B"/>
+    <!-- Moved code (git color-moved): blue for the new location, violet for the old, so it reads
+         differently from a genuine add (green) / remove (red). -->
+    <SolidColorBrush x:Key="Diff.MovedAddBg" Color="#16283C"/>
+    <SolidColorBrush x:Key="Diff.MovedDelBg" Color="#2A2140"/>
     <SolidColorBrush x:Key="Diff.AddWordBg" Color="#2C6B43"/>
     <SolidColorBrush x:Key="Diff.DelWordBg" Color="#6E2A34"/>
     <SolidColorBrush x:Key="Diff.HunkBg"  Color="#1D2233"/>
