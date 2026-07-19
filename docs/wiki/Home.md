@@ -1,3 +1,7 @@
+**🇰🇷 [한국어](#git-tab에-오신-것을-환영합니다) · 🇬🇧 [English](#welcome-to-git-tab)**
+
+---
+
 # Git Tab에 오신 것을 환영합니다!
 
 **Git Tab은 Windows에서 Git을 쉽게 배우고 사용하기 위한 무료 GUI 도구입니다.**
@@ -58,3 +62,69 @@ Windows 탐색기 우클릭 메뉴 연동, .NET 기반으로 가볍고 빠릅니
 Git 개념이 낯설다면 **[Git 기초](Git-기초)**를 먼저 읽어보세요. 어렵지 않습니다.
 
 궁금한 점이 있으면 **[자주 묻는 질문](자주-묻는-질문)**에서 답을 찾을 수 있습니다.
+
+<br>
+
+---
+---
+
+# Welcome to Git Tab!
+
+**Git Tab is a free GUI tool that makes learning and using Git on Windows easy.**
+
+New to Git, or not comfortable with the command line? You're in the right place. Git Tab lets you manage your code history with nothing but mouse clicks.
+
+---
+
+## Explore
+
+| | |
+|---|---|
+| **[Getting Started](Getting-Started-EN)** | From install to first launch in 5 minutes |
+| **[Git Basics](Git-Basics)** | Repositories, commits, branches — the concepts you need |
+| **[Feature Tour](Features)** | See everything Git Tab can do |
+| **[Explorer Right‑Click](Explorer-Menu)** | Run Git commands straight from File Explorer |
+| **[Authentication](Authentication)** | Use a token instead of a password for GitHub/GitLab |
+| **[FAQ](FAQ)** | The 10 questions beginners ask most |
+| **[Troubleshooting](Troubleshooting)** | What to check when something "won't work" |
+
+---
+
+## Why Git Tab?
+
+### 🎨 **A colorful commit graph**
+Each branch gets its own color, so you can see at a glance when and where you worked. Author avatars and change bars make it even more intuitive.
+
+### 💬 **Korean & English**
+Menus, settings, and help are available in both Korean and English, with Git terms explained in plain language the first time they appear.
+
+### 🖱️ **A mouse is all you need**
+No need to memorize complex commands — every action is a button or a menu.
+
+### 🔐 **Safe authentication**
+Your personal access token is stored securely and reused automatically, so you don't type it every time.
+
+### 📦 **Git is bundled**
+No separate Git install required — the Git tools Git Tab needs ship with it.
+
+### 🪟 **Designed for Windows**
+Explorer right‑click integration, and a lightweight, fast .NET foundation.
+
+### 🆓 **Free & open source**
+Anyone can use it freely, and the source code is open.
+
+### ⌨️ **Command palette (Ctrl+P)**
+Search and run any action with a single `Ctrl+P` — work entirely from the keyboard, no menu-hunting.
+
+### 🔀 **Compare & search**
+Compare changes between two branches/tags at a glance, and find the commits where a string was added or removed in the code.
+
+---
+
+## Next steps
+
+New here? Start with **[Getting Started](Getting-Started-EN)** to install and open your first repository — five minutes is plenty!
+
+If Git concepts are unfamiliar, read **[Git Basics](Git-Basics)** first. It's not hard.
+
+Have a question? You'll likely find the answer in the **[FAQ](FAQ)**.

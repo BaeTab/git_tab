@@ -1,3 +1,5 @@
+**한국어** · [English](Getting-Started-EN)
+
 # 시작하기
 
 **5분 안에 Git Tab을 설치하고 첫 저장소를 열어보세요.**
