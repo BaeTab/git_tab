@@ -363,6 +363,11 @@ public sealed class LocalizationService : ILocalizationService
         ["Settings.BackgroundFetch.Tip"] = "몇 분마다 열려 있는 저장소를 조용히 fetch해서 '받아올 커밋 N개'를 최신으로 유지해요. 그래프는 그대로 두고 표시만 갱신해요.",
         ["Settings.BetaChannel"] = "베타 채널(미리보기 버전) 받기",
         ["Settings.BetaChannel.Tip"] = "업데이트 확인 시 정식 출시 전의 프리릴리스(베타)까지 포함해요. 새 기능을 먼저 써볼 수 있지만 불안정할 수 있어요.",
+        ["Settings.Accessibility"] = "접근성",
+        ["Settings.UiScale"] = "화면/글자 크기",
+        ["Settings.UiScale.Tip"] = "제목 표시줄을 제외한 전체 화면을 확대해요(100~150%).",
+        ["Settings.HighContrast"] = "고대비 테마",
+        ["Settings.HighContrast.Tip"] = "검정 배경 + 흰 글자 + 선명한 강조색으로 대비를 높여 저시력 환경에서 보기 쉽게 해요.",
         ["Settings.OpenLogs"] = "로그 폴더 열기",
         ["Settings.About"] = "정보",
 
@@ -826,6 +831,11 @@ public sealed class LocalizationService : ILocalizationService
         ["Settings.BackgroundFetch.Tip"] = "Quietly fetches open repositories every few minutes to keep the \"N to pull\" count current. The graph stays put — only the indicator updates.",
         ["Settings.BetaChannel"] = "Get beta (preview) releases",
         ["Settings.BetaChannel.Tip"] = "When checking for updates, include pre-release (beta) builds published before the stable release. You get new features earlier, but they may be less stable.",
+        ["Settings.Accessibility"] = "Accessibility",
+        ["Settings.UiScale"] = "UI / text size",
+        ["Settings.UiScale.Tip"] = "Zooms the whole window (title bar excluded), from 100% to 150%.",
+        ["Settings.HighContrast"] = "High-contrast theme",
+        ["Settings.HighContrast.Tip"] = "Black background, white text and a vivid accent for stronger contrast — easier to read for low vision.",
         ["Settings.OpenLogs"] = "Open logs folder",
         ["Settings.About"] = "About",
 

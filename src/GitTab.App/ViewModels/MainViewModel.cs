@@ -345,6 +345,7 @@ public sealed partial class MainViewModel : ObservableObject
         _settings.Update(_theme.Theme, Loc.Language);
         OnPropertyChanged(nameof(IsDarkTheme));
         OnPropertyChanged(nameof(IsLightTheme));
+        OnPropertyChanged(nameof(HighContrastEnabled));
     }
 
     [RelayCommand]
@@ -419,6 +420,38 @@ public sealed partial class MainViewModel : ObservableObject
         get => Loc.Language == AppLanguage.English;
         set { if (value && Loc.Language != AppLanguage.English) ToggleLanguage(); }
     }
+
+    /// <summary>High-contrast accessibility theme (overrides light/dark for low-vision use).</summary>
+    public bool HighContrastEnabled
+    {
+        get => _theme.Theme == AppTheme.HighContrast;
+        set
+        {
+            var target = value ? AppTheme.HighContrast : AppTheme.Dark;
+            if (_theme.Theme == target) return;
+            _theme.Apply(target);
+            _settings.Update(_theme.Theme, Loc.Language);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsDarkTheme));
+            OnPropertyChanged(nameof(IsLightTheme));
+        }
+    }
+
+    /// <summary>UI/font zoom in percent (100/115/130/150). Persisted; applied as a root LayoutTransform.</summary>
+    public IReadOnlyList<int> UiScaleOptions { get; } = new[] { 100, 115, 130, 150 };
+
+    public int UiScalePercent
+    {
+        get => _settings.Current?.UiScalePercent is int p and >= 100 ? p : 100;
+        set
+        {
+            if (_settings.Current is { } s && s.UiScalePercent != value) { s.UiScalePercent = value; _settings.Save(); }
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(UiScale));
+        }
+    }
+
+    public double UiScale => UiScalePercent / 100.0;
 
     public string GitPath => GitTab.Core.Git.GitExecutableLocator.Resolve();
     public string AppVersion => AppInfo.Version;

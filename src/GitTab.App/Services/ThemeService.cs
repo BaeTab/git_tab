@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace GitTab.App.Services;
 
-public enum AppTheme { Light, Dark }
+public enum AppTheme { Light, Dark, HighContrast }
 
 public interface IThemeService : INotifyPropertyChanged
 {

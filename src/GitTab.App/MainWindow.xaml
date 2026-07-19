@@ -59,6 +59,10 @@
         </Border>
 
         <Grid>
+        <!-- UI/font zoom for accessibility: scales the whole content area (title bar excluded). -->
+        <Grid.LayoutTransform>
+            <ScaleTransform ScaleX="{Binding UiScale}" ScaleY="{Binding UiScale}"/>
+        </Grid.LayoutTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>   <!-- toolbar -->
             <RowDefinition Height="Auto"/>   <!-- repository tabs -->
