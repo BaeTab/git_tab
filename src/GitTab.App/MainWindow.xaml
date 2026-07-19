@@ -157,8 +157,18 @@
                             <MenuItem Header="{loc:Tr Menu.Hosting}" Command="{Binding OpenHostingCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.OpenInEditor}" Command="{Binding OpenInEditorCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.Statistics}" Command="{Binding ShowStatisticsCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Changelog}" Command="{Binding GenerateChangelogCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.Config}" Command="{Binding EditConfigCommand}"/>
                             <MenuItem Header="{loc:Tr Menu.ForcePush}" Command="{Binding ForcePushCommand}"/>
+                            <MenuItem Header="{loc:Tr Menu.Bookmarks}" ItemsSource="{Binding Bookmarks}">
+                                <MenuItem.ItemContainerStyle>
+                                    <Style TargetType="MenuItem">
+                                        <Setter Property="Header" Value="{Binding Summary}"/>
+                                        <Setter Property="Command" Value="{Binding DataContext.JumpToBookmarkCommand, RelativeSource={RelativeSource AncestorType=Menu}}"/>
+                                        <Setter Property="CommandParameter" Value="{Binding}"/>
+                                    </Style>
+                                </MenuItem.ItemContainerStyle>
+                            </MenuItem>
                             <MenuItem Header="{loc:Tr Submodule.Update}" Command="{Binding SubmoduleUpdateCommand}"
                                       Visibility="{Binding HasSubmodules, Converter={StaticResource Bool2Vis}}"/>
                         </MenuItem>
@@ -664,6 +674,7 @@
                             <controls:CommitGraphControl.ContextMenu>
                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                     <MenuItem Header="{loc:Tr Ctx.CheckoutCommit}" Command="{Binding CheckoutCommitCommand}"/>
+                                    <MenuItem Header="{loc:Tr Ctx.Bookmark}" Command="{Binding ToggleBookmarkCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.Reword}" Command="{Binding RewordCommitCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.AmendAuthor}" Command="{Binding AmendAuthorCommand}"/>
                                     <MenuItem Header="{loc:Tr Ctx.StartBisect}" Command="{Binding StartBisectCommand}"/>
@@ -763,52 +774,59 @@
                         </StackPanel>
 
                         <TextBlock Grid.Row="1" Text="{loc:Tr Details.ChangedFiles}" Style="{StaticResource SectionHeader}"/>
-                        <ListBox Grid.Row="2" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <ListBox.GroupStyle>
-                                <GroupStyle>
-                                    <GroupStyle.HeaderTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,2">
-                                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                                                           VerticalAlignment="Center" Margin="0,0,5,0"
-                                                           Foreground="{DynamicResource Brush.TextMuted}"/>
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="11"
-                                                           Foreground="{DynamicResource Brush.TextMuted}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </GroupStyle.HeaderTemplate>
-                                </GroupStyle>
-                            </ListBox.GroupStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid ToolTip="{Binding DisplayPath}"
+                        <TreeView Grid.Row="2" x:Name="FilesTree" ItemsSource="{Binding FileTree}"
+                                  SelectedItemChanged="OnFileTreeSelected" BorderThickness="0" Background="Transparent"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="TreeViewItem">
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
+                                </Style>
+                            </TreeView.ItemContainerStyle>
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                    <Grid ToolTip="{Binding File.DisplayPath}"
                                           Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
                                         <Grid.ContextMenu>
                                             <ContextMenu>
                                                 <MenuItem Header="{loc:Tr FileHistory.Menu}"
                                                           Command="{Binding PlacementTarget.Tag.FileHistoryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                          CommandParameter="{Binding PlacementTarget.DataContext.File, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                 <MenuItem Header="{loc:Tr Blame}"
                                                           Command="{Binding PlacementTarget.Tag.BlameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                          CommandParameter="{Binding PlacementTarget.DataContext.File, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                 <Separator/>
                                                 <MenuItem Header="{loc:Tr Ctx.RestoreFile}"
                                                           Command="{Binding PlacementTarget.Tag.RestoreFileCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                          CommandParameter="{Binding PlacementTarget.DataContext.File, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                             </ContextMenu>
                                         </Grid.ContextMenu>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding StatusLetter}" Width="16" FontWeight="Bold"
-                                                   Foreground="{Binding StatusColorKey, Converter={StaticResource Key2Brush}}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" Margin="4,0,0,0"/>
+                                        <TextBlock Grid.Column="0" Width="16" FontWeight="Bold" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="{Binding File.StatusLetter}"/>
+                                                    <Setter Property="Foreground" Value="{Binding File.StatusColorKey, Converter={StaticResource Key2Brush}}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                                                            <Setter Property="Text" Value="&#xE8B7;"/>
+                                                            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                                                            <Setter Property="FontSize" Value="10"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                                   Margin="4,0,0,0" VerticalAlignment="Center"/>
                                     </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
                     </Grid>
 
                     <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Center" VerticalAlignment="Stretch"

@@ -183,7 +183,7 @@ public sealed class RepositoryServiceAdvancedTests
         var normal = svc.GetWorkingFileDiff("f.txt", staged: false);
         normal.Hunks.Should().NotBeEmpty("the raw diff sees the spacing change");
 
-        var ignored = await svc.GetWorkingFileDiffIgnoreWsAsync("f.txt", staged: false);
+        var ignored = await svc.GetWorkingFileDiffWithOptionsAsync("f.txt", staged: false, ignoreWhitespace: true, contextLines: -1);
         ignored.Hunks.Should().BeEmpty("git diff -w ignores whitespace-only changes");
     }
 

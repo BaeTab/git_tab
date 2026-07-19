@@ -19,4 +19,7 @@ public sealed class CommitRowViewModel
 
     /// <summary>True when HEAD points here (any current ref).</summary>
     public bool IsHead => Refs.Any(r => r.IsCurrent);
+
+    /// <summary>True when the user has starred this commit as a bookmark.</summary>
+    public bool IsBookmarked { get; init; }
 }

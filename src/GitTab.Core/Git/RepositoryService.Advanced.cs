@@ -304,18 +304,28 @@ public sealed partial class RepositoryService
 
     // ---------------------------------------------------------------- whitespace-ignoring diff
 
-    /// <summary>A commit file diff produced by git with whitespace changes ignored (git diff -w).</summary>
-    public async Task<FileDiff> GetCommitFileDiffIgnoreWsAsync(string sha, string path, CancellationToken ct = default)
+    /// <summary>A commit file diff produced by git with options: ignore whitespace (-w) and/or a
+    /// custom context-line count (-U&lt;n&gt;; pass a negative value for git's default of 3).</summary>
+    public async Task<FileDiff> GetCommitFileDiffWithOptionsAsync(string sha, string path, bool ignoreWhitespace, int contextLines, CancellationToken ct = default)
     {
         if (!GitArg.IsSafe(sha)) return new FileDiff { Path = path };
-        var r = await Run(new[] { "show", "--format=", "-w", sha, "--", path }, ct).ConfigureAwait(false);
+        var args = new List<string> { "show", "--format=" };
+        if (ignoreWhitespace) args.Add("-w");
+        if (contextLines >= 0) args.Add($"-U{contextLines}");
+        args.Add(sha);
+        args.Add("--");
+        args.Add(path);
+        var r = await Run(args, ct).ConfigureAwait(false);
         return ParseRawDiff(path, r.StandardOutput);
     }
 
-    /// <summary>A working-tree file diff with whitespace changes ignored (git diff -w).</summary>
-    public async Task<FileDiff> GetWorkingFileDiffIgnoreWsAsync(string path, bool staged, CancellationToken ct = default)
+    /// <summary>A working-tree file diff with options: ignore whitespace (-w) and/or a custom
+    /// context-line count (-U&lt;n&gt;; negative = git default).</summary>
+    public async Task<FileDiff> GetWorkingFileDiffWithOptionsAsync(string path, bool staged, bool ignoreWhitespace, int contextLines, CancellationToken ct = default)
     {
-        var args = new List<string> { "diff", "-w" };
+        var args = new List<string> { "diff" };
+        if (ignoreWhitespace) args.Add("-w");
+        if (contextLines >= 0) args.Add($"-U{contextLines}");
         if (staged) args.Add("--staged");
         args.Add("--");
         args.Add(path);

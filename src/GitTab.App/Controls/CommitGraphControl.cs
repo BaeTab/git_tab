@@ -27,6 +27,7 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     private const double ChipHeight = 17;
 
     private readonly Pen[] _lanePens;
+    private static readonly Brush _bookmarkBrush = CreateFrozen(Color.FromRgb(0xF5, 0xB3, 0x00)); // gold
     private readonly Typeface _uiFont = new("Segoe UI");
     private readonly Typeface _uiBold = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
     private readonly Typeface _monoFont = new("Consolas");
@@ -264,6 +265,10 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
             if (i == SelectedIndex)
                 dc.DrawRectangle(selBrush, null, new Rect(_offset.X, top, vw, RowHeight));
 
+            // ----- bookmark marker (gold dot at the left edge) -----
+            if (row.IsBookmarked)
+                dc.DrawEllipse(_bookmarkBrush, null, new Point(_offset.X + 4, centerY), 3.2, 3.2);
+
             // ----- edges -----
             foreach (var seg in row.GraphRow.PassingLanes)
             {
@@ -407,6 +412,13 @@ public sealed class CommitGraphControl : FrameworkElement, IScrollInfo
     private Brush Res(string key, Brush fallback) => TryFindResource(key) as Brush ?? fallback;
 
     private static int Mod(int i) => ((i % GraphPalette.Size) + GraphPalette.Size) % GraphPalette.Size;
+
+    private static Brush CreateFrozen(Color c)
+    {
+        var b = new SolidColorBrush(c);
+        b.Freeze();
+        return b;
+    }
 
     // ------------------------------------------------------------ input
 

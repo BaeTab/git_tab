@@ -19,14 +19,13 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
         _repo = repo;
         _hosting = hosting;
         _logger = logger;
-
-        // Group the changed-files list by folder so large commits are easy to browse.
-        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(Files);
-        view.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(FileChangeViewModel.Folder)));
     }
 
     public DiffViewModel Diff { get; } = new();
     public ObservableCollection<FileChangeViewModel> Files { get; } = new();
+
+    /// <summary>Changed files arranged as a folder tree (for the details TreeView).</summary>
+    public ObservableCollection<FileTreeNode> FileTree { get; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasCommit))]
@@ -67,6 +66,7 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
     {
         Commit = commit;
         Files.Clear();
+        FileTree.Clear();
         Diff.Clear();
         SelectedFile = null;
         HasSignature = false;
@@ -82,6 +82,7 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
         {
             foreach (var change in _repo.GetCommitChanges(commit.Sha))
                 Files.Add(new FileChangeViewModel { Model = change });
+            foreach (var node in FileTreeNode.Build(Files)) FileTree.Add(node);
             SelectedFile = Files.FirstOrDefault();
         }
         catch (Exception ex)
@@ -150,9 +151,10 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
             }
             else
             {
-                Diff.Refetch = async ignore => ignore
-                    ? await _repo.GetCommitFileDiffIgnoreWsAsync(sha, path)
-                    : _repo.GetCommitFileDiff(sha, path);
+                Diff.Refetch = async () =>
+                    (Diff.IgnoreWhitespace || Diff.ContextLines != DiffViewModel.DefaultContext)
+                        ? await _repo.GetCommitFileDiffWithOptionsAsync(sha, path, Diff.IgnoreWhitespace, Diff.ContextLines)
+                        : _repo.GetCommitFileDiff(sha, path);
                 Diff.Show(_repo.GetCommitFileDiff(sha, path));
             }
         }

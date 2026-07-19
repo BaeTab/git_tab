@@ -117,9 +117,10 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
             }
             else
             {
-                Diff.Refetch = async ignore => ignore
-                    ? await _repo.GetWorkingFileDiffIgnoreWsAsync(path, staged)
-                    : _repo.GetWorkingFileDiff(path, staged);
+                Diff.Refetch = async () =>
+                    (Diff.IgnoreWhitespace || Diff.ContextLines != DiffViewModel.DefaultContext)
+                        ? await _repo.GetWorkingFileDiffWithOptionsAsync(path, staged, Diff.IgnoreWhitespace, Diff.ContextLines)
+                        : _repo.GetWorkingFileDiff(path, staged);
                 Diff.Show(_repo.GetWorkingFileDiff(path, staged));
             }
         }

@@ -169,9 +169,9 @@ public interface IRepositoryService : IDisposable
     byte[]? GetBlobBytes(string sha, string path);
     byte[]? GetWorkingBytes(string path);
 
-    // ---- whitespace-ignoring diff ----
-    Task<FileDiff> GetCommitFileDiffIgnoreWsAsync(string sha, string path, CancellationToken ct = default);
-    Task<FileDiff> GetWorkingFileDiffIgnoreWsAsync(string path, bool staged, CancellationToken ct = default);
+    // ---- diff options (ignore whitespace, context lines) ----
+    Task<FileDiff> GetCommitFileDiffWithOptionsAsync(string sha, string path, bool ignoreWhitespace, int contextLines, CancellationToken ct = default);
+    Task<FileDiff> GetWorkingFileDiffWithOptionsAsync(string path, bool staged, bool ignoreWhitespace, int contextLines, CancellationToken ct = default);
 
     // ---- patch import/export ----
     Task<GitResult> ExportCommitPatchAsync(string sha, string filePath, CancellationToken ct = default);

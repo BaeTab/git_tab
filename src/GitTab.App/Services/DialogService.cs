@@ -70,6 +70,9 @@ public interface IDialogService
     /// <summary>Show the Git config editor.</summary>
     void ShowGitConfig(GitConfigViewModel vm);
 
+    /// <summary>Show the CHANGELOG generator.</summary>
+    void ShowChangelog(ChangelogViewModel vm);
+
     /// <summary>Show a read-only text viewer (e.g. a stash diff).</summary>
     void ShowText(string title, string content);
 
@@ -296,6 +299,12 @@ public sealed class DialogService : IDialogService
     public void ShowGitConfig(GitConfigViewModel vm)
     {
         var win = new GitConfigDialog { DataContext = vm, Owner = Owner() };
+        win.ShowDialog();
+    }
+
+    public void ShowChangelog(ChangelogViewModel vm)
+    {
+        var win = new ChangelogDialog { DataContext = vm, Owner = Owner() };
         win.ShowDialog();
     }
 

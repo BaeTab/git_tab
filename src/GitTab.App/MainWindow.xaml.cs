@@ -32,6 +32,16 @@ public partial class MainWindow : Window
         };
     }
 
+    // Selecting a file leaf in the changed-files tree drives the diff panel.
+    private void OnFileTreeSelected(object sender, System.Windows.RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (e.NewValue is ViewModels.FileTreeNode { File: { } file }
+            && sender is System.Windows.FrameworkElement { DataContext: ViewModels.CommitDetailsViewModel details })
+        {
+            details.SelectedFile = file;
+        }
+    }
+
     /// <summary>Bring the window to the foreground when an Explorer right-click routes here.</summary>
     public void ActivateForShell()
     {

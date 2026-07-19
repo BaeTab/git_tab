@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using GitTab.App.Localization;
 using GitTab.Core.Models;
 
@@ -35,8 +36,17 @@ public sealed partial class DiffViewModel : ObservableObject
     /// <summary>When on, the diff is re-fetched with whitespace changes ignored (git diff -w).</summary>
     [ObservableProperty] private bool _ignoreWhitespace;
 
-    /// <summary>Set by the caller: re-produce the current file's diff, honoring ignore-whitespace.</summary>
-    public Func<bool, Task<FileDiff?>>? Refetch { get; set; }
+    /// <summary>git's default number of unified-diff context lines.</summary>
+    public const int DefaultContext = 3;
+
+    /// <summary>Unified-diff context lines to show; the "expand context" control raises this.</summary>
+    [ObservableProperty] private int _contextLines = DefaultContext;
+
+    public bool CanShrinkContext => ContextLines > DefaultContext;
+
+    /// <summary>Set by the caller: re-produce the current file's diff honoring the current
+    /// ignore-whitespace + context-lines options (reads them off this VM).</summary>
+    public Func<Task<FileDiff>>? Refetch { get; set; }
 
     private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -55,7 +65,7 @@ public sealed partial class DiffViewModel : ObservableObject
     {
         IsImage = false;
         OldImage = NewImage = null;
-        ResetWhitespaceToggle();
+        ResetOptions();
         Diff = diff;
         if (diff.IsTooLarge) PlaceholderKey = "Diff.TooLarge";
         else if (diff.IsBinary) PlaceholderKey = "Diff.Binary";
@@ -65,7 +75,7 @@ public sealed partial class DiffViewModel : ObservableObject
     /// <summary>Show a before/after image comparison instead of a text diff.</summary>
     public void ShowImage(byte[]? oldBytes, byte[]? newBytes, string path)
     {
-        ResetWhitespaceToggle();
+        ResetOptions();
         Diff = null;
         OldImage = ToImage(oldBytes);
         NewImage = ToImage(newBytes);
@@ -80,18 +90,33 @@ public sealed partial class DiffViewModel : ObservableObject
         PlaceholderKey = "Diff.SelectFile";
     }
 
-    partial void OnIgnoreWhitespaceChanged(bool value)
+    /// <summary>Show more surrounding (context) lines around each change.</summary>
+    [RelayCommand]
+    private void ExpandContext() => ContextLines += 10;
+
+    /// <summary>Back to fewer context lines (down to git's default).</summary>
+    [RelayCommand]
+    private void ShrinkContext() => ContextLines = System.Math.Max(DefaultContext, ContextLines - 10);
+
+    partial void OnIgnoreWhitespaceChanged(bool value) => TriggerRefetch();
+
+    partial void OnContextLinesChanged(int value)
     {
-        if (_suppressWs || Refetch is null) return;
-        _ = ApplyWhitespaceAsync(value);
+        OnPropertyChanged(nameof(CanShrinkContext));
+        TriggerRefetch();
     }
 
-    private async Task ApplyWhitespaceAsync(bool ignore)
+    private void TriggerRefetch()
+    {
+        if (_suppressWs || Refetch is null) return;
+        _ = ApplyOptionsAsync();
+    }
+
+    private async Task ApplyOptionsAsync()
     {
         try
         {
-            var d = await Refetch!.Invoke(ignore);
-            if (d is null) return;
+            var d = await Refetch!.Invoke();
             IsImage = false;
             OldImage = NewImage = null;
             Diff = d;
@@ -100,10 +125,11 @@ public sealed partial class DiffViewModel : ObservableObject
         catch { /* leave the current diff shown */ }
     }
 
-    private void ResetWhitespaceToggle()
+    private void ResetOptions()
     {
         _suppressWs = true;
         IgnoreWhitespace = false;
+        ContextLines = DefaultContext;
         _suppressWs = false;
     }
 

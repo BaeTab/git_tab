@@ -23,6 +23,8 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IShellIntegrationService _shell;
     private readonly ICredentialStore _credentials;
     private readonly Services.Hosting.IHostingClient _hosting;
+    private readonly IBookmarkStore _bookmarkStore;
+    private HashSet<string> _bookmarks = new(StringComparer.Ordinal);
     private readonly ILogger<MainViewModel> _logger;
     private readonly GraphLayoutEngine _engine = new();
 
@@ -56,6 +58,7 @@ public sealed partial class MainViewModel : ObservableObject
         IShellIntegrationService shell,
         ICredentialStore credentials,
         Services.Hosting.IHostingClient hosting,
+        IBookmarkStore bookmarks,
         ISettingsService settings,
         ICommitStatsSource stats,
         WorkingCopyViewModel workingCopy,
@@ -73,6 +76,7 @@ public sealed partial class MainViewModel : ObservableObject
         _shell = shell;
         _credentials = credentials;
         _hosting = hosting;
+        _bookmarkStore = bookmarks;
         _settings = settings;
         WorkingCopy = workingCopy;
         Branches = branches;
@@ -107,6 +111,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<RecentRepository> RecentRepositories { get; } = new();
     public ObservableCollection<StashInfo> Stashes { get; } = new();
+
+    /// <summary>Bookmarked commits currently loaded (for the quick-jump list).</summary>
+    public ObservableCollection<CommitRowViewModel> Bookmarks { get; } = new();
 
     // ---- multi-repository tabs ----
     public ObservableCollection<RepositoryTab> Tabs { get; } = new();
@@ -426,11 +433,37 @@ public sealed partial class MainViewModel : ObservableObject
             await ReloadAllAsync();
     }
 
+    /// <summary>Star/unstar a commit as a bookmark (persisted per repository).</summary>
+    [RelayCommand]
+    private void ToggleBookmark(CommitRowViewModel? row)
+    {
+        var target = row ?? SelectedCommit;
+        if (target is null || RepositoryPath is null) return;
+        var nowOn = _bookmarkStore.Toggle(RepositoryPath, target.Sha);
+        if (nowOn) _bookmarks.Add(target.Sha); else _bookmarks.Remove(target.Sha);
+        ApplyFilter();   // rebuild rows so the graph marker + Bookmarks list reflect the change
+    }
+
+    [RelayCommand]
+    private void JumpToBookmark(CommitRowViewModel? row)
+    {
+        if (row is null) return;
+        var idx = Rows is IList<CommitRowViewModel> list ? list.IndexOf(row) : -1;
+        if (idx >= 0) SelectedCommitIndex = idx;
+    }
+
     [RelayCommand]
     private void ShowStatistics()
     {
         if (!IsRepositoryOpen) return;
         _dialogs.ShowStats(new StatsViewModel(_repo, Loc, _logger));
+    }
+
+    [RelayCommand]
+    private void GenerateChangelog()
+    {
+        if (!IsRepositoryOpen) return;
+        _dialogs.ShowChangelog(new ChangelogViewModel(_repo, _dialogs, Loc, _logger));
     }
 
     [RelayCommand]
@@ -584,6 +617,7 @@ public sealed partial class MainViewModel : ObservableObject
             RepositoryPath = discovered;
             RepositoryName = new DirectoryInfo(discovered).Name;
             IsRepositoryOpen = true;
+            _bookmarks = new HashSet<string>(_bookmarkStore.Get(discovered), StringComparer.Ordinal);
             TrackTab(discovered, RepositoryName);
             WireChildren();
             await ReloadAllAsync();
@@ -722,12 +756,16 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 Commit = list[i],
                 GraphRow = layout.Rows[i],
-                Refs = _refsBySha.TryGetValue(list[i].Sha, out var refs) ? refs : Array.Empty<RefLabel>()
+                Refs = _refsBySha.TryGetValue(list[i].Sha, out var refs) ? refs : Array.Empty<RefLabel>(),
+                IsBookmarked = _bookmarks.Contains(list[i].Sha)
             });
         }
 
         Rows = rows;
         LaneCount = layout.LaneCount;
+
+        Bookmarks.Clear();
+        foreach (var r in rows) if (r.IsBookmarked) Bookmarks.Add(r);
 
         var restore = previousSha is null ? -1 : rows.FindIndex(r => r.Sha == previousSha);
         SelectedCommitIndex = restore >= 0 ? restore : (rows.Count > 0 ? 0 : -1);
@@ -1175,6 +1213,7 @@ public sealed partial class MainViewModel : ObservableObject
                 P("Menu.Hosting", OpenHostingCommand),
                 P("Menu.OpenInEditor", OpenInEditorCommand),
                 P("Menu.Statistics", ShowStatisticsCommand),
+                P("Menu.Changelog", GenerateChangelogCommand),
                 P("Menu.Config", EditConfigCommand),
                 P("Menu.ForcePush", ForcePushCommand),
                 P("Hosting.PR", CreatePullRequestCommand),
