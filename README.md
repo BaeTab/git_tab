@@ -79,6 +79,27 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 **Light Theme:**
 ![Main Window (Light)](/docs/screenshots/main-light.png)
 
+**Theme gallery** — eight built-in themes; pick one from the toolbar palette menu or in Settings:
+
+<table>
+<tr>
+<td align="center"><b>Dark</b><br><img src="/docs/screenshots/theme-dark.png" width="420"></td>
+<td align="center"><b>Light</b><br><img src="/docs/screenshots/theme-light.png" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Midnight</b><br><img src="/docs/screenshots/theme-midnight.png" width="420"></td>
+<td align="center"><b>Nord</b><br><img src="/docs/screenshots/theme-nord.png" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Dracula</b><br><img src="/docs/screenshots/theme-dracula.png" width="420"></td>
+<td align="center"><b>Solarized</b><br><img src="/docs/screenshots/theme-solarized.png" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Rosé Pine</b><br><img src="/docs/screenshots/theme-rose.png" width="420"></td>
+<td align="center"><b>High Contrast</b><br><img src="/docs/screenshots/theme-highcontrast.png" width="420"></td>
+</tr>
+</table>
+
 ### Requirements
 
 - **Windows 10 or Windows 11**
@@ -243,6 +264,27 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 
 **라이트 테마:**
 ![Main Window (Light)](/docs/screenshots/main-light.png)
+
+**테마 갤러리** — 8종 내장 테마. 툴바 팔레트 메뉴 또는 설정에서 선택하세요:
+
+<table>
+<tr>
+<td align="center"><b>Dark</b><br><img src="/docs/screenshots/theme-dark.png" width="420"></td>
+<td align="center"><b>Light</b><br><img src="/docs/screenshots/theme-light.png" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Midnight</b><br><img src="/docs/screenshots/theme-midnight.png" width="420"></td>
+<td align="center"><b>Nord</b><br><img src="/docs/screenshots/theme-nord.png" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Dracula</b><br><img src="/docs/screenshots/theme-dracula.png" width="420"></td>
+<td align="center"><b>Solarized</b><br><img src="/docs/screenshots/theme-solarized.png" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Rosé Pine</b><br><img src="/docs/screenshots/theme-rose.png" width="420"></td>
+<td align="center"><b>High Contrast</b><br><img src="/docs/screenshots/theme-highcontrast.png" width="420"></td>
+</tr>
+</table>
 
 ### 시스템 요구사항
 
