@@ -25,7 +25,7 @@
 ; (used by the release workflow to stamp the exact tag version). When not
 ; supplied, fall back to the current project version below.
 #ifndef AppVersion
-  #define AppVersion "2.3.0"
+  #define AppVersion "2.4.0"
 #endif
 
 [Setup]

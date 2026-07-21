@@ -3,6 +3,14 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.4.0] - 2026-07-21
+
+### Added
+- **Explorer file right-click menu** — right-click a *file* (not just a folder) and the **Git Tab**
+  submenu now offers **File history**, **Blame**, **Revert changes to this file**, and **Add to
+  .gitignore**. Each opens the file's repository and runs the action on that file. Re-enable the
+  Explorer integration in Settings (uncheck/recheck) or reinstall to pick up the new menu.
+
 ## [2.3.0] - 2026-07-19
 
 ### Added
