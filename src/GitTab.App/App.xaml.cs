@@ -146,8 +146,13 @@ public partial class App : Application
                 case "--fetch": verb = "fetch"; break;
                 case "--stash": verb = "stash"; break;
                 case "--clone": verb = "clone"; break;
+                // File-menu verbs — the path argument is a specific file, not a folder.
+                case "--filehistory": verb = "filehistory"; break;
+                case "--blame": verb = "blame"; break;
+                case "--revertfile": verb = "revertfile"; break;
+                case "--gitignoreadd": verb = "gitignoreadd"; break;
                 default:
-                    if (!a.StartsWith("--", StringComparison.Ordinal) && path is null && Directory.Exists(a))
+                    if (!a.StartsWith("--", StringComparison.Ordinal) && path is null && (Directory.Exists(a) || File.Exists(a)))
                         path = a;
                     break;
             }

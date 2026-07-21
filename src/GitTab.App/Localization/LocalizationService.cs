@@ -357,6 +357,11 @@ public sealed partial class LocalizationService : ILocalizationService
         ["Shell.Menu.Fetch"] = "가져오기 (Fetch)",
         ["Shell.Menu.Stash"] = "변경 스태시",
         ["Shell.Menu.Log"] = "히스토리 / 로그",
+        ["Shell.Menu.FileHistory"] = "파일 히스토리",
+        ["Shell.Menu.Blame"] = "Blame (한 줄씩 작성자 보기)",
+        ["Shell.Menu.RevertFile"] = "이 파일 변경 되돌리기",
+        ["Shell.Menu.Gitignore"] = ".gitignore에 추가",
+        ["Shell.RevertConfirm"] = "'{0}'의 작업 변경을 버리고 마지막 커밋 상태로 되돌릴까요? (되돌린 내용은 복구할 수 없어요.)",
         ["Shell.Tip"] = "Windows 탐색기에서 폴더를 우클릭하면 Git Tab 메뉴로 열기·커밋·풀·푸시를 바로 쓸 수 있어요. 체크 해제하면 제거돼요.",
 
         // GUI 인증 (자격 증명)
@@ -885,6 +890,11 @@ public sealed partial class LocalizationService : ILocalizationService
         ["Shell.Menu.Fetch"] = "Fetch",
         ["Shell.Menu.Stash"] = "Stash changes",
         ["Shell.Menu.Log"] = "History / Log",
+        ["Shell.Menu.FileHistory"] = "File history",
+        ["Shell.Menu.Blame"] = "Blame (who wrote each line)",
+        ["Shell.Menu.RevertFile"] = "Revert changes to this file",
+        ["Shell.Menu.Gitignore"] = "Add to .gitignore",
+        ["Shell.RevertConfirm"] = "Discard your working changes to '{0}' and restore it to the last commit? (This can't be undone.)",
         ["Shell.Tip"] = "Right-click any folder in Windows Explorer to open, commit, pull or push with Git Tab. Uncheck to remove.",
 
         // GUI authentication (credentials)

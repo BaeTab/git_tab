@@ -910,10 +910,15 @@ public sealed partial class MainViewModel : ObservableObject
     /// Run a command that arrived from the command line or an Explorer right-click: open (or switch
     /// to) the given repository, then perform the verb (pull / push / fetch / commit / log).
     /// </summary>
+    private static readonly string[] FileVerbs = { "filehistory", "blame", "revertfile", "gitignoreadd" };
+
     public async Task ExecuteShellCommandAsync(string verb, string? path)
     {
         // Clone doesn't open an existing repo — the path is the destination parent folder.
         if (verb == "clone") { await CloneInto(path); return; }
+
+        // File-menu verbs: the path is a specific file, not a repository folder.
+        if (Array.IndexOf(FileVerbs, verb) >= 0) { await ExecuteFileCommandAsync(verb, path); return; }
 
         if (!string.IsNullOrWhiteSpace(path))
         {
@@ -939,5 +944,30 @@ public sealed partial class MainViewModel : ObservableObject
             case "commit": CommitFocusRequested?.Invoke(); break;
                 // "open" / "log": the repository is open and the graph (log) is already shown.
         }
+    }
+
+    // Explorer file-menu action: the argument is a file. Discover its repository, open/focus that tab,
+    // then run the action against the file's repo-relative path.
+    private async Task ExecuteFileCommandAsync(string verb, string? file)
+    {
+        if (string.IsNullOrWhiteSpace(file) || !System.IO.File.Exists(file)) return;
+
+        var dir = System.IO.Path.GetDirectoryName(file);
+        var repoRoot = dir is null ? null : _repo.Discover(dir);
+        if (repoRoot is null)
+        {
+            _dialogs.Error(Loc.T("Error.NotARepo"), Loc.T("Error.OpenFailed"));
+            return;
+        }
+
+        var existing = Sessions.FirstOrDefault(s =>
+            string.Equals(s.RepositoryPath, repoRoot, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null) ActiveSession = existing;
+        else await OpenPath(repoRoot);
+
+        if (ActiveSession is not { } session) return;
+
+        var relative = System.IO.Path.GetRelativePath(repoRoot, file).Replace('\\', '/');
+        session.RunFileShellAction(verb, relative);
     }
 }

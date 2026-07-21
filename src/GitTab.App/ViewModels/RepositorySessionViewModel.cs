@@ -943,6 +943,26 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         catch (Exception ex) { _logger.LogDebug(ex, "Clipboard set failed"); }
     }
 
+    /// <summary>Run an Explorer file-menu action (from the shell integration) on a repo-relative path.</summary>
+    public void RunFileShellAction(string verb, string relativePath)
+    {
+        var file = new FileChangeViewModel { Model = new FileChange { Path = relativePath, Kind = FileChangeKind.Modified } };
+        switch (verb)
+        {
+            case "filehistory": FileHistoryCommand.Execute(file); break;
+            case "blame": BlameCommand.Execute(file); break;
+            case "gitignoreadd": AddToGitignoreCommand.Execute(file); break;
+            case "revertfile": _ = DiscardFileAsync(relativePath); break;
+        }
+    }
+
+    private async Task DiscardFileAsync(string relativePath)
+    {
+        if (!_dialogs.Confirm(Loc.T("Shell.RevertConfirm", relativePath), Loc.T("Shell.Menu.RevertFile"))) return;
+        if (await GitUi.RunAsync(() => _repo.RunRawAsync(new[] { "checkout", "--", relativePath }), _dialogs, Loc, _logger))
+            await ReloadAllAsync();
+    }
+
     public void Dispose()
     {
         try { _repo.Close(); } catch (Exception ex) { _logger.LogWarning(ex, "Close failed"); }

@@ -27,22 +27,18 @@ public interface IShellIntegrationService
 /// </summary>
 public sealed class ShellIntegrationService : IShellIntegrationService
 {
-    // Parent flyout anchors: (Explorer shell key, the command-store key its items live in). We use
-    // ExtendedSubCommandsKey (Microsoft's preferred cascade method) rather than the empty-SubCommands
-    // trick, which produces an empty flyout on Windows 11.
-    private static readonly (string ParentPath, string StoreKey)[] Parents =
-    {
-        (@"Software\Classes\Directory\shell\GitTab",             "GitTab.Menu.Dir"),
-        (@"Software\Classes\Directory\Background\shell\GitTab",  "GitTab.Menu.Bg"),
-    };
+    // A cascade surface: the Explorer anchor key, its command-store key (ExtendedSubCommandsKey —
+    // Microsoft's preferred cascade, vs. the empty-SubCommands trick that shows an empty flyout on
+    // Windows 11), the store path, the path token, and which items belong to it. A *selected* folder
+    // or file passes its own path via %1; a folder *background* uses %V (the folder being viewed).
+    private readonly record struct Surface(string ParentPath, string StoreKey, string StorePath, string Token, Item[] Items);
 
-    // Command stores holding the actual items: (store key, path token). A *selected* folder passes
-    // its own path via %1; a folder *background* must use %V (the folder being viewed).
-    private static readonly (string StorePath, string Token)[] Stores =
-    {
-        (@"Software\Classes\GitTab.Menu.Dir", "%1"),
-        (@"Software\Classes\GitTab.Menu.Bg",  "%V"),
-    };
+    private static Surface[] Surfaces =>
+    [
+        new(@"Software\Classes\Directory\shell\GitTab",            "GitTab.Menu.Dir",  @"Software\Classes\GitTab.Menu.Dir",  "%1", FolderItems),
+        new(@"Software\Classes\Directory\Background\shell\GitTab", "GitTab.Menu.Bg",   @"Software\Classes\GitTab.Menu.Bg",   "%V", FolderItems),
+        new(@"Software\Classes\*\shell\GitTab",                    "GitTab.Menu.File", @"Software\Classes\GitTab.Menu.File", "%1", FileItems),
+    ];
 
     private readonly ILocalizationService _loc;
     private readonly ILogger<ShellIntegrationService> _logger;
@@ -59,7 +55,8 @@ public sealed class ShellIntegrationService : IShellIntegrationService
     // Ordered so Explorer lists them predictably (subkeys sort alphabetically).
     private readonly record struct Item(string Order, string Verb, string LabelKey);
 
-    private static readonly Item[] Items =
+    // Folder / background surface verbs.
+    private static readonly Item[] FolderItems =
     {
         new("01", "open",   "Shell.Menu.Open"),
         new("02", "clone",  "Shell.Menu.Clone"),
@@ -71,13 +68,23 @@ public sealed class ShellIntegrationService : IShellIntegrationService
         new("08", "log",    "Shell.Menu.Log"),
     };
 
+    // File surface verbs (right-click a specific file). Each opens the file's repository and runs the
+    // action on that file; the app tells the user if the file isn't inside a git repository.
+    private static readonly Item[] FileItems =
+    {
+        new("01", "filehistory", "Shell.Menu.FileHistory"),
+        new("02", "blame",       "Shell.Menu.Blame"),
+        new("03", "revertfile",  "Shell.Menu.RevertFile"),
+        new("04", "gitignoreadd", "Shell.Menu.Gitignore"),
+    };
+
     public bool IsInstalled
     {
         get
         {
             try
             {
-                using var k = Registry.CurrentUser.OpenSubKey(Parents[0].ParentPath);
+                using var k = Registry.CurrentUser.OpenSubKey(Surfaces[0].ParentPath);
                 return k is not null;
             }
             catch (Exception ex)
@@ -94,25 +101,24 @@ public sealed class ShellIntegrationService : IShellIntegrationService
         var icon = $"\"{exe}\",0";
         var rootLabel = _loc.T("Shell.Menu.Root");
 
-        // Parent flyout anchors, each pointing at its command-store key.
-        foreach (var (parentPath, storeKey) in Parents)
+        foreach (var surface in Surfaces)
         {
-            using var p = Registry.CurrentUser.CreateSubKey(parentPath);
-            p.SetValue(null, rootLabel);
-            p.SetValue("MUIVerb", rootLabel);
-            p.SetValue("Icon", icon);
-            p.SetValue("ExtendedSubCommandsKey", storeKey);
-        }
+            // Parent flyout anchor → its command-store key.
+            using (var p = Registry.CurrentUser.CreateSubKey(surface.ParentPath))
+            {
+                p.SetValue(null, rootLabel);
+                p.SetValue("MUIVerb", rootLabel);
+                p.SetValue("Icon", icon);
+                p.SetValue("ExtendedSubCommandsKey", surface.StoreKey);
+            }
 
-        // The items themselves, one set per surface (different path token). Clear any previous set
-        // first so re-registering after the item list changes doesn't leave stale entries.
-        foreach (var (storePath, token) in Stores)
-        {
-            try { Registry.CurrentUser.DeleteSubKeyTree(storePath, throwOnMissingSubKey: false); }
+            // The items. Clear any previous set first so re-registering after the item list changes
+            // doesn't leave stale entries.
+            try { Registry.CurrentUser.DeleteSubKeyTree(surface.StorePath, throwOnMissingSubKey: false); }
             catch (Exception ex) { _logger.LogDebug(ex, "Clearing old menu store failed"); }
 
-            using var shell = Registry.CurrentUser.CreateSubKey(storePath + @"\shell");
-            foreach (var it in Items)
+            using var shell = Registry.CurrentUser.CreateSubKey(surface.StorePath + @"\shell");
+            foreach (var it in surface.Items)
             {
                 using var verb = shell.CreateSubKey(it.Order + it.Verb);
                 var label = _loc.T(it.LabelKey);
@@ -120,7 +126,7 @@ public sealed class ShellIntegrationService : IShellIntegrationService
                 verb.SetValue("MUIVerb", label);
                 verb.SetValue("Icon", icon);
                 using var cmd = verb.CreateSubKey("command");
-                cmd.SetValue(null, $"\"{exe}\" --{it.Verb} \"{token}\"");
+                cmd.SetValue(null, $"\"{exe}\" --{it.Verb} \"{surface.Token}\"");
             }
         }
 
@@ -130,8 +136,11 @@ public sealed class ShellIntegrationService : IShellIntegrationService
 
     public void Uninstall()
     {
-        foreach (var (parentPath, _) in Parents) TryDeleteTree(parentPath);
-        foreach (var (storePath, _) in Stores) TryDeleteTree(storePath);
+        foreach (var surface in Surfaces)
+        {
+            TryDeleteTree(surface.ParentPath);
+            TryDeleteTree(surface.StorePath);
+        }
         NotifyShell();
         _logger.LogInformation("Explorer shell integration removed");
     }
