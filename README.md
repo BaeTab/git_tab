@@ -1,8 +1,12 @@
-# Git Tab
+<p align="center">
+  <img src="docs/og-image.png" alt="Git Tab — the friendly, open-source Git client for Windows" width="820">
+</p>
 
-**A modern Windows Git client with a color-coded commit graph, built in .NET 8 & WPF.**
+<h1 align="center">Git Tab</h1>
 
-[English](#english) | [한국어](#한국어)
+<p align="center"><b>A modern Windows Git client with a color-coded commit graph, built in .NET 8 &amp; WPF.</b></p>
+
+<p align="center"><a href="#english">English</a> | <a href="#한국어">한국어</a></p>
 
 ---
 
