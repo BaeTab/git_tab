@@ -3,6 +3,40 @@
 All notable changes to **Git Tab** are documented here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.5.0] - 2026-08-05
+
+Safety and liveness: Git Tab now keeps itself up to date with the repository, and warns you before
+the two mistakes that are expensive to undo — a merge you have to abort, and a secret in history.
+
+### Added
+- **Automatic refresh** — Git Tab now watches the open repository on disk and refreshes itself.
+  Saving a file in your editor updates the changes list; a commit, checkout or rebase made in a
+  terminal reloads the history. Bursts (a build, a branch switch touching thousands of files) are
+  coalesced into a single refresh, and the app's own git commands don't trigger a redundant one.
+  Toggle it off in **Settings → 저장소가 바뀌면 자동으로 새로고침**.
+- **Merge conflict prediction** — merging a branch now tells you *first* what would happen:
+  fast-forward, clean merge, or "conflicts expected in N files" with the file list. The prediction
+  merges the two commits in memory, so nothing is written and there is no half-finished merge to
+  abort when the answer is "conflicts".
+- **Per-block conflict resolution** — the 3-way resolver lists every conflicting region of the file
+  and lets you pick **ours / theirs / both** for each one independently, instead of only applying a
+  choice to the whole file. The quick actions now apply to every block at once, which keeps the
+  non-conflicting edits already in your working file.
+- **Pre-commit check (Repo Doctor)** — before a commit lands, staged content is checked for
+  credential-shaped strings (AWS keys, GitHub/GitLab tokens, private keys, JWTs, hard-coded
+  passwords), blobs large enough to bloat the repository, and paths that are almost always local-only
+  or build output (`.env`, `*.pem`, `keystore.properties`, `node_modules/`, …). It warns and lists
+  what it found — it never blocks the commit. Toggle it in **Settings → 커밋 전에 비밀정보·큰 파일 점검**.
+
+### Fixed
+- **Settings window no longer runs off the screen** — it had `SizeToContent="Height"` with resizing
+  disabled, so on a long settings list the bottom was simply cut off. It is now a fixed-height,
+  resizable window with a scrolling body and the Close button pinned at the bottom.
+- **Theme / language / graph-density dropdowns showed raw object text** (`ThemeOption { Value = Dark,
+  Name = Dark }`) instead of the option name. The themed `ComboBox` template renders its closed state
+  through `SelectionBoxItemTemplate`, which WPF leaves null when only `DisplayMemberPath` is set;
+  those dropdowns now use a real `ItemTemplate`.
+
 ## [2.4.0] - 2026-07-21
 
 ### Added
