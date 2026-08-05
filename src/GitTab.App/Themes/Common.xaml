@@ -150,6 +150,14 @@
         </Setter>
     </Style>
 
+    <!-- The themed ComboBox below draws its closed state through SelectionBoxItemTemplate, which
+         WPF leaves null when a ComboBox only sets DisplayMemberPath — the box then falls back to the
+         item's ToString(). Giving those ComboBoxes a real ItemTemplate is what makes the selected
+         option render as its name. -->
+    <DataTemplate x:Key="NameOption">
+        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+    </DataTemplate>
+
     <!-- ============ ComboBox (themed so it follows light/dark) ============ -->
     <Style TargetType="ComboBox">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>

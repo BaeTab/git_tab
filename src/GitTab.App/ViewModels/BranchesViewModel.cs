@@ -139,8 +139,58 @@ public sealed partial class BranchesViewModel : ObservableObject
     private async Task Merge(BranchNodeViewModel? node)
     {
         if (node is null || node.IsCurrent) return;
+        if (!await ConfirmMergeAsync(node.FriendlyName)) return;
         if (await GitUi.RunAsync(() => _repo.MergeAsync(node.FriendlyName), _dialogs, _loc, _logger))
             await NotifyChanged();
+    }
+
+    // How many conflicting paths to spell out before summarizing the rest.
+    private const int MaxListedConflicts = 12;
+
+    /// <summary>
+    /// Say what the merge would actually do — fast-forward, clean, or conflicting, and in which
+    /// files — before running it. The prediction merges the two commits in memory, so nothing is
+    /// written and there is no half-finished merge to abort if the answer is "conflicts".
+    /// </summary>
+    private async Task<bool> ConfirmMergeAsync(string branch)
+    {
+        MergePreview? preview;
+        try
+        {
+            preview = await Task.Run(() => _repo.PreviewMerge(branch));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Merge preview failed for {Branch}", branch);
+            preview = null;
+        }
+
+        var title = _loc.T("Merge.Title");
+
+        // No prediction available — ask plainly rather than implying the merge is clean.
+        if (preview is null) return _dialogs.Confirm(_loc.T("Merge.ConfirmUnknown", branch), title);
+
+        if (preview.AlreadyUpToDate)
+        {
+            _dialogs.Info(_loc.T("Merge.UpToDate", branch), title);
+            return false;
+        }
+
+        if (!preview.HasConflicts)
+        {
+            return _dialogs.Confirm(
+                preview.CanFastForward ? _loc.T("Merge.FastForward", branch) : _loc.T("Merge.Clean", branch),
+                title);
+        }
+
+        var listed = string.Join("\n",
+            preview.ConflictingPaths.Take(MaxListedConflicts).Select(p => "  • " + p));
+        if (preview.ConflictingPaths.Count > MaxListedConflicts)
+            listed += "\n  … +" + (preview.ConflictingPaths.Count - MaxListedConflicts);
+
+        return _dialogs.Confirm(
+            _loc.T("Merge.WillConflict", branch, preview.ConflictingPaths.Count) + "\n\n" + listed,
+            title);
     }
 
     [RelayCommand]

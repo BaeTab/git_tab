@@ -11,6 +11,8 @@ public sealed class AppSettings
     public string Language { get; set; } = "Korean";  // "Korean" | "English"
     public bool CrashReports { get; set; } = true;     // write a local crash report on unhandled errors
     public bool BackgroundFetch { get; set; } = true;  // periodically fetch open repos and update "behind"
+    public bool AutoRefresh { get; set; } = true;      // refresh when the repo changes on disk (editor saves, CLI commits)
+    public bool RepoDoctor { get; set; } = true;       // warn about secrets/huge files/ignorable paths before committing
     public string UpdateChannel { get; set; } = "Stable"; // "Stable" | "Beta" (beta includes prereleases)
     public int UiScalePercent { get; set; } = 100;     // UI/font zoom: 100 / 115 / 130 / 150
 

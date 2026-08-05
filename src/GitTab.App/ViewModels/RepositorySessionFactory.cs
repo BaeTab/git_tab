@@ -21,6 +21,7 @@ public sealed class RepositorySessionFactory
     private readonly ICredentialStore _credentials;
     private readonly Services.Hosting.IHostingClient _hosting;
     private readonly IBookmarkStore _bookmarks;
+    private readonly ISettingsService _settings;
     private readonly ILoggerFactory _loggerFactory;
 
     public RepositorySessionFactory(
@@ -30,6 +31,7 @@ public sealed class RepositorySessionFactory
         ICredentialStore credentials,
         Services.Hosting.IHostingClient hosting,
         IBookmarkStore bookmarks,
+        ISettingsService settings,
         ILoggerFactory loggerFactory)
     {
         _git = git;
@@ -38,6 +40,7 @@ public sealed class RepositorySessionFactory
         _credentials = credentials;
         _hosting = hosting;
         _bookmarks = bookmarks;
+        _settings = settings;
         _loggerFactory = loggerFactory;
     }
 
@@ -52,13 +55,13 @@ public sealed class RepositorySessionFactory
         repo.Open(discoveredPath);
 
         var stats = new CommitStatsCache(repo);
-        var workingCopy = new WorkingCopyViewModel(repo, _dialogs, _loc, _loggerFactory.CreateLogger<WorkingCopyViewModel>());
+        var workingCopy = new WorkingCopyViewModel(repo, _dialogs, _loc, _settings, _loggerFactory.CreateLogger<WorkingCopyViewModel>());
         var branches = new BranchesViewModel(repo, _dialogs, _loc, _loggerFactory.CreateLogger<BranchesViewModel>());
         var details = new CommitDetailsViewModel(repo, _hosting, _loggerFactory.CreateLogger<CommitDetailsViewModel>());
 
         var session = new RepositorySessionViewModel(
             repo, workingCopy, branches, details, stats,
-            _dialogs, _loc, _credentials, _hosting, _bookmarks,
+            _dialogs, _loc, _credentials, _hosting, _bookmarks, _settings,
             _loggerFactory.CreateLogger<RepositorySessionViewModel>());
 
         session.Initialize(discoveredPath, new DirectoryInfo(discoveredPath).Name);

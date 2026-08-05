@@ -40,6 +40,9 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Diff moved-code detection** — blocks of code deleted in one place and re-added elsewhere now highlight as *moved* (blue/violet) instead of plain red/green, like `git`'s color-moved.
 - **Open diff in its own window** — pop-out diffs to a resizable window with F11 fullscreen support.
 - **Staging & Commit** — Stage/unstage/discard individual files and commit (or amend) from the UI.
+- **Automatic refresh** — Git Tab watches the repository on disk: saving a file in your editor updates the changes list, and a commit or checkout made in a terminal reloads the history. No F5.
+- **Pre-commit check (Repo Doctor)** — warns before a commit lands when the staged content looks like a credential (AWS keys, GitHub/GitLab tokens, private keys, JWTs), is large enough to bloat the repository, or is a path that is normally local-only (`.env`, `*.pem`, `node_modules/`). It warns and lists what it found — it never blocks the commit.
+- **Merge conflict prediction** — before merging, Git Tab says whether the merge fast-forwards, applies cleanly, or conflicts, and in which files. The prediction runs in memory, so there is no half-finished merge to abort.
 - **Branches & Tags** — Checkout, create, delete, rename, merge, rebase; create/delete/push tags; delete remote branches.
 - **Interactive Rebase** — Reorder, squash, fixup, or drop commits with a visual planner.
 - **Reword & Bisect** — Rewrite any commit's message, and binary-search for a bad commit (Good / Bad / Skip) right from the graph.
@@ -61,7 +64,7 @@ Git Tab is a native Windows Git client that brings the power of **visual branch 
 - **Commit Helper** — A Conventional-Commits type dropdown for consistent messages.
 - **Stash** — Stash your changes and apply/pop/drop them later.
 - **Blame** — See which commit last changed each line of a file.
-- **Conflict Handling** — An in-progress banner with Abort/Continue; resolve by staging files.
+- **Conflict Handling** — An in-progress banner with Abort/Continue; resolve by staging files. The 3-way resolver lists every conflicting region of a file so you can pick **ours / theirs / both** for each one independently.
 - **Remotes** — Fetch, pull, push with ahead/behind tracking; long network operations are cancellable.
 - **GUI Authentication** — Push/pull to private HTTPS remotes with no console setup: enter a username + Personal Access Token once in a dialog, stored securely in Windows Credential Manager and reused automatically.
 - **Windows Explorer Integration** — TortoiseGit-style right-click menu (**Open / Clone / Commit / Pull / Push / Fetch / Stash / History**) on any folder. Pull/Push/Fetch/Commit/Stash open in a dedicated dialog (no need to open the full app); Open/Clone/History launch the main window. Toggle it from **Settings** (no admin needed).
@@ -226,6 +229,9 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **Diff 이동 코드 감지(moved-code detection)** — 한 곳에서 삭제되고 다른 곳에서 다시 추가된 코드 블록이 *이동*(파랑/보라)으로 표시됨, `git`의 color-moved처럼.
 - **Diff를 별도 창에서 열기** — diff 툴바의 팝아웃 버튼으로 별도 창에 열고 F11으로 전체 화면 지원.
 - **스테이징 & 커밋** — 파일 단위 스테이징/언스테이징/되돌리기, 커밋(및 amend).
+- **자동 새로고침** — 저장소 변화를 감시해 스스로 갱신합니다. 에디터에서 파일을 저장하면 변경 목록이, 터미널에서 커밋·체크아웃하면 히스토리가 바로 반영돼요. F5를 누를 필요가 없습니다.
+- **커밋 전 점검(Repo Doctor)** — 스테이지된 내용에 API 키·개인키·토큰처럼 보이는 문자열, 저장소를 무겁게 만들 큰 파일, `.env`·`*.pem`·`node_modules/` 같이 보통 커밋하지 않는 경로가 있으면 커밋 전에 알려줍니다. 경고만 할 뿐 커밋을 막지는 않아요.
+- **병합 충돌 사전 예측** — 병합하기 전에 fast-forward인지, 깨끗하게 합쳐지는지, 어떤 파일에서 충돌이 나는지 먼저 알려줍니다. 메모리에서 계산하므로 중단할 반쪽짜리 병합이 생기지 않습니다.
 - **브랜치 & 태그** — 체크아웃·생성·삭제·이름변경·병합·리베이스, 태그 생성/삭제/푸시, 원격 브랜치 삭제.
 - **대화형 리베이스** — 커밋을 재정렬·squash·fixup·drop 하는 시각적 플래너.
 - **메시지 수정(reword) & 이분 탐색(bisect)** — 커밋 메시지를 다시 쓰고, Good/Bad/Skip 으로 버그 커밋을 이분 탐색 — 그래프에서 바로.
@@ -237,7 +243,7 @@ Git Tab는 **시각적 브랜치 관리**의 힘을 제공하는 네이티브 Wi
 - **생산성 도구** — diff 컨텍스트 확장/축소, Conventional Commits로 CHANGELOG 생성, 커밋 북마크, 변경 파일 폴더 트리.
 - **작업 기록 & 되돌리기** — HEAD reflog를 훑어보고 원하는 지점으로 복원, 원클릭 ‘마지막 작업 취소’.
 - **부분 스테이징** — 파일의 헝크(변경 블록) 단위로 스테이지 (GUI판 `git add -p`).
-- **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결.
+- **시각적 3-way 병합** — base/ours/theirs 참조 패널 + 편집 가능한 결과로 충돌 해결. 파일의 충돌 구간을 하나씩 나열해 구간마다 **ours / theirs / 둘 다**를 따로 고를 수 있습니다.
 - **만들기 / 복제 / 원격** — `git init` 새 저장소, URL에서 **복제(clone)**, 원격 추가/변경/삭제.
 - **파일 히스토리** — 파일을 건드린 커밋들과 각 커밋의 diff.
 - **비교(Compare)** — 두 브랜치·태그·커밋 사이 diff.

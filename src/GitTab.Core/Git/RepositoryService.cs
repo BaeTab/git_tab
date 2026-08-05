@@ -30,6 +30,8 @@ public sealed partial class RepositoryService : IRepositoryService
 
     public string? CurrentRepositoryPath => _workingDir ?? _repoPath;
 
+    public string? GitDirectory => _repoPath;
+
     public string? Discover(string path)
     {
         try
@@ -538,6 +540,99 @@ public sealed partial class RepositoryService : IRepositoryService
             }
 
             return (Read(conflict.Ancestor), Read(conflict.Ours), Read(conflict.Theirs));
+        }
+    }
+
+    public MergePreview? PreviewMerge(string branchFriendlyName)
+    {
+        lock (_sync)
+        {
+            try
+            {
+                var repo = EnsureOpen();
+                var ours = repo.Head.Tip;
+                var theirs = ResolveCommit(repo, branchFriendlyName);
+                if (ours is null || theirs is null) return null;
+
+                // Ancestry decides the easy cases before any merge work: nothing to do when the
+                // other branch is already contained in HEAD, and a fast-forward can't conflict.
+                var mergeBase = repo.ObjectDatabase.FindMergeBase(ours, theirs);
+                if (mergeBase is not null)
+                {
+                    if (mergeBase.Sha == theirs.Sha) return new MergePreview { AlreadyUpToDate = true };
+                    if (mergeBase.Sha == ours.Sha) return new MergePreview { CanFastForward = true };
+                }
+
+                // A real merge: computed into a new in-memory tree, so the working tree and index
+                // are untouched no matter how it turns out.
+                var result = repo.ObjectDatabase.MergeCommits(ours, theirs, new MergeTreeOptions());
+                if (result.Status != MergeTreeStatus.Conflicts) return new MergePreview();
+
+                var paths = result.Conflicts
+                    .Select(c => c.Ours?.Path ?? c.Theirs?.Path ?? c.Ancestor?.Path)
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .Select(p => p!)
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(p => p, StringComparer.Ordinal)
+                    .ToArray();
+
+                return new MergePreview { ConflictingPaths = paths };
+            }
+            catch (Exception ex)
+            {
+                // Unknown ref, unborn HEAD, or a merge libgit2 can't model: report "unknown" rather
+                // than implying the merge is clean.
+                _logger.LogDebug(ex, "Merge preview failed for {Branch}", branchFriendlyName);
+                return null;
+            }
+        }
+    }
+
+    public IReadOnlyList<DoctorFinding> InspectStagedChanges()
+    {
+        lock (_sync)
+        {
+            try
+            {
+                var repo = EnsureOpen();
+                var findings = new List<DoctorFinding>();
+
+                foreach (var change in GetStatus().Staged)
+                {
+                    // A deletion adds nothing to history's weight and carries no content to scan.
+                    if (change.Kind == FileChangeKind.Deleted) continue;
+
+                    var entry = repo.Index[change.Path];
+                    if (entry is null) continue;
+                    if (repo.Lookup<Blob>(entry.Id) is not { } blob) continue;
+
+                    byte[]? content = null;
+                    if (blob.Size <= RepoDoctor.MaxScanBytes)
+                    {
+                        try
+                        {
+                            using var stream = blob.GetContentStream();
+                            using var buffer = new MemoryStream();
+                            stream.CopyTo(buffer);
+                            content = buffer.ToArray();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Unreadable blob: fall through and still apply the size/path rules.
+                            _logger.LogDebug(ex, "Doctor could not read staged blob {Path}", change.Path);
+                        }
+                    }
+
+                    findings.AddRange(RepoDoctor.Inspect(change.Path, blob.Size, content));
+                }
+
+                return findings;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Staged-change inspection failed");
+                return Array.Empty<DoctorFinding>();
+            }
         }
     }
 

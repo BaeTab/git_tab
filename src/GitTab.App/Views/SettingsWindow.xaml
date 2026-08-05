@@ -3,168 +3,183 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:GitTab.App.Localization"
         Title="{loc:Tr Settings.Title}"
-        Width="480" SizeToContent="Height" MinWidth="420"
-        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize"
+        Width="480" Height="720" MinWidth="420" MinHeight="360"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="CanResize"
         Background="{DynamicResource Brush.Window}"
         FontFamily="Segoe UI" FontSize="13">
-    <StackPanel Margin="22">
-        <TextBlock Text="{loc:Tr Settings.Title}" FontSize="18" FontWeight="SemiBold"
+    <DockPanel Margin="22,22,22,16">
+
+        <!-- Title and Close stay pinned so they are reachable at any window height; only the
+             settings themselves scroll. -->
+        <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Settings.Title}" FontSize="18" FontWeight="SemiBold"
                    Foreground="{DynamicResource Brush.Text}" Margin="0,0,0,16"/>
 
-        <!-- Appearance -->
-        <TextBlock Text="{loc:Tr Settings.Appearance}" Style="{StaticResource SectionHeader}"/>
-        <StackPanel Orientation="Horizontal" Margin="0,8,0,6">
-            <TextBlock Text="{loc:Tr Settings.Theme}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedThemeOption, Mode=TwoWay}"
-                      DisplayMemberPath="Name" MinWidth="160"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-            <TextBlock Text="{loc:Tr Language}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
-                      DisplayMemberPath="Name" MinWidth="150"/>
-        </StackPanel>
+        <Button DockPanel.Dock="Bottom" Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True"
+                HorizontalAlignment="Right" MinWidth="88" Margin="0,14,0,0"/>
 
-        <!-- Personalization -->
-        <TextBlock Text="{loc:Tr Settings.Personalization}" Style="{StaticResource SectionHeader}" Margin="0,12,0,0"/>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                      Padding="0,0,12,0">
+            <StackPanel>
 
-        <TextBlock Text="{loc:Tr Settings.AccentColor}" Margin="0,8,0,4" Foreground="{DynamicResource Brush.Text}"/>
-        <ItemsControl ItemsSource="{Binding AccentPresets}" Margin="0,0,0,2">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button Width="26" Height="26" Margin="0,0,6,6" Padding="0" FontSize="9"
-                            BorderThickness="1" BorderBrush="{DynamicResource Brush.Border}"
-                            Command="{Binding DataContext.SetAccentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding}"
-                            ToolTip="{Binding}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="{Binding}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding}" Value="">
-                                        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}"/>
-                                        <Setter Property="Content" Value="{loc:Tr Settings.AccentDefault}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-            <TextBlock Text="#RRGGBB" Width="96" VerticalAlignment="Center" Style="{StaticResource MutedText}"/>
-            <TextBox Text="{Binding AccentColor, UpdateSourceTrigger=PropertyChanged}" MinWidth="110"/>
-        </StackPanel>
-        <TextBlock Text="{loc:Tr Settings.AccentColor.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <!-- Appearance -->
+                <TextBlock Text="{loc:Tr Settings.Appearance}" Style="{StaticResource SectionHeader}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,6">
+                    <TextBlock Text="{loc:Tr Settings.Theme}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedThemeOption, Mode=TwoWay}"
+                              ItemTemplate="{StaticResource NameOption}" MinWidth="160"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="{loc:Tr Language}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                              ItemTemplate="{StaticResource NameOption}" MinWidth="150"/>
+                </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-            <TextBlock Text="{loc:Tr Settings.UiFont}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding UiFontOptions}" SelectedItem="{Binding UiFontFamily, Mode=TwoWay}" MinWidth="150"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-            <TextBlock Text="{loc:Tr Settings.DiffFont}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding DiffFontOptions}" SelectedItem="{Binding DiffFontFamily, Mode=TwoWay}" MinWidth="150" Margin="0,0,8,0"/>
-            <ComboBox ItemsSource="{Binding DiffFontSizeOptions}" SelectedItem="{Binding DiffFontSize, Mode=TwoWay}" MinWidth="70"
-                      ToolTip="{loc:Tr Settings.DiffFontSize}"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-            <TextBlock Text="{loc:Tr Settings.GraphDensity}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding DensityOptions}" SelectedItem="{Binding SelectedDensity, Mode=TwoWay}"
-                      DisplayMemberPath="Name" MinWidth="150"/>
-        </StackPanel>
-        <CheckBox Content="{loc:Tr Settings.GraphGlow}" Margin="0,0,0,10"
-                  IsChecked="{Binding GraphGlowEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <!-- Personalization -->
+                <TextBlock Text="{loc:Tr Settings.Personalization}" Style="{StaticResource SectionHeader}" Margin="0,12,0,0"/>
 
-        <CheckBox Content="{loc:Tr Settings.DiffSplitDefault}" Margin="0,0,0,6"
-                  IsChecked="{Binding DiffSplitDefault, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-            <TextBlock Text="{loc:Tr Settings.DiffContext}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding DiffContextOptions}" SelectedItem="{Binding DiffContextDefault, Mode=TwoWay}" MinWidth="90"/>
-        </StackPanel>
-        <CheckBox Content="{loc:Tr Diff.IgnoreWhitespace}" Margin="0,0,0,6"
-                  IsChecked="{Binding DiffIgnoreWhitespaceDefault, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <CheckBox Content="{loc:Tr Settings.DiffWordWrap}" Margin="0,0,0,10"
-                  IsChecked="{Binding DiffWordWrap, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Settings.AccentColor}" Margin="0,8,0,4" Foreground="{DynamicResource Brush.Text}"/>
+                <ItemsControl ItemsSource="{Binding AccentPresets}" Margin="0,0,0,2">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Width="26" Height="26" Margin="0,0,6,6" Padding="0" FontSize="9"
+                                    BorderThickness="1" BorderBrush="{DynamicResource Brush.Border}"
+                                    Command="{Binding DataContext.SetAccentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="{Binding}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="{Binding}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding}" Value="">
+                                                <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}"/>
+                                                <Setter Property="Content" Value="{loc:Tr Settings.AccentDefault}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                    <TextBlock Text="#RRGGBB" Width="96" VerticalAlignment="Center" Style="{StaticResource MutedText}"/>
+                    <TextBox Text="{Binding AccentColor, UpdateSourceTrigger=PropertyChanged}" MinWidth="110"/>
+                </StackPanel>
+                <TextBlock Text="{loc:Tr Settings.AccentColor.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-            <TextBlock Text="{loc:Tr Settings.FetchInterval}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding FetchIntervalOptions}" SelectedItem="{Binding BackgroundFetchMinutes, Mode=TwoWay}"
-                      MinWidth="90">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding StringFormat='{}{0} min'}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </StackPanel>
-        <CheckBox Content="{loc:Tr Settings.ReopenLast}" Margin="0,0,0,2"
-                  IsChecked="{Binding ReopenLastRepo, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <CheckBox Content="{loc:Tr Settings.AbsoluteDates}" Margin="0,8,0,2"
-                  IsChecked="{Binding AbsoluteDates, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="{loc:Tr Settings.UiFont}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding UiFontOptions}" SelectedItem="{Binding UiFontFamily, Mode=TwoWay}" MinWidth="150"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="{loc:Tr Settings.DiffFont}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding DiffFontOptions}" SelectedItem="{Binding DiffFontFamily, Mode=TwoWay}" MinWidth="150" Margin="0,0,8,0"/>
+                    <ComboBox ItemsSource="{Binding DiffFontSizeOptions}" SelectedItem="{Binding DiffFontSize, Mode=TwoWay}" MinWidth="70"
+                              ToolTip="{loc:Tr Settings.DiffFontSize}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="{loc:Tr Settings.GraphDensity}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding DensityOptions}" SelectedItem="{Binding SelectedDensity, Mode=TwoWay}"
+                              ItemTemplate="{StaticResource NameOption}" MinWidth="150"/>
+                </StackPanel>
+                <CheckBox Content="{loc:Tr Settings.GraphGlow}" Margin="0,0,0,10"
+                          IsChecked="{Binding GraphGlowEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
 
-        <!-- Explorer integration -->
-        <TextBlock Text="{loc:Tr Settings.ShellSection}" Style="{StaticResource SectionHeader}" Margin="0,12,0,0"/>
-        <CheckBox Content="{loc:Tr Settings.ShellEnable}" Margin="0,8,0,2"
-                  IsChecked="{Binding IsShellIntegrationInstalled, Mode=OneWay}"
-                  Command="{Binding ToggleShellIntegrationCommand}"
-                  Foreground="{DynamicResource Brush.Text}"/>
-        <TextBlock Text="{loc:Tr Shell.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                <CheckBox Content="{loc:Tr Settings.DiffSplitDefault}" Margin="0,0,0,6"
+                          IsChecked="{Binding DiffSplitDefault, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="{loc:Tr Settings.DiffContext}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding DiffContextOptions}" SelectedItem="{Binding DiffContextDefault, Mode=TwoWay}" MinWidth="90"/>
+                </StackPanel>
+                <CheckBox Content="{loc:Tr Diff.IgnoreWhitespace}" Margin="0,0,0,6"
+                          IsChecked="{Binding DiffIgnoreWhitespaceDefault, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <CheckBox Content="{loc:Tr Settings.DiffWordWrap}" Margin="0,0,0,10"
+                          IsChecked="{Binding DiffWordWrap, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
 
-        <!-- Git executable -->
-        <TextBlock Text="{loc:Tr Settings.GitSection}" Style="{StaticResource SectionHeader}" Margin="0,14,0,0"/>
-        <TextBox Text="{Binding GitPath, Mode=OneWay}" IsReadOnly="True" Margin="0,8,0,4"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="{loc:Tr Settings.FetchInterval}" Width="96" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding FetchIntervalOptions}" SelectedItem="{Binding BackgroundFetchMinutes, Mode=TwoWay}"
+                              MinWidth="90">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StringFormat='{}{0} min'}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <CheckBox Content="{loc:Tr Settings.RepoDoctor}" Margin="0,0,0,2"
+                          IsChecked="{Binding RepoDoctorEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Settings.RepoDoctor.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <CheckBox Content="{loc:Tr Settings.AutoRefresh}" Margin="0,0,0,2"
+                          IsChecked="{Binding AutoRefreshEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Settings.AutoRefresh.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <CheckBox Content="{loc:Tr Settings.ReopenLast}" Margin="0,0,0,2"
+                          IsChecked="{Binding ReopenLastRepo, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <CheckBox Content="{loc:Tr Settings.AbsoluteDates}" Margin="0,8,0,2"
+                          IsChecked="{Binding AbsoluteDates, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
 
-        <!-- Authentication -->
-        <TextBlock Text="{loc:Tr Settings.AuthSection}" Style="{StaticResource SectionHeader}" Margin="0,14,0,0"/>
-        <TextBlock Text="{loc:Tr Settings.ClearCredTip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,6"/>
-        <Button Content="{loc:Tr Settings.ClearCred}" Command="{Binding ClearCredentialsCommand}" HorizontalAlignment="Left"/>
+                <!-- Explorer integration -->
+                <TextBlock Text="{loc:Tr Settings.ShellSection}" Style="{StaticResource SectionHeader}" Margin="0,12,0,0"/>
+                <CheckBox Content="{loc:Tr Settings.ShellEnable}" Margin="0,8,0,2"
+                          IsChecked="{Binding IsShellIntegrationInstalled, Mode=OneWay}"
+                          Command="{Binding ToggleShellIntegrationCommand}"
+                          Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Shell.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,4"/>
 
-        <!-- Diagnostics -->
-        <TextBlock Text="{loc:Tr Settings.Diagnostics}" Style="{StaticResource SectionHeader}" Margin="0,14,0,0"/>
-        <CheckBox Content="{loc:Tr Settings.BackgroundFetch}" Margin="0,8,0,2"
-                  IsChecked="{Binding BackgroundFetchEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <TextBlock Text="{loc:Tr Settings.BackgroundFetch.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-        <CheckBox Content="{loc:Tr Settings.BetaChannel}" Margin="0,8,0,2"
-                  IsChecked="{Binding UpdateBetaChannelEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <TextBlock Text="{loc:Tr Settings.BetaChannel.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                <!-- Git executable -->
+                <TextBlock Text="{loc:Tr Settings.GitSection}" Style="{StaticResource SectionHeader}" Margin="0,14,0,0"/>
+                <TextBox Text="{Binding GitPath, Mode=OneWay}" IsReadOnly="True" Margin="0,8,0,4"/>
 
-        <TextBlock Text="{loc:Tr Settings.Accessibility}" FontWeight="SemiBold" Margin="0,10,0,4"
-                   Foreground="{DynamicResource Brush.Text}"/>
-        <StackPanel Orientation="Horizontal" Margin="0,2,0,4">
-            <TextBlock Text="{loc:Tr Settings.UiScale}" VerticalAlignment="Center" Margin="0,0,8,0"
-                       Foreground="{DynamicResource Brush.Text}"/>
-            <ComboBox ItemsSource="{Binding UiScaleOptions}" SelectedItem="{Binding UiScalePercent, Mode=TwoWay}"
-                      MinWidth="90" ToolTip="{loc:Tr Settings.UiScale.Tip}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding StringFormat='{}{0} %'}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </StackPanel>
-        <CheckBox Content="{loc:Tr Settings.CrashReports}" Margin="0,8,0,2"
-                  IsChecked="{Binding CrashReportsEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
-        <TextBlock Text="{loc:Tr Settings.CrashReports.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-        <Button Content="{loc:Tr Settings.OpenLogs}" Command="{Binding OpenLogsFolderCommand}" HorizontalAlignment="Left"/>
+                <!-- Authentication -->
+                <TextBlock Text="{loc:Tr Settings.AuthSection}" Style="{StaticResource SectionHeader}" Margin="0,14,0,0"/>
+                <TextBlock Text="{loc:Tr Settings.ClearCredTip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,6"/>
+                <Button Content="{loc:Tr Settings.ClearCred}" Command="{Binding ClearCredentialsCommand}" HorizontalAlignment="Left"/>
 
-        <!-- About -->
-        <TextBlock Text="{loc:Tr Settings.About}" Style="{StaticResource SectionHeader}" Margin="0,16,0,0"/>
-        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <TextBlock Text="{loc:Tr App.Title}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
-            <TextBlock Text="{Binding AppVersion, StringFormat=v{0}}" Margin="8,0,0,0" Style="{StaticResource MutedText}"/>
-        </StackPanel>
-        <TextBlock Margin="0,3,0,0">
-            <Hyperlink NavigateUri="https://github.com/BaeTab/git_tab" RequestNavigate="OnNavigate">
-                github.com/BaeTab/git_tab
-            </Hyperlink>
-        </TextBlock>
+                <!-- Diagnostics -->
+                <TextBlock Text="{loc:Tr Settings.Diagnostics}" Style="{StaticResource SectionHeader}" Margin="0,14,0,0"/>
+                <CheckBox Content="{loc:Tr Settings.BackgroundFetch}" Margin="0,8,0,2"
+                          IsChecked="{Binding BackgroundFetchEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Settings.BackgroundFetch.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                <CheckBox Content="{loc:Tr Settings.BetaChannel}" Margin="0,8,0,2"
+                          IsChecked="{Binding UpdateBetaChannelEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Settings.BetaChannel.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
-        <Button Content="{loc:Tr Common.Close}" IsCancel="True" IsDefault="True"
-                HorizontalAlignment="Right" MinWidth="88" Margin="0,20,0,0"/>
-    </StackPanel>
+                <TextBlock Text="{loc:Tr Settings.Accessibility}" FontWeight="SemiBold" Margin="0,10,0,4"
+                           Foreground="{DynamicResource Brush.Text}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,4">
+                    <TextBlock Text="{loc:Tr Settings.UiScale}" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{DynamicResource Brush.Text}"/>
+                    <ComboBox ItemsSource="{Binding UiScaleOptions}" SelectedItem="{Binding UiScalePercent, Mode=TwoWay}"
+                              MinWidth="90" ToolTip="{loc:Tr Settings.UiScale.Tip}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StringFormat='{}{0} %'}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <CheckBox Content="{loc:Tr Settings.CrashReports}" Margin="0,8,0,2"
+                          IsChecked="{Binding CrashReportsEnabled, Mode=TwoWay}" Foreground="{DynamicResource Brush.Text}"/>
+                <TextBlock Text="{loc:Tr Settings.CrashReports.Tip}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                <Button Content="{loc:Tr Settings.OpenLogs}" Command="{Binding OpenLogsFolderCommand}" HorizontalAlignment="Left"/>
+
+                <!-- About -->
+                <TextBlock Text="{loc:Tr Settings.About}" Style="{StaticResource SectionHeader}" Margin="0,16,0,0"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="{loc:Tr App.Title}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Text}"/>
+                    <TextBlock Text="{Binding AppVersion, StringFormat=v{0}}" Margin="8,0,0,0" Style="{StaticResource MutedText}"/>
+                </StackPanel>
+                <TextBlock Margin="0,3,0,0">
+                    <Hyperlink NavigateUri="https://github.com/BaeTab/git_tab" RequestNavigate="OnNavigate">
+                        github.com/BaeTab/git_tab
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 </Window>

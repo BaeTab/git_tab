@@ -92,6 +92,35 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Refresh open repositories when they change on disk (an editor save, or a commit made in a
+    /// terminal) instead of waiting for a manual refresh. Persisted, and applied to every open tab.
+    /// </summary>
+    public bool AutoRefreshEnabled
+    {
+        get => _settings.Current?.AutoRefresh ?? true;
+        set
+        {
+            if (_settings.Current is { } s) { s.AutoRefresh = value; _settings.Save(); }
+            foreach (var session in Sessions) session.AutoRefreshEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Check staged content for credentials, oversized blobs and files that are normally ignored,
+    /// and warn before the commit lands. Persisted.
+    /// </summary>
+    public bool RepoDoctorEnabled
+    {
+        get => _settings.Current?.RepoDoctor ?? true;
+        set
+        {
+            if (_settings.Current is { } s) { s.RepoDoctor = value; _settings.Save(); }
+            OnPropertyChanged();
+        }
+    }
+
     private System.Windows.Threading.DispatcherTimer? EnsureFetchTimer()
     {
         if (_fetchTimer is not null) return _fetchTimer;

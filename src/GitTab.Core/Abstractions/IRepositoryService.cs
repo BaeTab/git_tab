@@ -11,6 +11,10 @@ public interface IRepositoryService : IDisposable
 {
     string? CurrentRepositoryPath { get; }
 
+    /// <summary>The repository's git directory (usually <c>&lt;repo&gt;\.git</c>, but a file-linked
+    /// path for worktrees and submodules). Used to watch HEAD/index/refs for external changes.</summary>
+    string? GitDirectory { get; }
+
     /// <summary>Returns the repository working directory if <paramref name="path"/> is inside a
     /// git repo (or is one), otherwise null.</summary>
     string? Discover(string path);
@@ -54,6 +58,20 @@ public interface IRepositoryService : IDisposable
     /// <summary>The three merge stages of a conflicted file: common ancestor (base), ours, and theirs.
     /// Any may be null (e.g. add/add conflicts have no base).</summary>
     (string? Base, string? Ours, string? Theirs) GetConflictVersions(string path);
+
+    /// <summary>
+    /// Predicts the outcome of merging <paramref name="branchFriendlyName"/> into HEAD without
+    /// touching the working tree or the index. Returns null when the result can't be computed
+    /// (unknown ref, unborn HEAD), which callers should treat as "unknown", not "clean".
+    /// </summary>
+    MergePreview? PreviewMerge(string branchFriendlyName);
+
+    /// <summary>
+    /// Pre-commit inspection of the staged content: credential-shaped strings, oversized blobs, and
+    /// paths that are almost always build output or local-only files. Advisory — an empty list is
+    /// not a guarantee that the commit is clean.
+    /// </summary>
+    IReadOnlyList<Git.DoctorFinding> InspectStagedChanges();
     IReadOnlyList<string> GetSubmodulePaths();
 
     /// <summary>URL of the given remote (default "origin"), or null if it has none. Used to key

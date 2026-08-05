@@ -27,8 +27,14 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
     private readonly ICredentialStore _credentials;
     private readonly Services.Hosting.IHostingClient _hosting;
     private readonly IBookmarkStore _bookmarkStore;
+    private readonly ISettingsService _settings;
     private readonly ILogger<RepositorySessionViewModel> _logger;
     private readonly GraphLayoutEngine _engine = new();
+
+    // Watches the repository on disk so edits made in an editor (or a commit made in a terminal)
+    // show up without the user pressing refresh.
+    private readonly WorkingTreeWatcher _watcher;
+    private bool _refreshingStatus;
 
     private HashSet<string> _bookmarks = new(StringComparer.Ordinal);
 
@@ -59,6 +65,7 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         ICredentialStore credentials,
         Services.Hosting.IHostingClient hosting,
         IBookmarkStore bookmarks,
+        ISettingsService settings,
         ILogger<RepositorySessionViewModel> logger)
     {
         _repo = repo;
@@ -71,7 +78,12 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         _credentials = credentials;
         _hosting = hosting;
         _bookmarkStore = bookmarks;
+        _settings = settings;
         _logger = logger;
+
+        _watcher = new WorkingTreeWatcher(logger) { Enabled = _settings.Current?.AutoRefresh ?? true };
+        _watcher.WorkingTreeChanged += () => _ = RefreshStatusAsync();
+        _watcher.GitDirChanged += () => _ = AutoReloadAsync();
 
         // A single diff panel follows whichever file is selected (commit file or working file).
         ActiveDiff = Details.Diff;
@@ -97,6 +109,47 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         RepositoryName = name;
         _bookmarks = new HashSet<string>(_bookmarkStore.Get(path), StringComparer.Ordinal);
         _commitLimit = CommitPageSize;
+        _watcher.Watch(path, _repo.GitDirectory);
+    }
+
+    /// <summary>Whether this session refreshes itself when the repository changes on disk.</summary>
+    public bool AutoRefreshEnabled
+    {
+        get => _watcher.Enabled;
+        set => _watcher.Enabled = value;
+    }
+
+    /// <summary>
+    /// Cheap refresh for working-directory edits: re-read the status lists and the in-progress
+    /// operation banner, leaving the commit graph alone (nothing that was committed has moved).
+    /// </summary>
+    public async Task RefreshStatusAsync()
+    {
+        if (IsBusy || _refreshingStatus) return;
+        _refreshingStatus = true;
+        try
+        {
+            var state = await Task.Run(() => { _repo.Refresh(); return _repo.GetState(); });
+            WorkingCopy.Refresh();
+            RepoState = state;
+        }
+        catch (Exception ex)
+        {
+            // Auto-refresh is a convenience; a transient read failure (a file locked mid-write)
+            // must not interrupt the user with a dialog the way an explicit refresh would.
+            _logger.LogDebug(ex, "Auto status refresh failed");
+        }
+        finally
+        {
+            _refreshingStatus = false;
+        }
+    }
+
+    // HEAD/index/refs moved on disk — someone committed or switched branches outside the app.
+    private async Task AutoReloadAsync()
+    {
+        if (IsBusy) return;
+        await ReloadAllAsync();
     }
 
     /// <summary>The remote URL of this repository (used by the app shell's credential actions).</summary>
@@ -238,6 +291,9 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
         finally
         {
             IsBusy = false;
+            // We just re-read everything, so ignore the disk churn our own git commands produced
+            // rather than bouncing straight back into a second reload.
+            _watcher.IgnoreSelfWrites();
         }
     }
 
@@ -965,6 +1021,7 @@ public sealed partial class RepositorySessionViewModel : ObservableObject, IDisp
 
     public void Dispose()
     {
+        _watcher.Dispose();
         try { _repo.Close(); } catch (Exception ex) { _logger.LogWarning(ex, "Close failed"); }
         if (_repo is IDisposable d) d.Dispose();
     }

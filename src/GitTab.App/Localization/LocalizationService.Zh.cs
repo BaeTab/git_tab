@@ -189,6 +189,7 @@ public sealed partial class LocalizationService
         ["Conflict.Abort"] = "中止",
         ["Conflict.Resolve"] = "解决冲突",
         ["Conflict.ResolveHint"] = "为每处冲突选择要保留的一方。应用后会写入文件并标记为已解决(暂存)。",
+        ["Conflict.Blocks"] = "冲突区段 — 每段可单独解决。数量:",
         ["Conflict.UseOurs"] = "我方 (ours)",
         ["Conflict.UseTheirs"] = "对方 (theirs)",
         ["Conflict.Both"] = "两者都要",

@@ -189,6 +189,7 @@ public sealed partial class LocalizationService
         ["Conflict.Abort"] = "中止",
         ["Conflict.Resolve"] = "競合を解決",
         ["Conflict.ResolveHint"] = "各競合箇所でどちらの内容を使うか選んでください。適用するとファイルが保存され、解決済み（ステージ）としてマークされます。",
+        ["Conflict.Blocks"] = "競合箇所 — 箇所ごとに個別に選べます。件数:",
         ["Conflict.UseOurs"] = "自分の変更（ours）",
         ["Conflict.UseTheirs"] = "相手の変更（theirs）",
         ["Conflict.Both"] = "両方",

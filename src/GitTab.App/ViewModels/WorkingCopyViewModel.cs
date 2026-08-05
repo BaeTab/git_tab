@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using GitTab.App.Localization;
 using GitTab.App.Services;
 using GitTab.Core.Abstractions;
+using GitTab.Core.Git;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -14,14 +15,16 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
     private readonly IRepositoryService _repo;
     private readonly IDialogService _dialogs;
     private readonly ILocalizationService _loc;
+    private readonly ISettingsService _settings;
     private readonly ILogger<WorkingCopyViewModel> _logger;
 
     public WorkingCopyViewModel(IRepositoryService repo, IDialogService dialogs, ILocalizationService loc,
-        ILogger<WorkingCopyViewModel> logger)
+        ISettingsService settings, ILogger<WorkingCopyViewModel> logger)
     {
         _repo = repo;
         _dialogs = dialogs;
         _loc = loc;
+        _settings = settings;
         _logger = logger;
     }
 
@@ -197,10 +200,48 @@ public sealed partial class WorkingCopyViewModel : ObservableObject
             : CommitMessage.TrimEnd() + "\n\n" + trailer;
     }
 
+    // How many findings to spell out before summarizing the rest.
+    private const int MaxListedFindings = 10;
+
+    /// <summary>
+    /// Run the pre-commit checks and, if anything turns up, let the user decide. This warns rather
+    /// than blocks: the rules are heuristics, and a false positive must never be able to stop
+    /// someone from committing their work.
+    /// </summary>
+    private async Task<bool> ConfirmDoctorFindingsAsync()
+    {
+        if (_settings.Current is { RepoDoctor: false }) return true;
+
+        IReadOnlyList<DoctorFinding> findings;
+        try
+        {
+            findings = await Task.Run(() => _repo.InspectStagedChanges());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Pre-commit inspection failed");
+            return true;
+        }
+
+        if (findings.Count == 0) return true;
+
+        var listed = string.Join("\n", findings.Take(MaxListedFindings).Select(f =>
+            $"  • {f.Path}{(f.Line is { } line ? ":" + line : string.Empty)}" +
+            $" — {_loc.T("Doctor.Kind." + f.Kind)}: {f.Detail}"));
+        if (findings.Count > MaxListedFindings)
+            listed += "\n  … +" + (findings.Count - MaxListedFindings);
+
+        return _dialogs.Confirm(
+            _loc.T("Doctor.Warning", findings.Count) + "\n\n" + listed + "\n\n" + _loc.T("Doctor.Proceed"),
+            _loc.T("Doctor.Title"));
+    }
+
     [RelayCommand(CanExecute = nameof(CanCommit))]
     private async Task Commit()
     {
         var message = CommitMessage.Trim();
+        if (!await ConfirmDoctorFindingsAsync()) return;
+
         var success = await GitUi.RunAsync(() => _repo.CommitAsync(message, Amend, Sign, SignOff), _dialogs, _loc, _logger);
         if (!success) return;
 

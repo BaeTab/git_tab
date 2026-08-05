@@ -189,6 +189,7 @@ public sealed partial class LocalizationService
         ["Conflict.Abort"] = "Abortar",
         ["Conflict.Resolve"] = "Resolver conflicto",
         ["Conflict.ResolveHint"] = "Para cada conflicto, elige qué versión conservar. Al aplicar se escribe el archivo y se marca como resuelto (preparado).",
+        ["Conflict.Blocks"] = "Regiones en conflicto — cada una se resuelve por separado. Total:",
         ["Conflict.UseOurs"] = "Nuestra versión",
         ["Conflict.UseTheirs"] = "La suya",
         ["Conflict.Both"] = "Ambas",

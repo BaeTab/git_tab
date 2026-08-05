@@ -81,6 +81,68 @@
             </StackPanel>
         </Grid>
 
+        <!-- per-block resolution: one row per conflicting region, each independently ours/theirs/both -->
+        <Border Grid.Row="3" Margin="0,0,0,8" MaxHeight="180"
+                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4"
+                Visibility="{Binding HasBlocks, Converter={StaticResource Bool2Vis}}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource MutedText}" FontSize="11" Margin="8,5,8,4">
+                    <Run Text="{loc:Tr Conflict.Blocks}"/><Run Text=" "/><Run Text="{Binding Blocks.Count, Mode=OneWay}"/>
+                </TextBlock>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Blocks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="8,0,8,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"
+                                               FontWeight="SemiBold" FontSize="11.5"
+                                               Foreground="{DynamicResource Brush.TextMuted}">
+                                        <Run Text="#"/><Run Text="{Binding Number, Mode=OneWay}"/>
+                                    </TextBlock>
+
+                                    <Border Grid.Column="1" Background="{DynamicResource Diff.DelBg}" CornerRadius="3"
+                                            Padding="6,3" Margin="0,0,4,0">
+                                        <TextBlock Text="{Binding OursPreview, Mode=OneWay}" FontFamily="Consolas"
+                                                   FontSize="11" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource Brush.Text}"/>
+                                    </Border>
+
+                                    <Border Grid.Column="2" Background="{DynamicResource Diff.AddBg}" CornerRadius="3"
+                                            Padding="6,3" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding TheirsPreview, Mode=OneWay}" FontFamily="Consolas"
+                                                   FontSize="11" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource Brush.Text}"/>
+                                    </Border>
+
+                                    <!-- One radio group per block (GroupName = the block number) so the
+                                         three choices are mutually exclusive within a block and
+                                         independent between blocks. -->
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <RadioButton Content="{loc:Tr Conflict.UseOurs}" Margin="0,0,10,0"
+                                                     GroupName="{Binding Number}" Foreground="{DynamicResource Brush.Text}"
+                                                     IsChecked="{Binding Choice, Converter={StaticResource EnumBool}, ConverterParameter=Ours}"/>
+                                        <RadioButton Content="{loc:Tr Conflict.UseTheirs}" Margin="0,0,10,0"
+                                                     GroupName="{Binding Number}" Foreground="{DynamicResource Brush.Text}"
+                                                     IsChecked="{Binding Choice, Converter={StaticResource EnumBool}, ConverterParameter=Theirs}"/>
+                                        <RadioButton Content="{loc:Tr Conflict.Both}"
+                                                     GroupName="{Binding Number}" Foreground="{DynamicResource Brush.Text}"
+                                                     IsChecked="{Binding Choice, Converter={StaticResource EnumBool}, ConverterParameter=Both}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
         <!-- editable result -->
         <Border Grid.Row="4" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4">
             <TextBox Text="{Binding Result, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" AcceptsTab="True"

@@ -58,3 +58,22 @@ public enum CommitSignature
     Bad,         // B — bad signature
     Unknown      // E/X/Y/R — expired, revoked, or cannot check
 }
+
+/// <summary>
+/// What merging a branch into HEAD would do, computed without touching the working tree
+/// (LibGit2Sharp merges the two commits in memory). Lets the UI warn about conflicts *before* the
+/// user starts a merge they would have to abort.
+/// </summary>
+public sealed class MergePreview
+{
+    /// <summary>HEAD already contains the other branch — merging would do nothing.</summary>
+    public bool AlreadyUpToDate { get; init; }
+
+    /// <summary>HEAD is an ancestor of the other branch, so the merge is a fast-forward.</summary>
+    public bool CanFastForward { get; init; }
+
+    /// <summary>Paths that would conflict, empty when the merge would apply cleanly.</summary>
+    public IReadOnlyList<string> ConflictingPaths { get; init; } = Array.Empty<string>();
+
+    public bool HasConflicts => ConflictingPaths.Count > 0;
+}

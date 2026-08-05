@@ -34,15 +34,19 @@ public sealed class MultiRepositorySessionTests
         var bookmarks = Substitute.For<IBookmarkStore>();
         bookmarks.Get(Arg.Any<string>()).Returns(System.Array.Empty<string>());
 
+        var settings = Substitute.For<ISettingsService>();
+        // Auto-refresh off: these tests drive the sessions explicitly, and a live FileSystemWatcher
+        // over the temp repositories would only add file handles and non-determinism.
+        settings.Current.Returns(new AppSettings { AutoRefresh = false });
+
         var factory = new RepositorySessionFactory(
-            runner, dialogs, loc, credentials, hosting, bookmarks, NullLoggerFactory.Instance);
+            runner, dialogs, loc, credentials, hosting, bookmarks, settings, NullLoggerFactory.Instance);
 
         var recent = Substitute.For<IRecentRepositoriesStore>();
         recent.GetAll().Returns(System.Array.Empty<RecentRepository>());
         var theme = Substitute.For<IThemeService>();
         var updates = Substitute.For<IUpdateService>();
         var shell = Substitute.For<IShellIntegrationService>();
-        var settings = Substitute.For<ISettingsService>();
         var keybindings = Substitute.For<IKeybindingService>();
 
         return new MainViewModel(

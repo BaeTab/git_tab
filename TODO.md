@@ -1,6 +1,6 @@
 # TODO / Known Limitations
 
-Honest record of what's done, what's left, and what's intentionally limited. Current release: **v2.0.0**.
+Honest record of what's done, what's left, and what's intentionally limited. Current release: **v2.5.0**.
 
 ## ✅ Implemented (through v1.5.0)
 
@@ -26,6 +26,10 @@ Honest record of what's done, what's left, and what's intentionally limited. Cur
   external diff tool.
 - **Management** — **repository statistics dashboard**, **Git config editor**, **CHANGELOG generator**,
   "add to .gitignore", `.gitignore` generator, 3-way conflict resolver + abort/continue banner.
+- **Safety & liveness** (v2.5.0) — **automatic refresh** (FileSystemWatcher over the worktree and
+  git dir, debounced and coalesced), **merge conflict prediction** (in-memory `MergeCommits`, nothing
+  written), **per-block conflict resolution** (ours/theirs/both per region), **pre-commit check**
+  (secret patterns, oversized blobs, normally-ignored paths — warns, never blocks).
 - **App** — light/dark + **high-contrast** theme, **UI/text zoom**, **5 UI languages** (ko/en/ja/zh/es,
   persisted), **customizable keyboard shortcuts**, command palette (Ctrl+P), Explorer right-click
   integration + standalone dialogs, single-instance, crash-report opt-in, **periodic background fetch**
