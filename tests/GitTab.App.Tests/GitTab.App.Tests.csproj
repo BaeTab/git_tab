@@ -16,11 +16,11 @@
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <!-- Builds throwaway git repositories for the multi-repository session integration tests
          (same version the Core adapter uses). -->
-    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
-    <PackageReference Include="NSubstitute" Version="6.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="LibGit2Sharp" Version="0.32.0" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
